@@ -24,7 +24,7 @@ type Lexer struct {
 
 // initialises a new lexer with input string
 func NewLexer(input string) Lexer {
-	return Lexer{input: input, rdr: *strings.NewReader(input), state: start}
+	return Lexer{input: input, rdr: *strings.NewReader(input), state: whiteSpace}
 }
 
 // advances the lexer to a new token. returns false if an error happened or
