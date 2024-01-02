@@ -1,7 +1,6 @@
 package lexer
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -37,7 +36,7 @@ func newSTR(c rune, typ TokenType, emit, adv bool, format string, args ...any) s
 		return str{next: assign, doEmit: emit, doAdv: adv, typ: typ}
 
 	default:
-		return str{err: errors.New(fmt.Sprintf(format, args...))}
+		return str{err: fmt.Errorf(format, args...)}
 	}
 }
 
