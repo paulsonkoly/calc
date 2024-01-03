@@ -1,9 +1,12 @@
 package lexer
 
-import "github.com/phaul/calc/combinator"
+import (
+	"github.com/phaul/calc/combinator"
+	t "github.com/phaul/calc/types"
+)
 
 type lexerResult struct {
-	token Token
+	token t.Token
 	err   error
 }
 
@@ -13,31 +16,28 @@ type TLexer struct {
 	pointers []int
 	writep   int
 	readp    int
+	nextF    bool
 	lexer    Lexer
 }
 
-// NewTLexer a new rollback capable lexer with input string
 func NewTLexer(input string) TLexer {
 	return TLexer{
 		stack:    make([]lexerResult, 0),
 		pointers: make([]int, 0),
-    readp: -1,
+    readp:    -1,
+    nextF:    true,
 		lexer:    NewLexer(input),
 	}
 }
 
-// Next advances the lexer to a new token.
-
-// returns false if an error happened or there are no tokens left
 func (tl *TLexer) Next() bool {
-	if tl.readp < tl.writep - 1 {
-    tl.readp++
+	if !tl.nextF && tl.readp < tl.writep {
 		return true
 	}
+	tl.nextF = true
 	if tl.lexer.Next() {
 		e := lexerResult{token: tl.lexer.Token, err: tl.lexer.Err}
 		tl.stack = append(tl.stack, e)
-    tl.readp++
 		tl.writep++
 		return true
 	}
@@ -45,22 +45,26 @@ func (tl *TLexer) Next() bool {
 	return false
 }
 
-// Token gives the next token
-func (tl TLexer) Token() combinator.Token {
-  return tl.stack[tl.readp].token
+func (tl *TLexer) Token() combinator.Token {
+	if tl.nextF {
+		tl.readp++
+		tl.nextF = false
+	}
+	return combinator.Token(tl.stack[tl.readp].token)
 }
 
-// Err gives the next lexer error if any
-func (tl TLexer) Err() error {
-  return tl.stack[tl.readp].err
+func (tl *TLexer) Err() error {
+	if tl.nextF {
+		tl.readp++
+		tl.nextF = false
+	}
+	return tl.stack[tl.writep].err
 }
 
-// Snapshot snapshots the lexer state
 func (tl *TLexer) Snapshot() {
 	tl.pointers = append(tl.pointers, tl.readp)
 }
 
-// Rollback rolls back to the last snapshot
 func (tl *TLexer) Rollback() {
 	tl.readp = tl.pointers[len(tl.pointers)-1]
 	tl.pointers = tl.pointers[:len(tl.pointers)-1]

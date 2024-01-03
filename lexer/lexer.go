@@ -12,14 +12,18 @@
 //			}
 package lexer
 
-import "strings"
+import (
+	"strings"
+
+	t "github.com/phaul/calc/types"
+)
 
 type Lexer struct {
 	input    string
 	rdr      strings.Reader
 	from, to int
-	Token    Token // the next token
-	Err      error // if there was an error this will be set
+	Token    t.Token // the next token
+	Err      error   // if there was an error this will be set
 	state    stateFunc
 }
 
@@ -54,8 +58,8 @@ func (l *Lexer) Next() bool {
 		st = str.next
 
 		if str.doEmit {
-			l.Token = Token{Value: l.input[l.from:l.to], Type: str.typ}
-      l.state = str.next
+			l.Token = t.Token{Value: l.input[l.from:l.to], Type: str.typ}
+			l.state = str.next
 			l.from = l.to
 			l.to += s
 			return true

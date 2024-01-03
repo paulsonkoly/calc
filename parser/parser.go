@@ -3,51 +3,51 @@ package parser
 import (
 	c "github.com/phaul/calc/combinator"
 	l "github.com/phaul/calc/lexer"
-	n "github.com/phaul/calc/node"
+	t "github.com/phaul/calc/types"
 )
 
-func Parse(input string) (n.Node, error) {
-  l := l.NewTLexer(input)
+func Parse(input string) ([]t.Node, error) {
+	l := l.NewTLexer(input)
+	rn := make([]t.Node, 0)
 
-  r, err := statement(&l)
-  return r[0].(n.Node), err
+	r, err := statement(&l)
+	for _, e := range r {
+		rn = append(rn, e.(t.Node))
+	}
+	return rn, err
 }
 
-type node = n.Node
-type token l.Token
+type node = t.Node
+type token t.Token
 
-func (t token) Node() c.Node {
-	return node{Token: l.Token(t)}
-}
-
-type tokenType = l.TokenType
+type tokenType = t.TokenType
 
 func wrap(nodes []c.Node) []c.Node {
-  var children []node 
+	var children []node
 
-  if len(nodes) > 0 {
-    children = make([]node, 0)
-  }
-  for _, n := range(nodes) {
-    children = append(children, n.(node))
-  }
-  r := []c.Node{c.Node(node{Children: children})}
+	if len(nodes) > 0 {
+		children = make([]node, 0)
+	}
+	for _, n := range nodes {
+		children = append(children, n.(node))
+	}
+	r := []c.Node{c.Node(node{Children: children})}
 
 	return r
 }
 
 func acceptTerm(tokType tokenType) c.Parser {
-	return c.Accept(func(t c.Token) bool { return t.(token).Type == tokType })
+	return c.Accept(func(tok c.Token) bool { return tok.(t.Token).Type == tokType })
 }
 
-func acceptToken(tok string) c.Parser {
-	return c.Accept(func(t c.Token) bool { return t.(token).Value == tok })
+func acceptToken(str string) c.Parser {
+	return c.Accept(func(tok c.Token) bool { return tok.(t.Token).Value == str })
 }
 
 // The grammar
-var intLit = acceptTerm(l.IntLit)
-var floatLit = acceptTerm(l.FloatLit)
-var varName = acceptTerm(l.VarName)
+var intLit = acceptTerm(t.IntLit)
+var floatLit = acceptTerm(t.FloatLit)
+var varName = acceptTerm(t.VarName)
 
 // these can't be defined as variables as they are self referencing
 func paren(input c.RollbackLexer) ([]c.Node, error) {

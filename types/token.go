@@ -1,6 +1,10 @@
-package lexer
+package types
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/phaul/calc/combinator"
+)
 
 type TokenType int
 
@@ -21,4 +25,8 @@ type Token struct {
 
 func (t Token) String() string {
 	return fmt.Sprintf("<\"%v\" %v>", t.Value, t.Type)
+}
+
+func (t Token)Node() combinator.Node {
+  return Node{Token: t}
 }
