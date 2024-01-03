@@ -54,7 +54,7 @@ func (tl *TLexer) Token() combinator.Token {
 
 // Err gives the next lexer error if any
 func (tl *TLexer) Err() error {
-	return tl.stack[tl.writep].err
+	return tl.stack[tl.readp].err
 }
 
 // Snapshot snapshots the lexer state
