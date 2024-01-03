@@ -3,62 +3,63 @@ package parser
 import (
 	"fmt"
 
+	"github.com/phaul/calc/combinator"
 	"github.com/phaul/calc/lexer"
 )
 
-// seems one can write haskell in every language
+type Token lexer.Token
+
+func (t Token) Node() combinator.Node {
+	return ASTNode{Token: t}
+}
+
+type Lexer struct {
+	l lexer.Lexer
+}
+
+func (l *Lexer) Next() bool {
+	return l.l.Next()
+}
+
+func (l Lexer) Err() error {
+	return l.l.Err
+}
+
+func (l Lexer) Token() Token {
+	return Token(l.l.Token)
+}
+
+func (l Lexer) Rollback() {
+}
+
+func (l Lexer) Snapshot() {
+}
 
 type ASTNode struct {
-	Token    lexer.Token
+	Token    Token
 	Children []ASTNode
 }
 
-func wrap(nodes []ASTNode) []ASTNode {
-	return []ASTNode{{Children: nodes}}
+var or = combinator.Or[*Lexer, ASTNode]
+
+func wrap(nodes []combinator.Node) []combinator.Node {
+	return []ASTNode{{Children: nodes.([]ASTNode)}}
 }
 
-func fmap(f func([]ASTNode) []ASTNode, p Parser) Parser {
-	return func(input lexer.Lexer) ([]ASTNode, error) {
-		r, err := p(input)
-		if err != nil {
-			return nil, err
-		}
-		return f(r), nil
-	}
+func term(tokType lexer.TokenType) combinator.Parser {
+	return combinator.Accept(
+		func(t combinator.Token) bool {
+			return t.(Token).Type == tokType
+		},
+  )
 }
 
-func term(tokType lexer.TokenType) Parser {
-	return func(input lexer.Lexer) ([]ASTNode, error) {
-		var result ASTNode
-		if !input.Next() {
-			return nil, fmt.Errorf("Parser: unexpected end of input")
-		}
-		if input.Err != nil {
-			return nil, input.Err
-		}
-		if input.Token.Type != tokType {
-			return nil, fmt.Errorf("Parser: %v failed", tokType)
-		}
-		result.Token = input.Token
-		return []ASTNode{result}, nil
-	}
-}
-
-func token(token string) Parser {
-	return func(input lexer.Lexer) ([]ASTNode, error) {
-		var result ASTNode
-		if !input.Next() {
-			return nil, fmt.Errorf("Parser: unexpected end of input")
-		}
-		if input.Err != nil {
-			return nil, input.Err
-		}
-		if input.Token.Value != token {
-			return nil, fmt.Errorf("Parser: %v failed", token)
-		}
-		result.Token = input.Token
-		return []ASTNode{result}, nil
-	}
+func token(token string) combinator.Parser {
+  return combinator.Accept(
+		func(t combinator.Token) bool {
+			return t.(Token).Value == token
+		},
+  )
 }
 
 // The grammar
@@ -68,7 +69,7 @@ var varName = term(lexer.VarName)
 
 // these can't be defined as variables as they are self referencing
 func paren(input lexer.Lexer) ([]ASTNode, error) {
-	r, err := fmap(wrap, Seq(token("("), expression, token(")")))(input)
+	r, err := combinator.Fmap(wrap, Seq(token("("), expression, token(")")))(input)
 	return r, err
 }
 
@@ -101,4 +102,3 @@ func expression(input lexer.Lexer) ([]ASTNode, error) {
 
 var assignment = fmap(wrap, Seq(varName, token("="), expression))
 var statement = Or(assignment, expression)
-
