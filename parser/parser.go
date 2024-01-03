@@ -1,104 +1,86 @@
 package parser
 
 import (
-	"fmt"
-
-	"github.com/phaul/calc/combinator"
-	"github.com/phaul/calc/lexer"
+	c "github.com/phaul/calc/combinator"
+	l "github.com/phaul/calc/lexer"
+	n "github.com/phaul/calc/node"
 )
 
-type Token lexer.Token
+func Parse(input string) (n.Node, error) {
+  l := l.NewTLexer(input)
 
-func (t Token) Node() combinator.Node {
-	return ASTNode{Token: t}
+  r, err := statement(&l)
+  return r[0].(n.Node), err
 }
 
-type Lexer struct {
-	l lexer.Lexer
+type node = n.Node
+type token l.Token
+
+func (t token) Node() c.Node {
+	return node{Token: l.Token(t)}
 }
 
-func (l *Lexer) Next() bool {
-	return l.l.Next()
+type tokenType = l.TokenType
+
+func wrap(nodes []c.Node) []c.Node {
+  var children []node 
+
+  if len(nodes) > 0 {
+    children = make([]node, 0)
+  }
+  for _, n := range(nodes) {
+    children = append(children, n.(node))
+  }
+  r := []c.Node{c.Node(node{Children: children})}
+
+	return r
 }
 
-func (l Lexer) Err() error {
-	return l.l.Err
+func acceptTerm(tokType tokenType) c.Parser {
+	return c.Accept(func(t c.Token) bool { return t.(token).Type == tokType })
 }
 
-func (l Lexer) Token() Token {
-	return Token(l.l.Token)
-}
-
-func (l Lexer) Rollback() {
-}
-
-func (l Lexer) Snapshot() {
-}
-
-type ASTNode struct {
-	Token    Token
-	Children []ASTNode
-}
-
-var or = combinator.Or[*Lexer, ASTNode]
-
-func wrap(nodes []combinator.Node) []combinator.Node {
-	return []ASTNode{{Children: nodes.([]ASTNode)}}
-}
-
-func term(tokType lexer.TokenType) combinator.Parser {
-	return combinator.Accept(
-		func(t combinator.Token) bool {
-			return t.(Token).Type == tokType
-		},
-  )
-}
-
-func token(token string) combinator.Parser {
-  return combinator.Accept(
-		func(t combinator.Token) bool {
-			return t.(Token).Value == token
-		},
-  )
+func acceptToken(tok string) c.Parser {
+	return c.Accept(func(t c.Token) bool { return t.(token).Value == tok })
 }
 
 // The grammar
-var intLit = term(lexer.IntLit)
-var floatLit = term(lexer.FloatLit)
-var varName = term(lexer.VarName)
+var intLit = acceptTerm(l.IntLit)
+var floatLit = acceptTerm(l.FloatLit)
+var varName = acceptTerm(l.VarName)
 
 // these can't be defined as variables as they are self referencing
-func paren(input lexer.Lexer) ([]ASTNode, error) {
-	r, err := combinator.Fmap(wrap, Seq(token("("), expression, token(")")))(input)
+func paren(input c.RollbackLexer) ([]c.Node, error) {
+	r, err := c.Fmap(wrap, c.Seq(acceptToken("("), expression, acceptToken(")")))(input)
 	return r, err
 }
 
-func top(input lexer.Lexer) ([]ASTNode, error) {
-	r, err := Any(intLit, floatLit, varName, paren)(input)
+func top(input c.RollbackLexer) ([]c.Node, error) {
+	r, err := c.Any(intLit, floatLit, varName, paren)(input)
 	return r, err
 }
 
-func unary(input lexer.Lexer) ([]ASTNode, error) {
-	r, err := Or(fmap(wrap, (Seq(token("-"), top))), top)(input)
+func unary(input c.RollbackLexer) ([]c.Node, error) {
+	r, err := c.Or(c.Fmap(wrap, (c.Seq(acceptToken("-"), top))), top)(input)
 	return r, err
 }
 
-func divmul(input lexer.Lexer) ([]ASTNode, error) {
-	op := Or(token("*"), token("/"))
-	r, err := Or(fmap(wrap, Seq(unary, op, divmul)), unary)(input)
+func divmul(input c.RollbackLexer) ([]c.Node, error) {
+	op := c.Or(acceptToken("*"), acceptToken("/"))
+	r, err := c.Or(c.Fmap(wrap, c.Seq(unary, op, divmul)), unary)(input)
 	return r, err
 }
 
-func addsub(input lexer.Lexer) ([]ASTNode, error) {
-	op := Or(token("+"), token("-"))
-	r, err := Or(fmap(wrap, Seq(divmul, op, addsub)), divmul)(input)
+func addsub(input c.RollbackLexer) ([]c.Node, error) {
+	op := c.Or(acceptToken("+"), acceptToken("-"))
+	r, err := c.Or(c.Fmap(wrap, c.Seq(divmul, op, addsub)), divmul)(input)
 	return r, err
 }
 
-func expression(input lexer.Lexer) ([]ASTNode, error) {
+func expression(input c.RollbackLexer) ([]c.Node, error) {
 	r, err := addsub(input)
 	return r, err
 }
 
-var assignment = fmap(wrap, Seq(varName, token("="), expression))
-var statement = Or(assignment, expression)
+var assignment = c.Fmap(wrap, c.Seq(varName, acceptToken("="), expression))
+var statement = c.Or(assignment, expression)

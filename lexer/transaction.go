@@ -1,5 +1,7 @@
 package lexer
 
+import "github.com/phaul/calc/combinator"
+
 type lexerResult struct {
 	token Token
 	err   error
@@ -44,7 +46,7 @@ func (tl *TLexer) Next() bool {
 }
 
 // Token gives the next token
-func (tl TLexer) Token() Token {
+func (tl TLexer) Token() combinator.Token {
   return tl.stack[tl.readp].token
 }
 

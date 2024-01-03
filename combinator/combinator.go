@@ -9,6 +9,7 @@ import "fmt"
 type Token interface {
 	Node() Node // lift a lexer token to an AST node that holds that single token
 }
+
 // Node is an AST node, with pointers to sub-tree nodes and potentially some
 // parse information data
 type Node any
@@ -41,13 +42,13 @@ type RollbackLexer interface {
 // It's the users responsibility to combine compound nodes into one, ie. the
 // sub-parser results can be combined into a Node that has tree pointers to the
 // sub expressions
-type Parser[L RollbackLexer, N Node] func(input L) ([]N, error)
+type Parser func(input RollbackLexer) ([]Node, error)
 
 // Or is a choice between two parsers
 //
 // parses with a and if that fails does what b would do
-func Or[L RollbackLexer, N Node](a, b Parser[L, N]) Parser[L, N] {
-	return func(input L) ([]N, error) {
+func Or(a, b Parser) Parser {
+	return func(input RollbackLexer) ([]Node, error) {
 		input.Snapshot()
 		aRes, aErr := a(input)
 		if aErr != nil {
@@ -68,7 +69,7 @@ func Or[L RollbackLexer, N Node](a, b Parser[L, N]) Parser[L, N] {
 // Appends the given parsers together with Or. In effect parses with the first
 // succeeding parser and returns what that would return. Fails if all parsers
 // fail.
-func Any[L RollbackLexer, N Node](args ...Parser[L, N]) Parser[L, N] {
+func Any(args ...Parser) Parser {
 	if len(args) < 1 {
 		panic("Parser: Any needs at least one parser")
 	}
@@ -83,8 +84,8 @@ func Any[L RollbackLexer, N Node](args ...Parser[L, N]) Parser[L, N] {
 //
 // Parses with a and then continues parsing with b. Only succeeds if both a and
 // b succeeds and returns the concatenated result from both a and b.
-func And[L RollbackLexer, N Node](a, b Parser[L, N]) Parser[L, N] {
-	return func(input L) ([]N, error) {
+func And(a, b Parser) Parser {
+	return func(input RollbackLexer) ([]Node, error) {
 		aRes, aErr := a(input)
 		if aErr != nil {
 			return aRes, aErr
@@ -98,7 +99,7 @@ func And[L RollbackLexer, N Node](a, b Parser[L, N]) Parser[L, N] {
 //
 // Parses with a sequence of parsers, returns the concatenated result from all
 // if all are successful. Fails if any of the parsers fail.
-func Seq[L RollbackLexer, N Node](args ...Parser[L, N]) Parser[L, N] {
+func Seq(args ...Parser) Parser {
 	if len(args) < 1 {
 		panic("Parser: Seq needs at least one parser")
 	}
@@ -116,8 +117,8 @@ func Seq[L RollbackLexer, N Node](args ...Parser[L, N]) Parser[L, N] {
 // is true for the next token provided by l, and then returns the node holding
 // that token.
 // If p is false or the lexer fails then Accept fails.
-func Accept[L RollbackLexer, N Node](p func(Token) bool) Parser[L, N] {
-	return func(input L) ([]N, error) {
+func Accept(p func(Token) bool) Parser {
+	return func(input RollbackLexer) ([]Node, error) {
 		if !input.Next() {
 			return nil, fmt.Errorf("Parser: unexpected end of input")
 		}
@@ -128,7 +129,7 @@ func Accept[L RollbackLexer, N Node](p func(Token) bool) Parser[L, N] {
 		if !p(tok) {
 			return nil, fmt.Errorf("Parser: %v failed", tok)
 		}
-		return []N{tok.Node().(N)}, nil
+		return []Node{tok.Node().(Node)}, nil
 	}
 }
 
@@ -136,8 +137,8 @@ func Accept[L RollbackLexer, N Node](p func(Token) bool) Parser[L, N] {
 //
 // Returns a modified version of p that succeeds when p succeeds but if p
 // returns r the modified version returns f(r)
-func Fmap[L RollbackLexer, N Node](f func([]N) []N, p Parser[L, N]) Parser[L, N] {
-	return func(input L) ([]N, error) {
+func Fmap(f func([]Node) []Node, p Parser) Parser {
+	return func(input RollbackLexer) ([]Node, error) {
 		r, err := p(input)
 		if err != nil {
 			return nil, err
