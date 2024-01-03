@@ -4,49 +4,50 @@ import (
 	"testing"
 
 	"github.com/phaul/calc/lexer"
+	t "github.com/phaul/calc/types"
 )
 
 type testDatum struct {
 	title string
 	input string
-	dat   []lexer.Token
+	dat   []t.Token
 }
 
 var testData = []testDatum{
-	{"single lexeme", "13", []lexer.Token{{Value: "13", Type: lexer.IntLit}}},
-	{"single lexeme", "a", []lexer.Token{{Value: "a", Type: lexer.VarName}}},
-	{"single lexeme", "ab", []lexer.Token{{Value: "ab", Type: lexer.VarName}}},
-	{"single lexeme", "13.6", []lexer.Token{{Value: "13.6", Type: lexer.FloatLit}}},
-	{"single lexeme", "+", []lexer.Token{{Value: "+", Type: lexer.Op}}},
-	{"single lexeme", "-", []lexer.Token{{Value: "-", Type: lexer.Op}}},
-	{"single lexeme", "*", []lexer.Token{{Value: "*", Type: lexer.Op}}},
-	{"single lexeme", "/", []lexer.Token{{Value: "/", Type: lexer.Op}}},
-	{"single lexeme", "(", []lexer.Token{{Value: "(", Type: lexer.Paren}}},
-	{"single lexeme", ")", []lexer.Token{{Value: ")", Type: lexer.Paren}}},
-	{"whitespace at front", "   )", []lexer.Token{{Value: ")", Type: lexer.Paren}}},
-	{"whitespace at back", ")    ", []lexer.Token{{Value: ")", Type: lexer.Paren}}},
+	{"single lexeme", "13", []t.Token{{Value: "13", Type: t.IntLit}}},
+	{"single lexeme", "a", []t.Token{{Value: "a", Type: t.VarName}}},
+	{"single lexeme", "ab", []t.Token{{Value: "ab", Type: t.VarName}}},
+	{"single lexeme", "13.6", []t.Token{{Value: "13.6", Type: t.FloatLit}}},
+	{"single lexeme", "+", []t.Token{{Value: "+", Type: t.Op}}},
+	{"single lexeme", "-", []t.Token{{Value: "-", Type: t.Op}}},
+	{"single lexeme", "*", []t.Token{{Value: "*", Type: t.Op}}},
+	{"single lexeme", "/", []t.Token{{Value: "/", Type: t.Op}}},
+	{"single lexeme", "(", []t.Token{{Value: "(", Type: t.Paren}}},
+	{"single lexeme", ")", []t.Token{{Value: ")", Type: t.Paren}}},
+	{"whitespace at front", "   )", []t.Token{{Value: ")", Type: t.Paren}}},
+	{"whitespace at back", ")    ", []t.Token{{Value: ")", Type: t.Paren}}},
 	{"complex example",
 		"13.6+a-(3 / 9)",
-		[]lexer.Token{
-			{"13.6", lexer.FloatLit},
-			{"+", lexer.Op},
-			{"a", lexer.VarName},
-			{"-", lexer.Op},
-			{"(", lexer.Paren},
-			{"3", lexer.IntLit},
-			{"/", lexer.Op},
-			{"9", lexer.IntLit},
-			{")", lexer.Paren},
+		[]t.Token{
+			{Value: "13.6", Type: t.FloatLit},
+			{Value: "+", Type: t.Op},
+			{Value: "a", Type: t.VarName},
+			{Value: "-", Type: t.Op},
+			{Value: "(", Type: t.Paren},
+			{Value: "3", Type: t.IntLit},
+			{Value: "/", Type: t.Op},
+			{Value: "9", Type: t.IntLit},
+			{Value: ")", Type: t.Paren},
 		},
 	},
 	{"assignment",
 		"a=2+3",
-		[]lexer.Token{
-			{"a", lexer.VarName},
-			{"=", lexer.Assign},
-			{"2", lexer.IntLit},
-			{"+", lexer.Op},
-			{"3", lexer.IntLit},
+		[]t.Token{
+			{Value: "a", Type: t.VarName},
+			{Value: "=", Type: t.Assign},
+			{Value: "2", Type: t.IntLit},
+			{Value: "+", Type: t.Op},
+			{Value: "3", Type: t.IntLit},
 		},
 	},
 }
