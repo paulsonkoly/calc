@@ -1,4 +1,5 @@
-// A lexer for our tiny language with an iterator style interface
+// package lexer is a lexer for our tiny language with an iterator style
+// interface
 //
 //	   l := NewLexer("12+13")
 //
@@ -22,13 +23,14 @@ type Lexer struct {
 	state    stateFunc
 }
 
-// initialises a new lexer with input string
+// NewLexer a new lexer with input string
 func NewLexer(input string) Lexer {
 	return Lexer{input: input, rdr: *strings.NewReader(input), state: whiteSpace}
 }
 
-// advances the lexer to a new token. returns false if an error happened or
-// there are no tokens left
+// Next advances the lexer to a new token.
+
+// returns false if an error happened or there are no tokens left
 func (l *Lexer) Next() bool {
 	var st stateFunc
 
