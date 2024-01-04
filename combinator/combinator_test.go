@@ -43,13 +43,34 @@ var testData = []testDatum{
 		err:       "",
 	},
 	{
+		name:      "Seq",
+		parser:    combinator.Seq(accept("a"), accept("b"), accept("c")),
+		lexerOut:  []testToken{"a", "b", "c"},
+		parserOut: []testNode{{token: testToken("a")}, {token: testToken("b")}, {token: testToken("c")}},
+		err:       "",
+	},
+	{
+		name:      "Or",
+		parser:    combinator.Or(accept("a"), accept("b")),
+		lexerOut:  []testToken{"b"},
+		parserOut: []testNode{{token: testToken("b")}},
+		err:       "",
+	},
+	{
+		name:      "Or failed",
+		parser:    combinator.Or(accept("a"), accept("b")),
+		lexerOut:  []testToken{"c"},
+		parserOut: nil,
+		err:       "Parser: c failed",
+	},
+	{
 		name: "Fmap",
 		parser: combinator.Fmap(
 			func(i []combinator.Node) []combinator.Node {
-        // sigh
+				// sigh
 				return []combinator.Node{
-          combinator.Node(testNode{token: testToken(strings.Repeat(string(i[0].(testNode).token), 2))}),
-        }
+					combinator.Node(testNode{token: testToken(strings.Repeat(string(i[0].(testNode).token), 2))}),
+				}
 			},
 			accept("a"),
 		),
@@ -86,12 +107,12 @@ func TestCombinator(t *testing.T) {
 		p := tt.parser
 
 		n, err := p(combinator.RollbackLexer(&l))
-    if tt.err != "" {
-      if assert.Error(t, err) {
-        assert.Equal(t, tt.err, err.Error())
-      }
-    } else {
-      assert.NoError(t, err)
+		if tt.err != "" {
+			if assert.Error(t, err) {
+				assert.Equal(t, tt.err, err.Error())
+			}
+		} else {
+			assert.NoError(t, err)
 
 			convert := []testNode{}
 			for _, a := range n {
