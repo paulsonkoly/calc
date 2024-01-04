@@ -105,7 +105,7 @@ func Seq(args ...Parser) Parser {
 	}
 	r := args[0]
 
-	for _, p := range args {
+	for _, p := range args[1:] {
 		r = And(r, p)
 	}
 	return r
