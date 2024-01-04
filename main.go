@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/phaul/calc/evaluator"
 	"github.com/phaul/calc/parser"
 )
 
@@ -16,6 +17,7 @@ func main() {
 		if len(t) > 0 {
 			t[0].PrettyPrint()
 		}
+    fmt.Println("> ", evaluator.Evaluate(t[0]))
 		if err != nil {
 			fmt.Println(err)
 		}
