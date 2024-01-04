@@ -16,6 +16,9 @@ The language has the following statement types:
  - arithmetic expression
  - variable assignment
 
+Expressions evaluate to a value printed in the repl loop as answers, assignments don't result in a value,
+ - they are not expressions so assignment can't be used apart from top level.
+
 ### Tokens
 
 The following tokens are valid:
@@ -52,7 +55,14 @@ This means that "- 5" is minus five with white-space.
 
 ### Lexer
 
-State machine based lexer.
+State machine based lexer, reading a character at a time. The mechanism is basically 
+
+    state <- start
+    WHILE NOT EOL
+      c <- NEXT CHAR
+      state <- FSM(state, c)
+
+The states are as followos, with the next character implying the next state.
 
     Start 
       - whitespace: Start
