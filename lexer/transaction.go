@@ -11,6 +11,11 @@ type lexerResult struct {
 }
 
 // TLexer is a lexer satisfying combinators.RollbackLexer
+//
+// It's the same as Lexer, but it's state can be snap-shotted and rolled back,
+// so if the parser backtracks, the parser can instruct the lexer to restore a
+// previous point in lexing and start emitting tokens it has already emitted
+// before.
 type TLexer struct {
 	stack    []lexerResult
 	pointers []int
