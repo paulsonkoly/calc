@@ -15,7 +15,6 @@ const (
 	FloatLit
 	VarName
 	Op
-	Assign
 	Paren
 )
 

@@ -22,18 +22,24 @@ type token t.Token
 
 type tokenType = t.TokenType
 
-func wrap(nodes []c.Node) []c.Node {
-	var children []node
-
-	if len(nodes) > 0 {
-		children = make([]node, 0)
+func binOp(nodes []c.Node) []c.Node {
+	if len(nodes) != 3 {
+		panic("incorrect number of sub nodes for binary operator")
 	}
-	for _, n := range nodes {
-		children = append(children, n.(node))
-	}
-	r := []c.Node{c.Node(node{Children: children})}
 
-	return r
+	r := nodes[1].(t.Node)
+	r.Children = []t.Node{nodes[0].(t.Node), nodes[2].(t.Node)}
+	return []c.Node{r}
+}
+
+func unOp(nodes []c.Node) []c.Node {
+	if len(nodes) != 2 {
+		panic("not enough sub nodes for operator")
+	}
+
+	r := nodes[0].(t.Node)
+	r.Children = []t.Node{nodes[1].(t.Node)}
+	return []c.Node{r}
 }
 
 func first(nodes []c.Node) []c.Node  { return []c.Node{nodes[0]} }
@@ -64,19 +70,19 @@ func top(input c.RollbackLexer) ([]c.Node, error) {
 }
 
 func unary(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.Or(c.Fmap(wrap, (c.Seq(acceptToken("-"), top))), top)(input)
+	r, err := c.Or(c.Fmap(unOp, (c.Seq(acceptToken("-"), top))), top)(input)
 	return r, err
 }
 
 func divmul(input c.RollbackLexer) ([]c.Node, error) {
 	op := c.Or(acceptToken("*"), acceptToken("/"))
-	r, err := c.Or(c.Fmap(wrap, c.Seq(unary, op, divmul)), unary)(input)
+	r, err := c.Or(c.Fmap(binOp, c.Seq(unary, op, divmul)), unary)(input)
 	return r, err
 }
 
 func addsub(input c.RollbackLexer) ([]c.Node, error) {
 	op := c.Or(acceptToken("+"), acceptToken("-"))
-	r, err := c.Or(c.Fmap(wrap, c.Seq(divmul, op, addsub)), divmul)(input)
+	r, err := c.Or(c.Fmap(binOp, c.Seq(divmul, op, addsub)), divmul)(input)
 	return r, err
 }
 
@@ -85,7 +91,7 @@ func expression(input c.RollbackLexer) ([]c.Node, error) {
 	return r, err
 }
 
-var assignment = c.Fmap(wrap, c.Seq(varName, acceptToken("="), expression))
+var assignment = c.Fmap(binOp, c.Seq(varName, acceptToken("="), expression))
 
 var statement = c.Fmap(first, c.Or(c.And(assignment, acceptTerm(t.EOL, "end of line")),
 	c.And(expression, acceptTerm(t.EOL, "end of line"))))

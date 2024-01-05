@@ -22,7 +22,7 @@ func TestTransaction(t *testing.T) {
 	assert.Equal(t, tl.Token().(ty.Token).Value, "2")
 
 	tl.Rollback()
-  tl.Rollback()
+	tl.Rollback()
 	assert.True(t, tl.Next())
 	assert.Equal(t, tl.Token().(ty.Token).Value, "a")
 

@@ -19,11 +19,11 @@ type stateFunc func(c rune) str
 
 func newSTR(c rune, typ t.TokenType, emit, adv bool, format string, args ...any) str {
 	switch {
-  case c == ' ' || c == '\t':
+	case c == ' ' || c == '\t':
 		return str{next: whiteSpace, doEmit: emit, doAdv: adv, typ: typ}
 
-  case c == '\n' || c == eof:
-    return str{next: eol, doEmit: emit, doAdv: adv, typ: typ}
+	case c == '\n' || c == eof:
+		return str{next: eol, doEmit: emit, doAdv: adv, typ: typ}
 
 	case '0' <= c && c <= '9':
 		return str{next: intLit, doEmit: emit, doAdv: adv, typ: typ}
@@ -34,11 +34,8 @@ func newSTR(c rune, typ t.TokenType, emit, adv bool, format string, args ...any)
 	case c == '(', c == ')':
 		return str{next: paren, doEmit: emit, doAdv: adv, typ: typ}
 
-	case c == '+' || c == '-' || c == '*' || c == '/':
+	case c == '+' || c == '-' || c == '*' || c == '/' || c == '=':
 		return str{next: op, doEmit: emit, doAdv: adv, typ: typ}
-
-	case c == '=':
-		return str{next: assign, doEmit: emit, doAdv: adv, typ: typ}
 
 	default:
 		return str{err: fmt.Errorf(format, args...)}
@@ -88,10 +85,6 @@ func op(c rune) str {
 
 func paren(c rune) str {
 	return newSTR(c, t.Paren, true, false, "Lexer: unexpected char %c following parenthesis", c)
-}
-
-func assign(c rune) str {
-	return newSTR(c, t.Assign, true, false, "Lexer: unexpected char %c following assignment", c)
 }
 
 func eol(c rune) str {

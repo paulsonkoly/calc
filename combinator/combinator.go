@@ -29,8 +29,8 @@ type Lexer interface {
 type Transaction interface {
 	Snapshot() // Push current state on a stack so it can be recovered
 	Rollback() // Recover last state that was pushed
-  // Commit state. After commit the previous snapshot point is removed, the
-  // next Rollback returns to the snapshot prior to that
+	// Commit state. After commit the previous snapshot point is removed, the
+	// next Rollback returns to the snapshot prior to that
 	Commit()
 }
 

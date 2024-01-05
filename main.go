@@ -13,12 +13,13 @@ import (
 var eval = flag.String("eval", "", "string to evaluate")
 
 func main() {
+	vars := make(evaluator.Variables)
 	flag.Parse()
 	if *eval != "" {
 		t, err := parser.Parse(*eval)
 		if len(t) > 0 {
 			t[0].PrettyPrint()
-      fmt.Println("> ", evaluator.Evaluate(t[0]))
+			fmt.Println("> ", evaluator.Evaluate(vars, t[0]))
 		}
 		if err != nil {
 			fmt.Println(err)
@@ -30,7 +31,7 @@ func main() {
 			t, err := parser.Parse(input)
 			if len(t) > 0 {
 				t[0].PrettyPrint()
-        fmt.Println("> ", evaluator.Evaluate(t[0]))
+				fmt.Println("> ", evaluator.Evaluate(vars, t[0]))
 			}
 			if err != nil {
 				fmt.Println(err)

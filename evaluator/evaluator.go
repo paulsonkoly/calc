@@ -1,12 +1,15 @@
 package evaluator
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/phaul/calc/types"
 )
 
-func Evaluate(n types.Node) Value {
+type Variables map[string]Value
+
+func Evaluate(vars Variables, n types.Node) Value {
 	switch n.Token.Type {
 
 	case types.IntLit:
@@ -23,15 +26,35 @@ func Evaluate(n types.Node) Value {
 		}
 		return ValueFloat(f)
 
-  case types.InvalidToken:
-    switch (n.Children[1].Token.Value) {
-    case "+":
-      a := Evaluate(n.Children[0])
-      b := Evaluate(n.Children[2])
+	case types.Op:
+		switch n.Token.Value {
 
-      return a.Plus(b)
-    }
+		case "+":
+			return Evaluate(vars, n.Children[0]).Plus(Evaluate(vars, n.Children[1]))
 
+		case "-":
+			return Evaluate(vars, n.Children[0]).Minus(Evaluate(vars, n.Children[1]))
+
+		case "*":
+			return Evaluate(vars, n.Children[0]).Mul(Evaluate(vars, n.Children[1]))
+
+		case "/":
+			return Evaluate(vars, n.Children[0]).Div(Evaluate(vars, n.Children[1]))
+
+		case "=":
+			v := Evaluate(vars, n.Children[1])
+			vars[n.Children[0].Token.Value] = v
+			return v
+		}
+
+	case types.VarName:
+		var r Value
+		if v, ok := vars[n.Token.Value]; ok {
+			return v
+		}
+		_ = fmt.Errorf("variable %s not defined\n", n.Token.Value)
+		return r
 	}
+
 	panic("unsupported node tpye")
 }
