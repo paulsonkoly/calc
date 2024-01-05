@@ -32,7 +32,7 @@ Expressions evaluate to a value printed in the repl loop as answers, assignments
 
 The following tokens are valid:
 
- - integer literal /-?\d+/
+ - integer literal /\d+/
  - float literal /-?\d*.\d*/
  - variable name /[a-z]+/
  - operator plus, minus /[+-]/
@@ -45,7 +45,7 @@ tokens are spearated by white-space.
 ### Grammar
 
 Support unary minus at the grammar level as opposed to lexer level for negative number literals.
-This means that "- 5" is minus five with white-space.
+This means that "- 5" is minus five with white-space or 2+-(3+1) works.
 
     statement: expression | assignment
     assignment: VARIABLE ASSIGN expression 
