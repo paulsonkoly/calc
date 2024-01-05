@@ -15,9 +15,25 @@ Supported features:
  - variables
  - 4 aritmetic operations +, -, *, /
  - explicit evaluation order by parenthesis
- - type coersions, pure integer expressions result in integer, expressions containing floats result in floats
 
 The language is right associative and has 2 precedence groups: +, - is lower than * and /. It is planned to make the language left associative.
+
+## Type coersions
+
+There are 3 value types: integers, floats and erros. Pure integer expressions result in integer, expressions containing floats result in floats. If there is an error, for example division by zero or undefined variable, the expression evaluates to the error and any further arithmetics using the error would result in the same error. Some examples:
+
+    1/0.0
+    >  +Inf
+    1/0
+    >  division by zero
+    a=1/0
+    >  division by zero
+    a+a
+    >  division by zero
+    c = b+a
+    >  variable b not defined
+    c*2
+    >  variable b not defined
 
 ## Language
 
