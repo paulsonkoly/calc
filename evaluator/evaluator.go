@@ -45,12 +45,10 @@ func Evaluate(vars Variables, n types.Node) Value {
 		}
 
 	case types.VarName:
-		var r Value
 		if v, ok := vars[n.Token.Value]; ok {
 			return v
 		}
-		_ = fmt.Errorf("variable %s not defined\n", n.Token.Value)
-		return r
+		return ValueError(fmt.Sprintf("variable %s not defined", n.Token.Value))
 	}
 
 	panic("unsupported node tpye")
