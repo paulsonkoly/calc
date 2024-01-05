@@ -36,27 +36,30 @@ func wrap(nodes []c.Node) []c.Node {
 	return r
 }
 
-func acceptTerm(tokType tokenType) c.Parser {
-	return c.Accept(func(tok c.Token) bool { return tok.(t.Token).Type == tokType })
+func first(nodes []c.Node) []c.Node  { return []c.Node{nodes[0]} }
+func second(nodes []c.Node) []c.Node { return []c.Node{nodes[1]} }
+
+func acceptTerm(tokType tokenType, msg string) c.Parser {
+	return c.Accept(func(tok c.Token) bool { return tok.(t.Token).Type == tokType }, msg)
 }
 
 func acceptToken(str string) c.Parser {
-	return c.Accept(func(tok c.Token) bool { return tok.(t.Token).Value == str })
+	return c.Accept(func(tok c.Token) bool { return tok.(t.Token).Value == str }, str)
 }
 
 // The grammar
-var intLit = acceptTerm(t.IntLit)
-var floatLit = acceptTerm(t.FloatLit)
-var varName = acceptTerm(t.VarName)
+var intLit = acceptTerm(t.IntLit, "integer literal")
+var floatLit = acceptTerm(t.FloatLit, "float literal")
+var varName = acceptTerm(t.VarName, "variable name")
 
 // these can't be defined as variables as they are self referencing
 func paren(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.Fmap(wrap, c.Seq(acceptToken("("), expression, acceptToken(")")))(input)
+	r, err := c.Fmap(second, c.Seq(acceptToken("("), expression, acceptToken(")")))(input)
 	return r, err
 }
 
 func top(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.Any(intLit, floatLit, varName, paren)(input)
+	r, err := c.Any(floatLit, intLit, varName, paren)(input)
 	return r, err
 }
 
@@ -83,4 +86,6 @@ func expression(input c.RollbackLexer) ([]c.Node, error) {
 }
 
 var assignment = c.Fmap(wrap, c.Seq(varName, acceptToken("="), expression))
-var statement = c.Or(assignment, expression)
+
+var statement = c.Fmap(first, c.Or(c.And(assignment, acceptTerm(t.EOL, "end of line")),
+	c.And(expression, acceptTerm(t.EOL, "end of line"))))

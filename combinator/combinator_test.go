@@ -17,7 +17,7 @@ type testDatum struct {
 }
 
 func accept(t string) combinator.Parser {
-	return combinator.Accept(func(a combinator.Token) bool { return string(a.(testToken)) == t })
+	return combinator.Accept(func(a combinator.Token) bool { return string(a.(testToken)) == t }, "?")
 }
 
 var testData = []testDatum{
@@ -33,7 +33,7 @@ var testData = []testDatum{
 		parser:    accept("b"),
 		lexerOut:  []testToken{"a"},
 		parserOut: nil,
-		err:       "Parser: a failed",
+		err:       "Parser: ? expected, got a",
 	},
 	{
 		name:      "And",
@@ -61,7 +61,24 @@ var testData = []testDatum{
 		parser:    combinator.Or(accept("a"), accept("b")),
 		lexerOut:  []testToken{"c"},
 		parserOut: nil,
-		err:       "Parser: c failed",
+		err:       "Parser: ? expected, got c",
+	},
+	{
+		name: "Backtrack aab -> a(aa|ab)",
+		parser: combinator.And(
+			accept("a"),
+			combinator.Or(combinator.And(accept("a"), accept("a")), combinator.And(accept("a"), accept("b"))),
+		),
+		lexerOut:  []testToken{"a", "a", "b"},
+		parserOut: []testNode{{token: testToken("a")}, {token: testToken("a")}, {token: testToken("b")}},
+		err:       "",
+	},
+	{
+		name:      "Any",
+		parser:    combinator.Any(accept("a"), accept("b"), accept("c")),
+		lexerOut:  []testToken{"b"},
+		parserOut: []testNode{{token: testToken("b")}},
+		err:       "",
 	},
 	{
 		name: "Fmap",
@@ -96,9 +113,9 @@ func (l lexerStub) Token() combinator.Token { return combinator.Token(l.tokens[l
 func (l lexerStub) Err() error              { return nil }
 func (l *lexerStub) Next() bool             { l.readP++; return l.readP < len(l.tokens) }
 func (l *lexerStub) Snapshot()              { l.pointers = append(l.pointers, l.readP) }
+func (l *lexerStub) Commit()                { l.pointers = l.pointers[:len(l.pointers)-1] }
 func (l *lexerStub) Rollback() {
 	l.readP = l.pointers[len(l.pointers)-1]
-	l.pointers = l.pointers[:len(l.pointers)-1]
 }
 
 func TestCombinator(t *testing.T) {
@@ -108,17 +125,17 @@ func TestCombinator(t *testing.T) {
 
 		n, err := p(combinator.RollbackLexer(&l))
 		if tt.err != "" {
-			if assert.Error(t, err) {
-				assert.Equal(t, tt.err, err.Error())
+			if assert.Error(t, err, "%s", tt.name) {
+				assert.Equal(t, tt.err, err.Error(), "%s", tt.name)
 			}
 		} else {
-			assert.NoError(t, err)
+			assert.NoError(t, err, "%s", tt.name)
 
 			convert := []testNode{}
 			for _, a := range n {
 				convert = append(convert, a.(testNode))
 			}
-			assert.Equal(t, tt.parserOut, convert)
+			assert.Equal(t, tt.parserOut, convert, "%s", tt.name)
 		}
 	}
 }

@@ -10,6 +10,7 @@ type TokenType int
 
 const (
 	InvalidToken = TokenType(iota)
+	EOL
 	IntLit
 	FloatLit
 	VarName
@@ -24,9 +25,12 @@ type Token struct {
 }
 
 func (t Token) String() string {
+	if t.Type == EOL {
+		return fmt.Sprintf("<%v>", t.Type)
+	}
 	return fmt.Sprintf("<\"%v\" %v>", t.Value, t.Type)
 }
 
-func (t Token)Node() combinator.Node {
-  return Node{Token: t}
+func (t Token) Node() combinator.Node {
+	return Node{Token: t}
 }

@@ -67,6 +67,10 @@ func (tl *TLexer) Snapshot() {
 	tl.pointers = append(tl.pointers, tl.readp)
 }
 
+func (tl *TLexer) Commit() {
+	tl.pointers = tl.pointers[:len(tl.pointers)-1]
+}
+
 // Rollback rolls back to the last snapshot
 func (tl *TLexer) Rollback() {
 	tl.readp = tl.pointers[len(tl.pointers)-1]

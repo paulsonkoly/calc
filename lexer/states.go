@@ -19,8 +19,11 @@ type stateFunc func(c rune) str
 
 func newSTR(c rune, typ t.TokenType, emit, adv bool, format string, args ...any) str {
 	switch {
-	case c == ' ' || c == '\t' || c == '\n' || c == eof:
+  case c == ' ' || c == '\t':
 		return str{next: whiteSpace, doEmit: emit, doAdv: adv, typ: typ}
+
+  case c == '\n' || c == eof:
+    return str{next: eol, doEmit: emit, doAdv: adv, typ: typ}
 
 	case '0' <= c && c <= '9':
 		return str{next: intLit, doEmit: emit, doAdv: adv, typ: typ}
@@ -89,4 +92,8 @@ func paren(c rune) str {
 
 func assign(c rune) str {
 	return newSTR(c, t.Assign, true, false, "Lexer: unexpected char %c following assignment", c)
+}
+
+func eol(c rune) str {
+	return newSTR(c, t.EOL, true, false, "Lexer: unexpected char %c following new line", c)
 }

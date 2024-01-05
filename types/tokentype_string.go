@@ -9,17 +9,18 @@ func _() {
 	// Re-run the stringer command to generate them again.
 	var x [1]struct{}
 	_ = x[InvalidToken-0]
-	_ = x[IntLit-1]
-	_ = x[FloatLit-2]
-	_ = x[VarName-3]
-	_ = x[Op-4]
-	_ = x[Assign-5]
-	_ = x[Paren-6]
+	_ = x[EOL-1]
+	_ = x[IntLit-2]
+	_ = x[FloatLit-3]
+	_ = x[VarName-4]
+	_ = x[Op-5]
+	_ = x[Assign-6]
+	_ = x[Paren-7]
 }
 
-const _TokenType_name = "InvalidTokenIntLitFloatLitVarNameOpAssignParen"
+const _TokenType_name = "InvalidTokenEOLIntLitFloatLitVarNameOpAssignParen"
 
-var _TokenType_index = [...]uint8{0, 12, 18, 26, 33, 35, 41, 46}
+var _TokenType_index = [...]uint8{0, 12, 15, 21, 29, 36, 38, 44, 49}
 
 func (i TokenType) String() string {
 	if i < 0 || i >= TokenType(len(_TokenType_index)-1) {

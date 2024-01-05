@@ -25,11 +25,13 @@ type Lexer interface {
 
 // Transaction adds snapshot and rollback functionality to some API.
 
-// It's expected to be stack based just like a database transaction, although
-// there is no commit and begin is called snapshot.
+// It's expected to be stack based just like a database transaction
 type Transaction interface {
 	Snapshot() // Push current state on a stack so it can be recovered
 	Rollback() // Recover last state that was pushed
+  // Commit state. After commit the previous snapshot point is removed, the
+  // next Rollback returns to the snapshot prior to that
+	Commit()
 }
 
 type RollbackLexer interface {
@@ -51,16 +53,13 @@ func Or(a, b Parser) Parser {
 	return func(input RollbackLexer) ([]Node, error) {
 		input.Snapshot()
 		aRes, aErr := a(input)
-		if aErr != nil {
-			input.Rollback()
-		} else {
+		if aErr == nil {
+			input.Commit()
 			return aRes, nil
 		}
+		input.Rollback()
 		bRes, bErr := b(input)
-		if bErr != nil {
-			return bRes, bErr
-		}
-		return bRes, nil
+		return bRes, bErr
 	}
 }
 
@@ -117,7 +116,7 @@ func Seq(args ...Parser) Parser {
 // is true for the next token provided by l, and then returns the node holding
 // that token.
 // If p is false or the lexer fails then Accept fails.
-func Accept(p func(Token) bool) Parser {
+func Accept(p func(Token) bool, msg string) Parser {
 	return func(input RollbackLexer) ([]Node, error) {
 		if !input.Next() {
 			return nil, fmt.Errorf("Parser: unexpected end of input")
@@ -127,7 +126,7 @@ func Accept(p func(Token) bool) Parser {
 		}
 		tok := input.Token()
 		if !p(tok) {
-			return nil, fmt.Errorf("Parser: %v failed", tok)
+			return nil, fmt.Errorf("Parser: %s expected, got %v", msg, tok)
 		}
 		return []Node{tok.Node().(Node)}, nil
 	}
