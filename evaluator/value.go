@@ -15,7 +15,7 @@ func (i ValueInt) Op(op string, other Value) Value {
 	switch o := other.(type) {
 
 	case ValueInt:
-		if op == "/" && 0 == int(o) {
+		if op == "/" && int(o) == 0 {
 			return ValueError("division by zero")
 		}
 		return ValueInt(doOp[int](op, int(i), int(o)))
