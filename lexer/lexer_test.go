@@ -49,7 +49,7 @@ var testData = []testDatum{
 		"a=2+3",
 		[]t.Token{
 			{Value: "a", Type: t.VarName},
-			{Value: "=", Type: t.Assign},
+			{Value: "=", Type: t.Op},
 			{Value: "2", Type: t.IntLit},
 			{Value: "+", Type: t.Op},
 			{Value: "3", Type: t.IntLit},
