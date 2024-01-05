@@ -30,22 +30,19 @@ Expressions evaluate to a value printed in the repl loop as answers, assignments
 
 ### Tokens
 
-The following tokens are valid:
+The following tokens are valid (using usual regular expression notation)
 
  - integer literal /\d+/
- - float literal /-?\d*.\d*/
+ - float literal /\d+.\d+/
  - variable name /[a-z]+/
- - operator plus, minus /[+-]/
- - operator multiply, divide /[*/]/
- - assign /=/
+ - operator /[+-*/=]/
  - paren /[()]/
 
-tokens are spearated by white-space.
+tokens are spearated with white-spaces.
 
 ### Grammar
 
-Support unary minus at the grammar level as opposed to lexer level for negative number literals.
-This means that "- 5" is minus five with white-space or 2+-(3+1) works.
+Support unary minus at the grammar level as opposed to lexer level for negative number literals. This means that "- 5" is minus five with white-space or 2+-(3+1) works.
 
     statement: expression | assignment
     assignment: VARIABLE ASSIGN expression 
@@ -121,5 +118,3 @@ The states are as followos, with the next character implying the next state.
       - [a-z]: Variable
       - '(', ')': Paren 
       - '+', '*', '/', '-': Op
-
-
