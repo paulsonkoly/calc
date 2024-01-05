@@ -58,8 +58,7 @@ var varName = acceptTerm(t.VarName, "variable name")
 // these can't be defined as variables as there are cycles in their
 // definitions, otherwise we could write:
 //
-//    var paren = c.Fmap(second, c.Seq(acceptToken("("), expression, acceptToken(")")))
-//
+//	var paren = c.Fmap(second, c.Seq(acceptToken("("), expression, acceptToken(")")))
 func paren(input c.RollbackLexer) ([]c.Node, error) {
 	r, err := c.Fmap(second, c.Seq(acceptToken("("), expression, acceptToken(")")))(input)
 	return r, err

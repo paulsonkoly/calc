@@ -15,8 +15,7 @@ const (
 	IntLit       // integer literal
 	FloatLit     // float literal
 	VarName      // variable name
-	Op           // one of +, -, *, /, =
-	Paren        // one of (, )
+	SingleChar   // one of +, -, *, /, =, (, )
 )
 
 // Token as produced by the lexer
@@ -26,10 +25,17 @@ type Token struct {
 }
 
 func (t Token) String() string {
-	if t.Type == EOL {
+	switch t.Type {
+
+	case EOL:
 		return fmt.Sprintf("<%v>", t.Type)
+
+	case SingleChar:
+		return t.Value
+
+	default:
+		return fmt.Sprintf("<\"%v\" %v>", t.Value, t.Type)
 	}
-	return fmt.Sprintf("<\"%v\" %v>", t.Value, t.Type)
 }
 
 // fulfills the combinator.Token interface

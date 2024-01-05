@@ -31,11 +31,8 @@ func newSTR(c rune, typ t.TokenType, emit, adv bool, format string, args ...any)
 	case 'a' <= c && c <= 'z':
 		return str{next: varName, doEmit: emit, doAdv: adv, typ: typ}
 
-	case c == '(', c == ')':
-		return str{next: paren, doEmit: emit, doAdv: adv, typ: typ}
-
-	case c == '+' || c == '-' || c == '*' || c == '/' || c == '=':
-		return str{next: op, doEmit: emit, doAdv: adv, typ: typ}
+	case c == '+' || c == '-' || c == '*' || c == '/' || c == '=' || c == '(' || c == ')':
+		return str{next: singleChar, doEmit: emit, doAdv: adv, typ: typ}
 
 	default:
 		return str{err: fmt.Errorf(format, args...)}
@@ -79,12 +76,8 @@ func varName(c rune) str {
 	}
 }
 
-func op(c rune) str {
-	return newSTR(c, t.Op, true, false, "Lexer: unexpected char %c following operator", c)
-}
-
-func paren(c rune) str {
-	return newSTR(c, t.Paren, true, false, "Lexer: unexpected char %c following parenthesis", c)
+func singleChar(c rune) str {
+	return newSTR(c, t.SingleChar, true, false, "Lexer: unexpected char %c following single character token", c)
 }
 
 func eol(c rune) str {

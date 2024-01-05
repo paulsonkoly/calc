@@ -51,8 +51,7 @@ The following tokens are valid (using usual regular expression notation)
  - integer literal /\d+/
  - float literal /\d+.\d+/
  - variable name /[a-z]+/
- - operator /[+-*/=]/
- - paren /[()]/
+ - single character token /[+-*/=()]/
 
 tokens are separated with white-spaces.
 

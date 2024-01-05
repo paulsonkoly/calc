@@ -2,6 +2,7 @@ package evaluator
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/phaul/calc/types"
@@ -26,7 +27,7 @@ func Evaluate(vars Variables, n types.Node) Value {
 		}
 		return ValueFloat(f)
 
-	case types.Op:
+	case types.SingleChar:
 		switch n.Token.Value {
 
 		case "+", "-", "*", "/":
@@ -42,6 +43,9 @@ func Evaluate(vars Variables, n types.Node) Value {
 			v := Evaluate(vars, n.Children[1])
 			vars[n.Children[0].Token.Value] = v
 			return v
+
+		default:
+			log.Panicf("unexpected single character in evaluator: %s", n.Token.Value)
 		}
 
 	case types.VarName:
