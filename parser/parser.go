@@ -34,7 +34,7 @@ func binOp(nodes []c.Node) []c.Node {
 
 func unOp(nodes []c.Node) []c.Node {
 	if len(nodes) != 2 {
-		panic("not enough sub nodes for operator")
+		panic("incorrect number of sub nodes for unary operator")
 	}
 
 	r := nodes[0].(t.Node)
@@ -58,7 +58,11 @@ var intLit = acceptTerm(t.IntLit, "integer literal")
 var floatLit = acceptTerm(t.FloatLit, "float literal")
 var varName = acceptTerm(t.VarName, "variable name")
 
-// these can't be defined as variables as they are self referencing
+// these can't be defined as variables as there are cycles in their
+// definitions, otherwise we could write:
+//
+//    var paren = c.Fmap(second, c.Seq(acceptToken("("), expression, acceptToken(")")))
+//
 func paren(input c.RollbackLexer) ([]c.Node, error) {
 	r, err := c.Fmap(second, c.Seq(acceptToken("("), expression, acceptToken(")")))(input)
 	return r, err

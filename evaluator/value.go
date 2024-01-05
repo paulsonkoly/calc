@@ -3,7 +3,7 @@ package evaluator
 // type Value represents the evaluation result value
 type Value interface {
 	// Op is the operator token string, other is the RHS of the operation,
-	// possibly different type in which case type coersion happens
+	// possibly different type in which case type coercion happens
 	Op(op string, other Value) Value
 }
 
