@@ -29,17 +29,8 @@ func Evaluate(vars Variables, n types.Node) Value {
 	case types.Op:
 		switch n.Token.Value {
 
-		case "+":
-			return Evaluate(vars, n.Children[0]).Plus(Evaluate(vars, n.Children[1]))
-
-		case "-":
-			return Evaluate(vars, n.Children[0]).Minus(Evaluate(vars, n.Children[1]))
-
-		case "*":
-			return Evaluate(vars, n.Children[0]).Mul(Evaluate(vars, n.Children[1]))
-
-		case "/":
-			return Evaluate(vars, n.Children[0]).Div(Evaluate(vars, n.Children[1]))
+    case "+", "-", "*", "/":
+			return Evaluate(vars, n.Children[0]).Op(n.Token.Value, Evaluate(vars, n.Children[1]))
 
 		case "=":
 			v := Evaluate(vars, n.Children[1])
