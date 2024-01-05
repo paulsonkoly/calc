@@ -17,9 +17,6 @@ func Parse(input string) ([]t.Node, error) {
 	return rn, err
 }
 
-type node = t.Node
-type token t.Token
-
 type tokenType = t.TokenType
 
 func binOp(nodes []c.Node) []c.Node {

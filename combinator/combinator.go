@@ -128,7 +128,7 @@ func Accept(p func(Token) bool, msg string) Parser {
 		if !p(tok) {
 			return nil, fmt.Errorf("Parser: %s expected, got %v", msg, tok)
 		}
-		return []Node{tok.Node().(Node)}, nil
+		return []Node{tok.Node()}, nil
 	}
 }
 
