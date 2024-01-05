@@ -1,13 +1,22 @@
 # Calc
 
-A Simple calculator repl. Supported features:
+A simple calculator language / REPL. This project is merely for code practicing, not intended to be used.
+
+    1+2
+    >  3
+    a = 2 * ( 1+1)
+    >  4
+    a+a
+    >  8
+
+Supported features:
 
  - integer and floating point literals
  - variables
  - 4 aritmetic operations +, -, *, /
  - explicit evaluation order by parenthesis
 
-The language is right associative and has 2 precedence groups: +, - is lower than * and /
+The language is right associative and has 2 precedence groups: +, - is lower than * and /. It is planned to make the language left associative.
 
 ## Language
 
@@ -16,8 +25,7 @@ The language has the following statement types:
  - arithmetic expression
  - variable assignment
 
-Expressions evaluate to a value printed in the repl loop as answers, assignments don't result in a value,
- - they are not expressions so assignment can't be used apart from top level.
+Expressions evaluate to a value printed in the repl loop as answers, assignments results in the value assigned, but they are not expressions so an assignment can't be used apart from top level.
 
 ### Tokens
 

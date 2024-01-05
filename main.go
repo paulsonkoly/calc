@@ -18,7 +18,6 @@ func main() {
 	if *eval != "" {
 		t, err := parser.Parse(*eval)
 		if len(t) > 0 {
-			t[0].PrettyPrint()
 			fmt.Println("> ", evaluator.Evaluate(vars, t[0]))
 		}
 		if err != nil {
@@ -30,7 +29,6 @@ func main() {
 			input, _ := r.ReadString('\n')
 			t, err := parser.Parse(input)
 			if len(t) > 0 {
-				t[0].PrettyPrint()
 				fmt.Println("> ", evaluator.Evaluate(vars, t[0]))
 			}
 			if err != nil {
