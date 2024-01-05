@@ -45,7 +45,7 @@ func (f ValueFloat) Op(op string, other Value) Value {
 	panic("no type conversion")
 }
 
-func (e ValueError) Op(op string, other Value) Value { return e }
+func (e ValueError) Op(_ string, _ Value) Value { return e }
 
 func doOp[t int | float64](op string, a, b t) t {
 	switch op {
@@ -62,5 +62,5 @@ func doOp[t int | float64](op string, a, b t) t {
 		return a / b
 
 	}
-	panic("unkown operator")
+	panic("unknown operator")
 }
