@@ -13,14 +13,14 @@ Supported features:
 
  - integer and floating point literals
  - variables
- - 4 aritmetic operations +, -, *, /
+ - 4 arithmetic operations +, -, *, /
  - explicit evaluation order by parenthesis
 
 The language is right associative and has 2 precedence groups: +, - is lower than * and /. It is planned to make the language left associative.
 
-## Type coersions
+## Type coercions
 
-There are 3 value types: integers, floats and erros. Pure integer expressions result in integer, expressions containing floats result in floats. If there is an error, for example division by zero or undefined variable, the expression evaluates to the error and any further arithmetics using the error would result in the same error. Some examples:
+There are 3 value types: integers, floats and errors. Pure integer expressions result in integer, expressions containing floats result in floats. If there is an error, for example division by zero or undefined variable, the expression evaluates to the error and any further arithmetics using the error would result in the same error. Some examples:
 
     1/0.0
     >  +Inf
@@ -42,7 +42,7 @@ The language has the following statement types:
  - arithmetic expression
  - variable assignment
 
-Expressions evaluate to a value printed in the repl loop as answers, assignments results in the value assigned, but they are not expressions so an assignment can't be used apart from top level.
+Expressions evaluate to a value printed in the REPL loop as answers, assignments results in the value assigned, but they are not expressions so an assignment can't be used apart from top level.
 
 ### Tokens
 
@@ -54,18 +54,18 @@ The following tokens are valid (using usual regular expression notation)
  - operator /[+-*/=]/
  - paren /[()]/
 
-tokens are spearated with white-spaces.
+tokens are separated with white-spaces.
 
 ### Grammar
 
-Support unary minus at the grammar level as opposed to lexer level for negative number literals. This means that "- 5" is minus five with white-space or 2+-(3+1) works.
+Support unary minus at the grammar level as opposed to lexer level for negative number literals. This means that "- 5" is minus five with white-space or 2+-(3+1) works. In the following BNF non-terminals are lower case, terminals are upper case.
 
     statement: expression | assignment
-    assignment: VARIABLE ASSIGN expression 
+    assignment: VARIABLE '=' expression 
     expression: addsub
-    addsub: divmul ADDSUB addsub | divmul
-    divmul: unary DIVMUL divmul | unary
-    unary: UNARY top | top
+    addsub: divmul /[+-]/ addsub | divmul
+    divmul: unary /[*/]/ divmul | unary
+    unary: '-' top | top
     top: INTL | FLOATL | VARIABLE  | '(' expression ')'
 
 ## Approach
@@ -87,7 +87,7 @@ State machine based lexer, reading a character at a time. The mechanism is basic
       c <- NEXT CHAR
       state <- FSM(state, c)
 
-The states are as followos, with the next character implying the next state.
+The states are as follows, with the next character implying the next state.
 
     Start 
       - whitespace: Start
