@@ -15,6 +15,7 @@ Supported features:
  - variables
  - 4 aritmetic operations +, -, *, /
  - explicit evaluation order by parenthesis
+ - type coersions, pure integer expressions result in integer, expressions containing floats result in floats
 
 The language is right associative and has 2 precedence groups: +, - is lower than * and /. It is planned to make the language left associative.
 
@@ -55,6 +56,8 @@ This means that "- 5" is minus five with white-space.
     top: INTL | FLOATL | VARIABLE  | '(' expression ')'
 
 ## Approach
+
+A finite state machine based hand written lexer combined with a hand written parser using the parser combinator style approach to effectively create a recursive descent parser.
                          tokens           AST
     input text -> lexer --------> parser -----> logic --> output
     var state ------------------------------------^ |
