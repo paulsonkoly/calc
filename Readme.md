@@ -58,6 +58,7 @@ This means that "- 5" is minus five with white-space.
 ## Approach
 
 A finite state machine based hand written lexer combined with a hand written parser using the parser combinator style approach to effectively create a recursive descent parser.
+
                          tokens           AST
     input text -> lexer --------> parser -----> logic --> output
     var state ------------------------------------^ |
