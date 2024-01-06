@@ -12,7 +12,7 @@ func Parse(input string) ([]t.Node, error) {
 	l := l.NewTLexer(input)
 	rn := make([]t.Node, 0)
 
-	r, err := statement(&l)
+	r, err := program(&l)
 	for _, e := range r {
 		rn = append(rn, e.(t.Node))
 	}
@@ -111,6 +111,5 @@ func expression(input c.RollbackLexer) ([]c.Node, error) {
 }
 
 var assignment = c.Fmap(leftChain, c.Seq(varName, acceptToken("="), expression))
-
-var statement = c.Fmap(first, c.Or(c.And(assignment, acceptTerm(t.EOL, "end of line")),
-	c.And(expression, acceptTerm(t.EOL, "end of line"))))
+var statement = c.Fmap(first, c.Or(assignment, expression))
+var program = c.Some(c.Fmap(first, c.And(statement, acceptTerm(t.EOL, "end of line"))))

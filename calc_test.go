@@ -28,7 +28,7 @@ var testData = [...]TestDatum{
 	{"arithmetics/parenthesis", "1-(2+1)", nil, evaluator.ValueInt(-2)},
 
 	{"variable/not defined", "a", nil, evaluator.ValueError("variable a not defined")},
-	// {"variable/lookup", "a=3\na+1", nil, evaluator.ValueInt(4)},
+	{"variable/lookup", "a=3\na+1", nil, evaluator.ValueInt(4)},
 }
 
 func TestCalc(t *testing.T) {
@@ -37,7 +37,10 @@ func TestCalc(t *testing.T) {
 		ast, err := parser.Parse(test.input)
 		if test.parseError == nil {
 			assert.NoError(t, err)
-			v := evaluator.Evaluate(vars, ast[0])
+      var v evaluator.Value
+      for _, stmnt := range(ast) {
+        v = evaluator.Evaluate(vars, stmnt)  
+      }
 			assert.Equal(t, v, test.value)
 		} else {
 			assert.EqualError(t, err, test.parseError.Error())

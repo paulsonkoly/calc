@@ -2,6 +2,7 @@ package lexer
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	t "github.com/phaul/calc/types"
@@ -23,8 +24,11 @@ func newSTR(c rune, typ t.TokenType, emit, adv bool, format string, args ...any)
 	case c == ' ' || c == '\t':
 		return str{next: whiteSpace, doEmit: emit, doAdv: adv, typ: typ}
 
-	case c == '\n' || c == eof:
+	case c == '\n':
 		return str{next: eol, doEmit: emit, doAdv: adv, typ: typ}
+
+	case c == EOF:
+		return str{next: eof, doEmit: emit, doAdv: adv, typ: typ}
 
 	case '0' <= c && c <= '9':
 		return str{next: intLit, doEmit: emit, doAdv: adv, typ: typ}
@@ -96,4 +100,9 @@ func sticky(c rune) str {
 
 func eol(c rune) str {
 	return newSTR(c, t.EOL, true, false, "Lexer: unexpected char %c following new line", c)
+}
+
+func eof(c rune) str {
+	log.Panicf("Lexer: %c character after end of input", c)
+	return str{}
 }

@@ -12,6 +12,7 @@ const (
 	// InvalidToken should not be produced by the lexer, however the parser uses it in compound AST nodes
 	InvalidToken = TokenType(iota)
 	EOL          // end of line
+  EOF          // end of file (end of input)
 	IntLit       // integer literal
 	FloatLit     // float literal
 	Name         // sequence of alphabeth chars, variable names or keywords

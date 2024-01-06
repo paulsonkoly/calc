@@ -78,11 +78,11 @@ func (l *Lexer) Next() bool {
 	return false
 }
 
-const eof = rune(0)
+const EOF = rune(0)
 
 func (l *Lexer) nextRune() (rune, int, error) {
 	if l.to >= len(l.input) {
-		return eof, 0, nil
+		return EOF, 0, nil
 	}
 
 	c, s, err := l.rdr.ReadRune()

@@ -10,16 +10,17 @@ func _() {
 	var x [1]struct{}
 	_ = x[InvalidToken-0]
 	_ = x[EOL-1]
-	_ = x[IntLit-2]
-	_ = x[FloatLit-3]
-	_ = x[Name-4]
-	_ = x[Sticky-5]
-	_ = x[NotSticky-6]
+	_ = x[EOF-2]
+	_ = x[IntLit-3]
+	_ = x[FloatLit-4]
+	_ = x[Name-5]
+	_ = x[Sticky-6]
+	_ = x[NotSticky-7]
 }
 
-const _TokenType_name = "InvalidTokenEOLIntLitFloatLitNameStickyNotSticky"
+const _TokenType_name = "InvalidTokenEOLEOFIntLitFloatLitNameStickyNotSticky"
 
-var _TokenType_index = [...]uint8{0, 12, 15, 21, 29, 33, 39, 48}
+var _TokenType_index = [...]uint8{0, 12, 15, 18, 24, 32, 36, 42, 51}
 
 func (i TokenType) String() string {
 	if i < 0 || i >= TokenType(len(_TokenType_index)-1) {
