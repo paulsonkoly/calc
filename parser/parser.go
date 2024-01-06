@@ -111,5 +111,9 @@ func expression(input c.RollbackLexer) ([]c.Node, error) {
 }
 
 var assignment = c.Fmap(leftChain, c.Seq(varName, acceptToken("="), expression))
-var statement = c.Fmap(first, c.Or(assignment, expression))
-var program = c.Some(c.Fmap(first, c.And(statement, acceptTerm(t.EOL, "end of line"))))
+var statement = c.Or(assignment, expression)
+var eol = acceptTerm(t.EOL, "end of line")
+var eof = acceptTerm(t.EOF, "end of file")
+var nonfinal = c.Fmap(first, c.And(statement, eol))
+var final = c.Fmap(first, c.And(statement, eof))
+var program = c.Or(c.And(c.Some(nonfinal), final), final)

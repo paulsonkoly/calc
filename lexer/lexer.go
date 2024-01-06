@@ -25,7 +25,7 @@ type Lexer struct {
 	Token    t.Token // the next token
 	Err      error   // if there was an error this will be set
 	state    stateFunc
-	eol      bool
+	eof      bool
 }
 
 // NewLexer a new lexer with input string
@@ -69,9 +69,9 @@ func (l *Lexer) Next() bool {
 		}
 		l.to += s
 	}
-	if !l.eol {
-		l.eol = true
-		l.Token = t.Token{Value: "\n", Type: t.EOL}
+	if !l.eof {
+		l.eof = true
+		l.Token = t.Token{Value: string(EOF), Type: t.EOF}
 		l.Err = nil
 		return true
 	}

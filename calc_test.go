@@ -37,11 +37,11 @@ func TestCalc(t *testing.T) {
 		ast, err := parser.Parse(test.input)
 		if test.parseError == nil {
 			assert.NoError(t, err)
-      var v evaluator.Value
-      for _, stmnt := range(ast) {
-        v = evaluator.Evaluate(vars, stmnt)  
-      }
-			assert.Equal(t, v, test.value)
+			var v evaluator.Value
+			for _, stmnt := range ast {
+				v = evaluator.Evaluate(vars, stmnt)
+			}
+			assert.Equal(t, test.value, v)
 		} else {
 			assert.EqualError(t, err, test.parseError.Error())
 		}

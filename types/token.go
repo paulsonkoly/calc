@@ -12,7 +12,7 @@ const (
 	// InvalidToken should not be produced by the lexer, however the parser uses it in compound AST nodes
 	InvalidToken = TokenType(iota)
 	EOL          // end of line
-  EOF          // end of file (end of input)
+	EOF          // end of file (end of input)
 	IntLit       // integer literal
 	FloatLit     // float literal
 	Name         // sequence of alphabeth chars, variable names or keywords
@@ -29,7 +29,7 @@ type Token struct {
 func (t Token) String() string {
 	switch t.Type {
 
-	case EOL:
+	case EOL, EOF:
 		return fmt.Sprintf("<%v>", t.Type)
 
 	case Sticky, NotSticky:

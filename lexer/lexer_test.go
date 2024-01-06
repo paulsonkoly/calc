@@ -15,23 +15,24 @@ type testDatum struct {
 }
 
 var eol = t.Token{Value: "\n", Type: t.EOL}
+var eof = t.Token{Value: string(lexer.EOF), Type: t.EOF}
 
 var testData = []testDatum{
-	{"single lexeme", "13", []t.Token{{Value: "13", Type: t.IntLit}, eol}},
-	{"single lexeme", "a", []t.Token{{Value: "a", Type: t.Name}, eol}},
-	{"single lexeme", "ab", []t.Token{{Value: "ab", Type: t.Name}, eol}},
-	{"single lexeme", "13.6", []t.Token{{Value: "13.6", Type: t.FloatLit}, eol}},
-	{"single lexeme", "+", []t.Token{{Value: "+", Type: t.Sticky}, eol}},
-	{"single lexeme", "-", []t.Token{{Value: "-", Type: t.Sticky}, eol}},
-	{"single lexeme", "*", []t.Token{{Value: "*", Type: t.Sticky}, eol}},
-	{"single lexeme", "/", []t.Token{{Value: "/", Type: t.Sticky}, eol}},
-	{"single lexeme", "(", []t.Token{{Value: "(", Type: t.NotSticky}, eol}},
-	{"single lexeme", ")", []t.Token{{Value: ")", Type: t.NotSticky}, eol}},
-	{"sticky double", "<=", []t.Token{{Value: "<=", Type: t.Sticky}, eol}},
-	{"non-sticky double", "((", []t.Token{{Value: "(", Type: t.NotSticky}, {Value: "(", Type: t.NotSticky}, eol}},
-	{"new line lexeme", "a\nb", []t.Token{{Value: "a", Type: t.Name}, eol, {Value: "b", Type: t.Name}, eol}},
-	{"whitespace at front", "   )", []t.Token{{Value: ")", Type: t.NotSticky}, eol}},
-	{"whitespace at back", ")    ", []t.Token{{Value: ")", Type: t.NotSticky}, eol}},
+	{"single lexeme", "13", []t.Token{{Value: "13", Type: t.IntLit}, eof}},
+	{"single lexeme", "a", []t.Token{{Value: "a", Type: t.Name}, eof}},
+	{"single lexeme", "ab", []t.Token{{Value: "ab", Type: t.Name}, eof}},
+	{"single lexeme", "13.6", []t.Token{{Value: "13.6", Type: t.FloatLit}, eof}},
+	{"single lexeme", "+", []t.Token{{Value: "+", Type: t.Sticky}, eof}},
+	{"single lexeme", "-", []t.Token{{Value: "-", Type: t.Sticky}, eof}},
+	{"single lexeme", "*", []t.Token{{Value: "*", Type: t.Sticky}, eof}},
+	{"single lexeme", "/", []t.Token{{Value: "/", Type: t.Sticky}, eof}},
+	{"single lexeme", "(", []t.Token{{Value: "(", Type: t.NotSticky}, eof}},
+	{"single lexeme", ")", []t.Token{{Value: ")", Type: t.NotSticky}, eof}},
+	{"sticky double", "<=", []t.Token{{Value: "<=", Type: t.Sticky}, eof}},
+	{"non-sticky double", "((", []t.Token{{Value: "(", Type: t.NotSticky}, {Value: "(", Type: t.NotSticky}, eof}},
+	{"new line lexeme", "a\nb", []t.Token{{Value: "a", Type: t.Name}, eol, {Value: "b", Type: t.Name}, eof}},
+	{"whitespace at front", "   )", []t.Token{{Value: ")", Type: t.NotSticky}, eof}},
+	{"whitespace at back", ")    ", []t.Token{{Value: ")", Type: t.NotSticky}, eof}},
 	{"complex example",
 		"13.6+a-(3 / 9)\n",
 		[]t.Token{
@@ -44,7 +45,7 @@ var testData = []testDatum{
 			{Value: "/", Type: t.Sticky},
 			{Value: "9", Type: t.IntLit},
 			{Value: ")", Type: t.NotSticky},
-			eol, eol,
+			eol, eof,
 		},
 	},
 	{"assignment",
@@ -55,7 +56,7 @@ var testData = []testDatum{
 			{Value: "2", Type: t.IntLit},
 			{Value: "+", Type: t.Sticky},
 			{Value: "3", Type: t.IntLit},
-			eol,
+			eof,
 		},
 	},
 }
