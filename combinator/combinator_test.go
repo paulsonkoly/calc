@@ -81,6 +81,13 @@ var testData = []testDatum{
 		err:       "",
 	},
 	{
+		name:      "Some",
+		parser:    combinator.Some(accept("a")),
+		lexerOut:  []testToken{"a", "a", "a", "b"},
+		parserOut: []testNode{{token: testToken("a")}, {token: testToken("a")}, {token: testToken("a")}},
+		err:       "",
+	},
+	{
 		name: "Fmap",
 		parser: combinator.Fmap(
 			func(i []combinator.Node) []combinator.Node {

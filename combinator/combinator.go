@@ -110,6 +110,34 @@ func Seq(args ...Parser) Parser {
 	return r
 }
 
+// Some runs the given parser a as many times as it would succeed
+//
+// Some fails if a doesn't succeed at least once and succeeds otherwise. It
+// returns the concatenated result of all successful runs. Useful for left
+// recursive rules, where a rule such as A -> A b can be expressed as
+// Some(And(A, b)
+func Some(a Parser) Parser {
+	return func(input RollbackLexer) ([]Node, error) {
+		aRes, aErr := a(input)
+		if aErr != nil {
+			return aRes, aErr
+		}
+		r := aRes
+		for aErr == nil {
+			input.Snapshot()
+			aRes, aErr = a(input)
+			if aErr == nil {
+				input.Commit()
+				r = append(r, aRes...)
+			} else {
+				input.Rollback()
+				break
+			}
+		}
+		return r, nil
+	}
+}
+
 // Accept asserts the next token
 //
 // given a predicate p on a lexer Token, parses successfully if the predicate

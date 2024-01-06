@@ -16,7 +16,7 @@ Supported features:
  - 4 arithmetic operations +, -, *, /
  - explicit evaluation order by parenthesis
 
-The language is right associative and has 2 precedence groups: +, - is lower than * and /. It is planned to make the language left associative.
+All arithmetic operators are left associative thus following the natural notations. 1-2+1 is 0 and not -2. * and / are higher precedence than + and -.
 
 ## Type coercions
 
@@ -62,8 +62,8 @@ Support unary minus at the grammar level as opposed to lexer level for negative 
     statement: expression | assignment
     assignment: VARIABLE '=' expression 
     expression: addsub
-    addsub: divmul /[+-]/ addsub | divmul
-    divmul: unary /[*/]/ divmul | unary
+    addsub: addsub /[+-]/ divmul | divmul
+    divmul: divmul /[*/]/ unary | unary
     unary: '-' top | top
     top: INTL | FLOATL | VARIABLE  | '(' expression ')'
 
