@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/phaul/calc/evaluator"
 	"github.com/phaul/calc/parser"
@@ -27,6 +28,7 @@ func main() {
 		r := bufio.NewReader(os.Stdin)
 		for {
 			input, _ := r.ReadString('\n')
+			input = strings.TrimSpace(input)
 			t, err := parser.Parse(input)
 			if len(t) > 0 {
 				fmt.Println("> ", evaluator.Evaluate(vars, t[0]))

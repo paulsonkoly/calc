@@ -29,6 +29,32 @@ var testData = [...]TestDatum{
 
 	{"variable/not defined", "a", nil, evaluator.ValueError("variable a not defined")},
 	{"variable/lookup", "a=3\na+1", nil, evaluator.ValueInt(4)},
+
+	{"relop/int==int true", "1==1", nil, evaluator.ValueBool(true)},
+	{"relop/int==float true", "1==1.0", nil, evaluator.ValueBool(true)},
+	{"relop/float==int true", "1.0==1", nil, evaluator.ValueBool(true)},
+	{"relop/float==float true", "1.0==1.0", nil, evaluator.ValueBool(true)},
+	{"relop/bool==bool true", "false==false", nil, evaluator.ValueBool(true)},
+
+	{"relop/int!=int false", "1!=1", nil, evaluator.ValueBool(false)},
+	{"relop/int!=float false", "1!=1.0", nil, evaluator.ValueBool(false)},
+	{"relop/float!=int false", "1.0!=1", nil, evaluator.ValueBool(false)},
+	{"relop/float!=float false", "1.0!=1.0", nil, evaluator.ValueBool(false)},
+	{"relop/bool!=bool false", "false!=false", nil, evaluator.ValueBool(false)},
+
+	{"relop/float accuracy", "1==0.9999999", nil, evaluator.ValueBool(false)},
+
+	{"relop/int<int false", "1<1", nil, evaluator.ValueBool(false)},
+	{"relop/int<float false", "1<1.0", nil, evaluator.ValueBool(false)},
+	{"relop/float<int false", "1.0<1", nil, evaluator.ValueBool(false)},
+	{"relop/float<float false", "1.0<1.0", nil, evaluator.ValueBool(false)},
+	{"relop/bool<bool", "false<false", nil, evaluator.InvalidOpError},
+
+	{"relop/int<=int true", "1<=1", nil, evaluator.ValueBool(true)},
+	{"relop/int<=float true", "1<=1.0", nil, evaluator.ValueBool(true)},
+	{"relop/float<=int true", "1.0<=1", nil, evaluator.ValueBool(true)},
+	{"relop/float<=float true", "1.0<=1.0", nil, evaluator.ValueBool(true)},
+	{"relop/bool<=bool", "true<=true", nil, evaluator.InvalidOpError},
 }
 
 func TestCalc(t *testing.T) {
