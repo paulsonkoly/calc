@@ -70,7 +70,7 @@ func paren(input c.RollbackLexer) ([]c.Node, error) {
 }
 
 func top(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.Any(floatLit, intLit, varName, paren)(input)
+	r, err := c.OneOf(floatLit, intLit, varName, paren)(input)
 	return r, err
 }
 

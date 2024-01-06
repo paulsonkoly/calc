@@ -63,12 +63,12 @@ func Or(a, b Parser) Parser {
 	}
 }
 
-// Any is a choice between many parsers
+// OneOf is a choice between many parsers
 //
 // Appends the given parsers together with Or. In effect parses with the first
 // succeeding parser and returns what that would return. Fails if all parsers
 // fail.
-func Any(args ...Parser) Parser {
+func OneOf(args ...Parser) Parser {
 	if len(args) < 1 {
 		panic("Parser: Any needs at least one parser")
 	}
@@ -115,7 +115,7 @@ func Seq(args ...Parser) Parser {
 // Some fails if a doesn't succeed at least once and succeeds otherwise. It
 // returns the concatenated result of all successful runs. Useful for left
 // recursive rules, where a rule such as A -> A b can be expressed as
-// Some(And(A, b)
+// Or(Some(b))
 func Some(a Parser) Parser {
 	return func(input RollbackLexer) ([]Node, error) {
 		aRes, aErr := a(input)

@@ -75,7 +75,7 @@ var testData = []testDatum{
 	},
 	{
 		name:      "Any",
-		parser:    combinator.Any(accept("a"), accept("b"), accept("c")),
+		parser:    combinator.OneOf(accept("a"), accept("b"), accept("c")),
 		lexerOut:  []testToken{"b"},
 		parserOut: []testNode{{token: testToken("b")}},
 		err:       "",
