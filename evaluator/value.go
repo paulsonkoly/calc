@@ -2,26 +2,37 @@ package evaluator
 
 // type Value represents the evaluation result value
 type Value interface {
-	// Op is the operator token string, other is the RHS of the operation,
+	// Arith is the operator token string, other is the RHS of the operation,
 	// possibly different type in which case type coercion happens
-	Op(op string, other Value) Value
+	Arith(op string, other Value) Value
+	Relational(op string, other Value) Value
 }
 
 type ValueInt int
 type ValueFloat float64
 type ValueError string
+type ValueBool bool
 
-func (i ValueInt) Op(op string, other Value) Value {
+// errors
+var CoercionError = ValueError("coercion error")
+var ZeroDivError = ValueError("division by zero")
+var TypeError = ValueError("type error")
+var InvalidOpError = ValueError("invalid operator")
+
+func (i ValueInt) Arith(op string, other Value) Value {
 	switch o := other.(type) {
 
 	case ValueInt:
 		if op == "/" && int(o) == 0 {
-			return ValueError("division by zero")
+			return ZeroDivError
 		}
-		return ValueInt(doOp[int](op, int(i), int(o)))
+		return ValueInt(builtinArith[int](op, int(i), int(o)))
 
 	case ValueFloat:
-		return ValueFloat(doOp[float64](op, float64(i), float64(o)))
+		return ValueFloat(builtinArith[float64](op, float64(i), float64(o)))
+
+	case ValueBool:
+		return CoercionError
 
 	case ValueError:
 		return o
@@ -30,14 +41,36 @@ func (i ValueInt) Op(op string, other Value) Value {
 	panic("no type conversion")
 }
 
-func (f ValueFloat) Op(op string, other Value) Value {
+func (i ValueInt) Relational(op string, other Value) Value {
 	switch o := other.(type) {
 
 	case ValueInt:
-		return ValueFloat(doOp[float64](op, float64(f), float64(o)))
+		return ValueBool(builtinRelational[int](op, int(i), int(o)))
 
 	case ValueFloat:
-		return ValueFloat(doOp[float64](op, float64(f), float64(o)))
+		return ValueBool(builtinRelational[float64](op, float64(i), float64(o)))
+
+	case ValueBool:
+		return CoercionError
+
+	case ValueError:
+		return o
+
+	}
+	panic("no type conversion")
+}
+
+func (f ValueFloat) Arith(op string, other Value) Value {
+	switch o := other.(type) {
+
+	case ValueInt:
+		return ValueFloat(builtinArith[float64](op, float64(f), float64(o)))
+
+	case ValueFloat:
+		return ValueFloat(builtinArith[float64](op, float64(f), float64(o)))
+
+	case ValueBool:
+		return CoercionError
 
 	case ValueError:
 		return o
@@ -45,22 +78,82 @@ func (f ValueFloat) Op(op string, other Value) Value {
 	panic("no type conversion")
 }
 
-func (e ValueError) Op(_ string, _ Value) Value { return e }
+func (f ValueFloat) Relational(op string, other Value) Value {
+	switch o := other.(type) {
 
-func doOp[t int | float64](op string, a, b t) t {
+	case ValueInt:
+		return ValueBool(builtinRelational[float64](op, float64(f), float64(o)))
+
+	case ValueFloat:
+		return ValueBool(builtinRelational[float64](op, float64(f), float64(o)))
+
+	case ValueBool:
+		return CoercionError
+
+	case ValueError:
+		return o
+
+	}
+	panic("no type conversion")
+}
+
+func (b ValueBool) Arith(_ string, _ Value) Value { return CoercionError }
+
+func (b ValueBool) Relational(op string, other Value) Value {
+	switch o := other.(type) {
+
+	case ValueInt, ValueFloat:
+		return CoercionError
+
+	case ValueBool:
+		switch op {
+		case "==":
+			return ValueBool(b == o)
+		case "!=":
+			return ValueBool(b != o)
+		default:
+			return InvalidOpError
+		}
+
+	case ValueError:
+		return o
+
+	}
+	panic("no type conversion")
+}
+
+func (e ValueError) Arith(_ string, _ Value) Value      { return e }
+func (e ValueError) Relational(_ string, _ Value) Value { return e }
+
+func builtinArith[t int | float64](op string, a, b t) t {
 	switch op {
 	case "+":
 		return a + b
-
 	case "-":
 		return a - b
-
 	case "*":
 		return a * b
-
 	case "/":
 		return a / b
 
+	}
+	panic("unknown operator")
+}
+
+func builtinRelational[t int | float64](op string, a, b t) bool {
+	switch op {
+	case "==":
+		return a == b
+	case "!=":
+		return a != b
+	case "<":
+		return a < b
+	case ">":
+		return a > b
+	case "<=":
+		return a <= b
+	case ">=":
+		return a >= b
 	}
 	panic("unknown operator")
 }

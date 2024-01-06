@@ -110,7 +110,9 @@ Support unary minus at the grammar level as opposed to lexer level for negative 
 
     block: '{' program '}' | expression
 
-    expression: addsub
+    expression: relational
+    relational: logic /<|>|<=|>=|==|!=/ logic | logic
+    logic: logic /[|&]/ addsub | addsub
     addsub: addsub /[+-]/ divmul | divmul
     divmul: divmul /[*/]/ unary | unary
     unary: '-' atom | atom

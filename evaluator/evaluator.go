@@ -34,10 +34,13 @@ func Evaluate(vars Variables, n types.Node) Value {
 			// special case unary -
 			if len(n.Children) == 1 {
 				r := Evaluate(vars, n.Children[0])
-				r = r.Op("*", ValueInt(-1))
+				r = r.Arith("*", ValueInt(-1))
 				return r
 			}
-			return Evaluate(vars, n.Children[0]).Op(n.Token.Value, Evaluate(vars, n.Children[1]))
+			return Evaluate(vars, n.Children[0]).Arith(n.Token.Value, Evaluate(vars, n.Children[1]))
+
+		case "<", "<=", ">", ">=", "==", "!=":
+			return Evaluate(vars, n.Children[0]).Relational(n.Token.Value, Evaluate(vars, n.Children[1]))
 
 		case "=":
 			v := Evaluate(vars, n.Children[1])

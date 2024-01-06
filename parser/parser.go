@@ -91,8 +91,22 @@ func addsub(input c.RollbackLexer) ([]c.Node, error) {
 	return r, err
 }
 
+var relOp = c.OneOf(
+	acceptToken("=="),
+	acceptToken("!="),
+	acceptToken("<="),
+	acceptToken(">="),
+	acceptToken("<"),
+	acceptToken(">"),
+)
+
+func relational(input c.RollbackLexer) ([]c.Node, error) {
+	r, err := c.Or(c.Fmap(leftChain, c.Seq(addsub, relOp, addsub)), addsub)(input)
+	return r, err
+}
+
 func expression(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := addsub(input)
+	r, err := relational(input)
 	return r, err
 }
 
