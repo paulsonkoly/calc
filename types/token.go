@@ -15,7 +15,8 @@ const (
 	IntLit       // integer literal
 	FloatLit     // float literal
 	VarName      // variable name
-	SingleChar   // one of +, -, *, /, =, (, )
+	Sticky       // one of +, -, *, /, =, <, >, ! a sequence of these stick together in a single lexeme
+	NotSticky    // one of (, ), {, } a sequence of these gives a sequence of single char lexemes
 )
 
 // Token as produced by the lexer
@@ -30,7 +31,7 @@ func (t Token) String() string {
 	case EOL:
 		return fmt.Sprintf("<%v>", t.Type)
 
-	case SingleChar:
+	case Sticky, NotSticky:
 		return t.Value
 
 	default:

@@ -27,7 +27,7 @@ func Evaluate(vars Variables, n types.Node) Value {
 		}
 		return ValueFloat(f)
 
-	case types.SingleChar:
+	case types.Sticky:
 		switch n.Token.Value {
 
 		case "+", "-", "*", "/":

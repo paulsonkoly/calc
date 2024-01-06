@@ -2,6 +2,7 @@ package lexer
 
 import (
 	"fmt"
+	"strings"
 
 	t "github.com/phaul/calc/types"
 )
@@ -31,8 +32,11 @@ func newSTR(c rune, typ t.TokenType, emit, adv bool, format string, args ...any)
 	case 'a' <= c && c <= 'z':
 		return str{next: varName, doEmit: emit, doAdv: adv, typ: typ}
 
-	case c == '+' || c == '-' || c == '*' || c == '/' || c == '=' || c == '(' || c == ')':
-		return str{next: singleChar, doEmit: emit, doAdv: adv, typ: typ}
+	case strings.Contains("()", string(c)):
+		return str{next: notSticky, doEmit: emit, doAdv: adv, typ: typ}
+
+	case strings.Contains("+*/=<>!-", string(c)):
+		return str{next: sticky, doEmit: emit, doAdv: adv, typ: typ}
 
 	default:
 		return str{err: fmt.Errorf(format, args...)}
@@ -76,8 +80,18 @@ func varName(c rune) str {
 	}
 }
 
-func singleChar(c rune) str {
-	return newSTR(c, t.SingleChar, true, false, "Lexer: unexpected char %c following single character token", c)
+func notSticky(c rune) str {
+	return newSTR(c, t.NotSticky, true, false, "Lexer: unexpected char %c", c)
+}
+
+func sticky(c rune) str {
+	switch {
+	case strings.Contains("+*/=<>!-", string(c)):
+		return str{next: sticky}
+
+	default:
+		return newSTR(c, t.Sticky, true, false, "Lexer: unexpected char %c following operator", c)
+	}
 }
 
 func eol(c rune) str {
