@@ -14,7 +14,7 @@ const (
 	EOL          // end of line
 	IntLit       // integer literal
 	FloatLit     // float literal
-	VarName      // variable name
+	Name         // sequence of alphabeth chars, variable names or keywords
 	Sticky       // one of +, -, *, /, =, <, >, ! a sequence of these stick together in a single lexeme
 	NotSticky    // one of (, ), {, } a sequence of these gives a sequence of single char lexemes
 )

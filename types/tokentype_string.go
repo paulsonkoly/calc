@@ -12,14 +12,14 @@ func _() {
 	_ = x[EOL-1]
 	_ = x[IntLit-2]
 	_ = x[FloatLit-3]
-	_ = x[VarName-4]
+	_ = x[Name-4]
 	_ = x[Sticky-5]
 	_ = x[NotSticky-6]
 }
 
-const _TokenType_name = "InvalidTokenEOLIntLitFloatLitVarNameStickyNotSticky"
+const _TokenType_name = "InvalidTokenEOLIntLitFloatLitNameStickyNotSticky"
 
-var _TokenType_index = [...]uint8{0, 12, 15, 21, 29, 36, 42, 51}
+var _TokenType_index = [...]uint8{0, 12, 15, 21, 29, 33, 39, 48}
 
 func (i TokenType) String() string {
 	if i < 0 || i >= TokenType(len(_TokenType_index)-1) {

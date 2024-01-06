@@ -76,7 +76,7 @@ func varName(c rune) str {
 		return str{next: varName}
 
 	default:
-		return newSTR(c, t.VarName, true, false, "Lexer: unexpected char %c in variable name", c)
+		return newSTR(c, t.Name, true, false, "Lexer: unexpected char %c in variable name", c)
 	}
 }
 

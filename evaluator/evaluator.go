@@ -51,11 +51,21 @@ func Evaluate(vars Variables, n types.Node) Value {
 			log.Panicf("unexpected single character in evaluator: %s", n.Token.Value)
 		}
 
-	case types.VarName:
-		if v, ok := vars[n.Token.Value]; ok {
-			return v
+	case types.Name:
+		switch n.Token.Value {
+
+		case "true":
+			return ValueBool(true)
+
+		case "false":
+			return ValueBool(false)
+
+		default:
+			if v, ok := vars[n.Token.Value]; ok {
+				return v
+			}
+			return ValueError(fmt.Sprintf("variable %s not defined", n.Token.Value))
 		}
-		return ValueError(fmt.Sprintf("variable %s not defined", n.Token.Value))
 	}
 
 	panic("unsupported node tpye")

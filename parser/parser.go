@@ -58,7 +58,7 @@ func acceptToken(str string) c.Parser {
 // The grammar
 var intLit = acceptTerm(t.IntLit, "integer literal")
 var floatLit = acceptTerm(t.FloatLit, "float literal")
-var varName = acceptTerm(t.VarName, "variable name")
+var varName = acceptTerm(t.Name, "variable name")
 
 // these can't be defined as variables as there are cycles in their
 // definitions, otherwise we could write:
@@ -69,13 +69,13 @@ func paren(input c.RollbackLexer) ([]c.Node, error) {
 	return r, err
 }
 
-func top(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.OneOf(floatLit, intLit, varName, paren)(input)
+func atom(input c.RollbackLexer) ([]c.Node, error) {
+	r, err := c.OneOf(floatLit, intLit, acceptToken("true"), acceptToken("false"), varName, paren)(input)
 	return r, err
 }
 
 func unary(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.Or(c.Fmap(unOp, (c.Seq(acceptToken("-"), top))), top)(input)
+	r, err := c.Or(c.Fmap(unOp, (c.Seq(acceptToken("-"), atom))), atom)(input)
 	return r, err
 }
 
