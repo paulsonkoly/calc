@@ -140,12 +140,12 @@ func Some(a Parser) Parser {
 
 // SeparatedBy parses with a sequence of a, separated by b.
 //
-// It fails if a doesn't succeed at least once. The first is not preceeded and
-// the last a is not succeeded by b. The parse results of b are thrown away,
-// it returns the sequenced results of a.
+// It fails if a doesn't succeed at least once. If there is only one a it
+// doesn't assert a subsequent b. Otherwise the sequence has to end with b. The
+// parse results of b are thrown away, it returns the sequenced results of a.
 func SeparatedBy(a, b Parser) Parser {
 	return Or(
-		And(Some(Fmap(func(ab []Node) []Node { return ab[0:1] }, And(a, b))), a),
+		Some(Fmap(func(ab []Node) []Node { return ab[0:1] }, And(a, b))),
 		a,
 	)
 }

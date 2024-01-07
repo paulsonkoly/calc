@@ -10,6 +10,8 @@ import (
 
 type Variables map[string]Value
 
+var NoResultError = ValueError("no result")
+
 func Evaluate(vars Variables, n types.Node) Value {
 	switch n.Token.Type {
 
@@ -59,6 +61,20 @@ func Evaluate(vars Variables, n types.Node) Value {
 
 		case "false":
 			return ValueBool(false)
+
+		case "if":
+			c:= Evaluate(vars, n.Children[0])
+			if cc, ok := c.(ValueBool); ok {
+				if bool(cc) {
+					return Evaluate(vars, n.Children[1])
+				} else if len(n.Children) > 2 {
+					return Evaluate(vars, n.Children[2])
+				} else {
+					return NoResultError
+				}
+			} else {
+				return TypeError
+			}
 
 		default:
 			if v, ok := vars[n.Token.Value]; ok {

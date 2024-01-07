@@ -57,6 +57,26 @@ func leftChain(nodes []c.Node) []c.Node {
 	return []c.Node{r}
 }
 
+func wrap(nodes []c.Node) []c.Node {
+	r := t.Node{Children: make([]t.Node, 0)}
+	for _, n := range nodes {
+		r.Children = append(r.Children, n.(t.Node))
+	}
+	return []c.Node{r}
+}
+
+func cond(nodes []c.Node) []c.Node {
+	if len(nodes) != 3 && len(nodes) != 5 {
+		log.Panicf("incorrect number of sub nodes for conditional (%d)", len(nodes))
+	}
+	r := nodes[0].(t.Node)
+	r.Children = []t.Node{nodes[1].(t.Node), nodes[2].(t.Node)}
+	if len(nodes) == 5 {
+		r.Children = append(r.Children, nodes[4].(t.Node))
+	}
+	return []c.Node{r}
+}
+
 func allButLast(nodes []c.Node) []c.Node { return nodes[0 : len(nodes)-1] }
 
 func acceptTerm(tokType tokenType, msg string) c.Parser {
@@ -123,13 +143,30 @@ func expression(input c.RollbackLexer) ([]c.Node, error) {
 }
 
 var assignment = c.Fmap(leftChain, c.Seq(varName, acceptToken("="), expression))
-var statement = c.Or(assignment, expression)
+
+func statement(input c.RollbackLexer) ([]c.Node, error) {
+	r, err := c.OneOf(conditional, assignment, expression)(input)
+	return r, err
+}
+
+func conditional(input c.RollbackLexer) ([]c.Node, error) {
+	r, err := c.Fmap(cond,
+		c.Seq(acceptToken("if"), expression, c.Or(c.Seq(block, acceptToken("else"), block), block)))(input)
+	return r, err
+}
+
 var eol = acceptTerm(t.EOL, "end of line")
 var eof = acceptTerm(t.EOF, "end of file")
-var block = c.Or(
-	c.SurroundedBy(
-		c.And(acceptToken("{"), eol),
-		c.Some(c.Fmap(allButLast, c.And(statement, eol))),
-		acceptToken("}")),
-	statement)
+
+func block(input c.RollbackLexer) ([]c.Node, error) {
+	r, err := c.Or(
+		c.Fmap(wrap,
+			c.SurroundedBy(
+				c.And(acceptToken("{"), eol),
+				c.SeparatedBy(statement, eol),
+				acceptToken("}"))),
+		statement)(input)
+	return r, err
+}
+
 var program = c.Fmap(allButLast, c.And(c.SeparatedBy(block, eol), eof))

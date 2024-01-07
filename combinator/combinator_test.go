@@ -88,9 +88,16 @@ var testData = []testDatum{
 		err:       "",
 	},
 	{
+		name:      "Separated by (single token)",
+		parser:    combinator.SeparatedBy(accept("a"), accept("b")),
+		lexerOut:  []testToken{"a"},
+		parserOut: []testNode{{token: testToken("a")}},
+		err:       "",
+	},
+	{
 		name:      "Separated by",
 		parser:    combinator.SeparatedBy(accept("a"), accept("b")),
-		lexerOut:  []testToken{"a", "b", "a", "b", "a"},
+		lexerOut:  []testToken{"a", "b", "a", "b", "a", "b"},
 		parserOut: []testNode{{token: testToken("a")}, {token: testToken("a")}, {token: testToken("a")}},
 		err:       "",
 	},
