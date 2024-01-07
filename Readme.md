@@ -101,14 +101,14 @@ tokens are separated with white-spaces.
 
 Support unary minus at the grammar level as opposed to lexer level for negative number literals. This means that "- 5" is minus five with white-space or 2+-(3+1) works. In the following BNF non-terminals are lower case, terminals are upper case.
 
-    program: statement "\n" program | statement
+    program: block "\n" program | block EOF
+    block: "{" "\n" statements "\n" "}" | statement
+    statements: statement "\n" statements | statement
     statement: assigment | loop | conditional | expression
 
     assignment: VARIABLE '=' block 
     loop: "while" expression block
     conditional: "if" expression block "else" block | "if" expression block
-
-    block: '{' program '}' | expression
 
     expression: relational
     relational: logic /<|>|<=|>=|==|!=/ logic | logic
@@ -116,7 +116,7 @@ Support unary minus at the grammar level as opposed to lexer level for negative 
     addsub: addsub /[+-]/ divmul | divmul
     divmul: divmul /[*/]/ unary | unary
     unary: '-' atom | atom
-    top: INTL | FLOATL | VARIABLE  | '(' expression ')'
+    atom: INTL | FLOATL | VARIABLE  | '(' expression ')'
 
 ## Approach
 
