@@ -82,7 +82,7 @@ func OneOf(args ...Parser) Parser {
 // And is sequencing two parsers
 //
 // Parses with a and then continues parsing with b. Only succeeds if both a and
-// b succeeds and returns the concatenated result from both a and b.
+// b succeed and returns the concatenated result from both a and b.
 func And(a, b Parser) Parser {
 	return func(input RollbackLexer) ([]Node, error) {
 		aRes, aErr := a(input)
@@ -115,7 +115,7 @@ func Seq(args ...Parser) Parser {
 // Some fails if a doesn't succeed at least once and succeeds otherwise. It
 // returns the concatenated result of all successful runs. Useful for left
 // recursive rules, where a rule such as A -> A b can be expressed as
-// Or(Some(b))
+// Some(b).
 func Some(a Parser) Parser {
 	return func(input RollbackLexer) ([]Node, error) {
 		aRes, aErr := a(input)
