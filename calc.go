@@ -34,14 +34,19 @@ func main() {
 			blocksOpen += strings.Count(line, "{") - strings.Count(line, "}")
 			input = join(input, line)
 			if blocksOpen == 0 {
-				fmt.Printf("%v", input)
 				t, err := parser.Parse(input)
-				if len(t) > 0 {
-					fmt.Println("> ", evaluator.Evaluate(vars, t[0]))
-				}
 				if err != nil {
 					fmt.Println(err)
+					continue
 				}
+				if len(t) < 1 {
+					continue
+				}
+				v := evaluator.Evaluate(vars, t[0])
+				for _, e := range t[1:] {
+					v = evaluator.Evaluate(vars, e)
+				}
+				fmt.Println("> ", v)
 				input = ""
 			}
 		}
@@ -54,4 +59,3 @@ func join(a, b string) string {
 	}
 	return a + "\n" + b
 }
-
