@@ -65,7 +65,7 @@ func Evaluate(vars Variables, n types.Node) Value {
 		case "if":
 			c:= Evaluate(vars, n.Children[0])
 			if cc, ok := c.(ValueBool); ok {
-				if bool(cc) {
+				if cc {
 					return Evaluate(vars, n.Children[1])
 				} else if len(n.Children) > 2 {
 					return Evaluate(vars, n.Children[2])
@@ -74,6 +74,21 @@ func Evaluate(vars Variables, n types.Node) Value {
 				}
 			} else {
 				return TypeError
+			}
+
+		case "while":
+			r := Value(NoResultError)
+			for {
+				cond := Evaluate(vars, n.Children[0])
+				if ccond, ok := cond.(ValueBool); ok {
+					if ! ccond {
+						return r
+					}
+					r = Evaluate(vars, n.Children[1])
+				} else {
+					return TypeError
+				}
+
 			}
 
 		default:

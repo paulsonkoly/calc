@@ -65,9 +65,9 @@ func wrap(nodes []c.Node) []c.Node {
 	return []c.Node{r}
 }
 
-func cond(nodes []c.Node) []c.Node {
+func control(nodes []c.Node) []c.Node {
 	if len(nodes) != 3 && len(nodes) != 5 {
-		log.Panicf("incorrect number of sub nodes for conditional (%d)", len(nodes))
+		log.Panicf("incorrect number of sub nodes for control (%d)", len(nodes))
 	}
 	r := nodes[0].(t.Node)
 	r.Children = []t.Node{nodes[1].(t.Node), nodes[2].(t.Node)}
@@ -145,13 +145,18 @@ func expression(input c.RollbackLexer) ([]c.Node, error) {
 var assignment = c.Fmap(leftChain, c.Seq(varName, acceptToken("="), expression))
 
 func statement(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.OneOf(conditional, assignment, expression)(input)
+	r, err := c.OneOf(conditional, loop, assignment, expression)(input)
 	return r, err
 }
 
 func conditional(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.Fmap(cond,
+	r, err := c.Fmap(control,
 		c.Seq(acceptToken("if"), expression, c.Or(c.Seq(block, acceptToken("else"), block), block)))(input)
+	return r, err
+}
+
+func loop(input c.RollbackLexer) ([]c.Node, error) {
+	r, err := c.Fmap(control, c.Seq(acceptToken("while"), expression, block))(input)
 	return r, err
 }
 

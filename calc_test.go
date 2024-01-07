@@ -65,6 +65,33 @@ var testData = [...]TestDatum{
 	{"conditional/no result", "if false 1", nil, evaluator.NoResultError},
 	{"conditional/blocks no else", "if true {\n1\n}", nil, evaluator.ValueInt(1)},
 	{"conditional/blocks with else", "if false {\n1\n} else {\n2\n}", nil, evaluator.ValueInt(2)},
+
+	{"loop/single line",
+		`{
+	a = 1
+	while a < 10 a = a + 1
+	a
+}`, nil, evaluator.ValueInt(10)},
+	{"loop/block",
+		`{
+	a = 1
+	while a < 10 {
+		a = a + 1
+	}
+	a
+}`, nil, evaluator.ValueInt(10)},
+	{"loop/false initial condition",
+		`{
+	while false {
+		a = a + 1
+	}
+}`, nil, evaluator.NoResultError},
+	{"loop/incorrect condition",
+		`{
+	while 13 {
+		a = a + 1
+	}
+}`, nil, evaluator.TypeError},
 }
 
 func TestCalc(t *testing.T) {
