@@ -21,6 +21,9 @@ func Parse(input string) ([]t.Node, error) {
 
 type tokenType = t.TokenType
 
+// unOp is used for unary operators
+//
+// It rewrites the pair of nodes putting the second under the first.
 func unOp(nodes []c.Node) []c.Node {
 	if len(nodes) != 2 {
 		log.Panicf("incorrect number of sub nodes for unary operator (%d)", len(nodes))
@@ -31,6 +34,16 @@ func unOp(nodes []c.Node) []c.Node {
 	return []c.Node{r}
 }
 
+// leftChain rewrites a sequence of binary operators applied on operands in a
+// left assictive structure
+//
+// In effect it arranges a+b+c sequence in:
+//
+//	+
+//	|-+
+//	| |-a
+//	| `-b
+//	`-c
 func leftChain(nodes []c.Node) []c.Node {
 	if len(nodes) < 3 || len(nodes)%2 == 0 {
 		log.Panicf("incorrect number of sub nodes for left chain (%d)", len(nodes))
@@ -44,8 +57,7 @@ func leftChain(nodes []c.Node) []c.Node {
 	return []c.Node{r}
 }
 
-func first(nodes []c.Node) []c.Node  { return []c.Node{nodes[0]} }
-func second(nodes []c.Node) []c.Node { return []c.Node{nodes[1]} }
+func allButLast(nodes []c.Node) []c.Node { return nodes[0 : len(nodes)-1] }
 
 func acceptTerm(tokType tokenType, msg string) c.Parser {
 	return c.Accept(func(tok c.Token) bool { return tok.(t.Token).Type == tokType }, msg)
@@ -65,7 +77,7 @@ var varName = acceptTerm(t.Name, "variable name")
 //
 //	var paren = c.Fmap(second, c.Seq(acceptToken("("), expression, acceptToken(")")))
 func paren(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.Fmap(second, c.Seq(acceptToken("("), expression, acceptToken(")")))(input)
+	r, err := c.SurroundedBy(acceptToken("("), expression, acceptToken(")"))(input)
 	return r, err
 }
 
@@ -114,6 +126,10 @@ var assignment = c.Fmap(leftChain, c.Seq(varName, acceptToken("="), expression))
 var statement = c.Or(assignment, expression)
 var eol = acceptTerm(t.EOL, "end of line")
 var eof = acceptTerm(t.EOF, "end of file")
-var nonfinal = c.Fmap(first, c.And(statement, eol))
-var final = c.Fmap(first, c.And(statement, eof))
-var program = c.Or(c.And(c.Some(nonfinal), final), final)
+var block = c.Or(
+	c.SurroundedBy(
+		c.And(acceptToken("{"), eol),
+		c.Some(c.Fmap(allButLast, c.And(statement, eol))),
+		acceptToken("}")),
+	statement)
+var program = c.Fmap(allButLast, c.And(c.SeparatedBy(block, eol), eof))

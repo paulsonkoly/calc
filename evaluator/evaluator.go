@@ -66,6 +66,15 @@ func Evaluate(vars Variables, n types.Node) Value {
 			}
 			return ValueError(fmt.Sprintf("variable %s not defined", n.Token.Value))
 		}
+	default:
+		if len(n.Children) < 1 {
+			log.Panic("empty block")
+		}
+		r := Evaluate(vars, n.Children[0])
+		for _, e := range n.Children[1:] {
+			r = Evaluate(vars, e)
+		}
+		return r
 	}
 
 	panic("unsupported node tpye")

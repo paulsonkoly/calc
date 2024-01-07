@@ -138,6 +138,38 @@ func Some(a Parser) Parser {
 	}
 }
 
+// SeparatedBy parses with a sequence of a, separated by b.
+//
+// It fails if a doesn't succeed at least once. The first is not preceeded and
+// the last a is not succeeded by b. The parse results of b are thrown away,
+// it returns the sequenced results of a.
+func SeparatedBy(a, b Parser) Parser {
+	return Or(
+		And(Some(Fmap(func(ab []Node) []Node { return ab[0:1] }, And(a, b))), a),
+		a,
+	)
+}
+
+// SurroundedBy parses with a sequence of a, b, c but returns the parse result
+// of b only
+//
+// It fails if any of a, b, c fails. Useful for asserting parenthesis style rules.
+func SurroundedBy(a, b, c Parser) Parser {
+	return func(input RollbackLexer) ([]Node, error) {
+		_, aErr := a(input)
+		if aErr != nil {
+			return nil, aErr
+		}
+		bRes, bErr := b(input)
+		if bErr != nil {
+			return nil, aErr
+		}
+		_, cErr := c(input)
+
+		return bRes, cErr
+	}
+}
+
 // Accept asserts the next token
 //
 // given a predicate p on a lexer Token, parses successfully if the predicate

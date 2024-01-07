@@ -28,6 +28,8 @@ var testData = []testDatum{
 	{"single lexeme", "/", []t.Token{{Value: "/", Type: t.Sticky}, eof}},
 	{"single lexeme", "(", []t.Token{{Value: "(", Type: t.NotSticky}, eof}},
 	{"single lexeme", ")", []t.Token{{Value: ")", Type: t.NotSticky}, eof}},
+	{"single lexeme", "{", []t.Token{{Value: "{", Type: t.NotSticky}, eof}},
+	{"single lexeme", "}", []t.Token{{Value: "}", Type: t.NotSticky}, eof}},
 	{"sticky double", "<=", []t.Token{{Value: "<=", Type: t.Sticky}, eof}},
 	{"non-sticky double", "((", []t.Token{{Value: "(", Type: t.NotSticky}, {Value: "(", Type: t.NotSticky}, eof}},
 	{"new line lexeme", "a\nb", []t.Token{{Value: "a", Type: t.Name}, eol, {Value: "b", Type: t.Name}, eof}},

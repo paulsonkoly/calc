@@ -88,6 +88,20 @@ var testData = []testDatum{
 		err:       "",
 	},
 	{
+		name:      "Separated by",
+		parser:    combinator.SeparatedBy(accept("a"), accept("b")),
+		lexerOut:  []testToken{"a", "b", "a", "b", "a"},
+		parserOut: []testNode{{token: testToken("a")}, {token: testToken("a")}, {token: testToken("a")}},
+		err:       "",
+	},
+	{
+		name:      "Surrounded by",
+		parser:    combinator.SurroundedBy(accept("a"), accept("b"), accept("c")),
+		lexerOut:  []testToken{"a", "b", "c"},
+		parserOut: []testNode{{token: testToken("b")}},
+		err:       "",
+	},
+	{
 		name: "Fmap",
 		parser: combinator.Fmap(
 			func(i []combinator.Node) []combinator.Node {
