@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -30,7 +31,10 @@ func main() {
 		blocksOpen := 0
 		input := ""
 		for {
-			line, _ := r.ReadString('\n')
+			line, err := r.ReadString('\n')
+			if err == io.EOF {
+				return
+			}
 			line = strings.TrimSpace(line)
 			if line != "" {
 				blocksOpen += strings.Count(line, "{") - strings.Count(line, "}")
