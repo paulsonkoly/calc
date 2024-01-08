@@ -4,20 +4,36 @@ A simple calculator language / REPL. This project is merely for code practicing,
 
 The language can be used in a REPL or instructions can be read from a file. The REPL outputs its answer after '>' character.
 
-    fib = (n) -> if (n <= 1) 1 else rec(n-1) + rec(n-2) 
-    > function fib
-    
-
-    sum = (n) -> {
-        i = 1
-        s = 0
-        while (i <= n) {
-           s = s + i
+    {
+      divides = (a, b) -> {
+        r = false
+        s = a
+        while s <= b {
+          if s == b {
+            r = true
+          }
+          s = s + a
         }
+        r
+      }
+      isprime = (n) -> {
+        if n < 2 {
+          false
+        } else {
+          i = 2
+          r = true
+          while i <= n / 2 {
+            if divides(i, n) {
+              r = false
+            }
+            i = i + 1	
+          }
+          r
+        }
+      }
+      isprime(13)
     }
-    > function sum
-
-    TODO SHOW USE
+    > true
 
 Supported features:
 
@@ -57,6 +73,30 @@ Incorrect operations result in error, any further calculation with an error resu
     >  variable b not defined
     c*2
     >  variable b not defined
+
+## Variable lookup, shadowing
+
+The language has very simple variable lookup rules. Function calls create new stack frames, function returns pop stack frames. Variables on read are looked up starting at the current frame, travesing each frame upwards in the stack until the variable is found. Variable writes set the variable in the current frame.
+
+    a = 13
+    >  13
+    f = (n) -> {
+        a = a+1
+    }
+    >  function
+    f(1)
+    >  14
+    a
+    >  13
+
+We set a to 13 at the top frame. We set f to a function value. We call f passing argument 1. This does the following steps:
+
+   1. push a new empty frame on the stack
+   2. set n in the new frame to 1
+   3. evaluate the function body, which sets a in the current frame to 14 (reading 13 from the frame above).
+   4. pops the last frame from the stack
+
+Now a is 13 as the variable was shadowed in the function call.
 
 ## Language
 
