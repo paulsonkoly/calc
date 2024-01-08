@@ -60,7 +60,7 @@ Incorrect operations result in error, any further calculation with an error resu
 
 ## Language
 
-The token { defines a multi-line block, until the corresponding } is found. The REPL doesn't output for lines inside a block. The top level non-terminal is the program, a program consists of statements. Statements are normally a single line but if they contain a block they can span across mulitple lines.
+The token { defines a multi-line block, until the corresponding } is found. The REPL doesn't output for lines inside a block. The top level non-terminal is the program, a program consists of statements. Statements are on a single line up to the first new line character, blocks span across mulitple lines.
 
 The language has the following statement types:
 
