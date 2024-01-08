@@ -4,35 +4,37 @@ A simple calculator language / REPL. This project is merely for code practicing,
 
 The language can be used in a REPL or instructions can be read from a file. The REPL outputs its answer after '>' character.
 
-    {
-      divides = (a, b) -> {
-        r = false
-        s = a
-        while s <= b {
-          if s == b {
-            r = true
+    divides = (a, b) -> {
+      r = false
+      s = a
+      while s <= b {
+        if s == b {
+          r = true
+        }
+        s = s + a
+      }
+      r
+    }
+    > function
+  
+    isprime = (n) -> {
+      if n < 2 {
+        false
+      } else {
+        i = 2
+        r = true
+        while i <= n / 2 {
+          if divides(i, n) {
+            r = false
           }
-          s = s + a
+          i = i + 1	
         }
         r
       }
-      isprime = (n) -> {
-        if n < 2 {
-          false
-        } else {
-          i = 2
-          r = true
-          while i <= n / 2 {
-            if divides(i, n) {
-              r = false
-            }
-            i = i + 1	
-          }
-          r
-        }
-      }
-      isprime(13)
     }
+    > function
+  
+    isprime(13)
     > true
 
 Supported features:
