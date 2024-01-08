@@ -176,7 +176,3 @@ A finite state machine based hand written lexer combined with a hand written par
     var state ------------------------------------^ |
           ^                                         |
           `--- write back --------------------------'
-
-### Lexer
-
-State machine based lexer, reading a character at a time. The lexer also inserts an EOL (end of line) at the end of the input if there is none, as the parser uses that to assert that all input has been consumed.
