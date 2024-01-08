@@ -116,9 +116,13 @@ Support unary minus at the grammar level as opposed to lexer level for negative 
     addsub: addsub /[+-]/ divmul | divmul
     divmul: divmul /[*/]/ unary | unary
     unary: '-' atom | atom
-    atom: function | INTL | FLOATL | VARIABLE  | '(' expression ')'
-    function: '(' arguments ')' '->' block
-    arguments: VARIABLE ',' arguments | VARIABLE
+    atom: function | call | INTL | FLOATL | VARIABLE  | '(' expression ')'
+
+    function: '(' parameters ')' '->' block
+    parameters: VARIABLE ',' parameters | VARIABLE
+    call: VARIABLE '(' arguments ')'
+    arguments: expression ',' arguments | expression
+
 
 ## Approach
 
