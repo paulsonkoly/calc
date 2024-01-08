@@ -65,6 +65,11 @@ func wrap(nodes []c.Node) []c.Node {
 	return []c.Node{r}
 }
 
+func mkFCall(nodes []c.Node) []c.Node {
+	r := t.Node{Token: t.Token{Type: t.Call}, Children: []t.Node{nodes[0].(t.Node), nodes[1].(t.Node)}}
+	return []c.Node{r}
+}
+
 func control(nodes []c.Node) []c.Node {
 	if len(nodes) != 3 && len(nodes) != 5 {
 		log.Panicf("incorrect number of sub nodes for control (%d)", len(nodes))
@@ -102,7 +107,7 @@ func paren(input c.RollbackLexer) ([]c.Node, error) {
 }
 
 func atom(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.OneOf(function, floatLit, intLit, acceptToken("true"), acceptToken("false"), varName, paren)(input)
+	r, err := c.OneOf(function, call, floatLit, intLit, acceptToken("true"), acceptToken("false"), varName, paren)(input)
 	return r, err
 }
 
@@ -164,15 +169,29 @@ func loop(input c.RollbackLexer) ([]c.Node, error) {
 }
 
 func function(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.Fmap(leftChain, c.Seq(arguments, acceptToken("->"), block))(input)
+	r, err := c.Fmap(leftChain, c.Seq(parameters, acceptToken("->"), block))(input)
 	return r, err
 }
 
-var arguments = c.Fmap(wrap,
+var parameters = c.Fmap(wrap,
 	c.SurroundedBy(
 		acceptToken("("),
 		c.SeparatedBy(varName, acceptToken(",")),
 		acceptToken(")")))
+
+func call(input c.RollbackLexer) ([]c.Node, error) {
+	r, err := c.Fmap(mkFCall, c.Seq(varName, arguments))(input)
+	return r, err
+}
+
+func arguments(input c.RollbackLexer) ([]c.Node, error) {
+	r, err := c.Fmap(wrap,
+		c.SurroundedBy(
+			acceptToken("("),
+			c.SeparatedBy(expression, acceptToken(",")),
+			acceptToken(")")))(input)
+	return r, err
+}
 
 var eol = acceptTerm(t.EOL, "end of line")
 var eof = acceptTerm(t.EOF, "end of file")

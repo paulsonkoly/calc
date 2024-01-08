@@ -18,6 +18,8 @@ const (
 	Name         // sequence of alphabeth chars, variable names or keywords
 	Sticky       // one of +, -, *, /, =, <, >, ! a sequence of these stick together in a single lexeme
 	NotSticky    // one of (, ), {, }, `,` a sequence of these gives a sequence of single char lexemes
+	// TODO it shouldn't be a token type
+	Call
 )
 
 // Token as produced by the lexer

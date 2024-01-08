@@ -1,6 +1,4 @@
-package evaluator
-
-import "github.com/phaul/calc/types"
+package types
 
 // type Value represents the evaluation result value
 type Value interface {
@@ -14,12 +12,14 @@ type ValueInt int
 type ValueFloat float64
 type ValueError string
 type ValueBool bool
-type ValueFunction types.Node
+type ValueFunction Node
 
 // errors
 var ZeroDivError = ValueError("division by zero")
 var TypeError = ValueError("type error")
 var InvalidOpError = ValueError("invalid operator")
+var NoResultError = ValueError("no result")
+var ArgumentError = ValueError("argument error")
 
 func (i ValueInt) Arith(op string, other Value) Value {
 	switch o := other.(type) {

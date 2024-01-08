@@ -9,17 +9,18 @@ import (
 
 	"github.com/phaul/calc/evaluator"
 	"github.com/phaul/calc/parser"
+	"github.com/phaul/calc/stack"
 )
 
 var eval = flag.String("eval", "", "string to evaluate")
 
 func main() {
-	vars := make(evaluator.Variables)
+	s := stack.NewStack()
 	flag.Parse()
 	if *eval != "" {
 		t, err := parser.Parse(*eval)
 		if len(t) > 0 {
-			fmt.Println("> ", evaluator.Evaluate(vars, t[0]))
+			fmt.Println("> ", evaluator.Evaluate(s, t[0]))
 		}
 		if err != nil {
 			fmt.Println(err)
@@ -42,9 +43,9 @@ func main() {
 				if len(t) < 1 {
 					continue
 				}
-				v := evaluator.Evaluate(vars, t[0])
+				v := evaluator.Evaluate(s, t[0])
 				for _, e := range t[1:] {
-					v = evaluator.Evaluate(vars, e)
+					v = evaluator.Evaluate(s, e)
 				}
 				fmt.Println("> ", v)
 				input = ""
