@@ -53,6 +53,7 @@ There are 5 value types: integers, floats, booleans, functions and errors.
 Arithmetic operations and relational operations work on numbers, an expression containing only integers results in integer (or error), an expression containing a float results in a float. Relational operations work both on numbers and booleans, logic operations work only on booleans.
 
 There are 5 precedence groups (from lowest to highest): 
+
     - relational
     - logic
     - + or -
