@@ -1,10 +1,13 @@
 package main_test
 
 import (
+	// "errors"
+	"errors"
 	"testing"
 
 	"github.com/phaul/calc/evaluator"
 	"github.com/phaul/calc/parser"
+	"github.com/phaul/calc/types"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -92,6 +95,13 @@ var testData = [...]TestDatum{
 		a = a + 1
 	}
 }`, nil, evaluator.TypeError},
+
+	{"function definition", "(n) -> 1", nil, evaluator.ValueFunction(types.Node{})},
+	{"function/no argument", "() -> 1", errors.New("Parser: ( expected, got )"), nil},
+	{"function/block",
+		`(n) -> {
+		n + 1
+}`, nil, evaluator.ValueFunction(types.Node{})},
 }
 
 func TestCalc(t *testing.T) {
@@ -104,7 +114,11 @@ func TestCalc(t *testing.T) {
 			for _, stmnt := range ast {
 				v = evaluator.Evaluate(vars, stmnt)
 			}
-			assert.Equal(t, test.value, v, test.name)
+			if f, ok := test.value.(evaluator.ValueFunction); ok {
+				assert.IsType(t, f, v, "test.name")
+			} else {
+				assert.Equal(t, test.value, v, test.name)
+			}
 		} else {
 			assert.EqualError(t, err, test.parseError.Error(), test.name)
 		}

@@ -36,7 +36,7 @@ func newSTR(c rune, typ t.TokenType, emit, adv bool, format string, args ...any)
 	case 'a' <= c && c <= 'z':
 		return str{next: varName, doEmit: emit, doAdv: adv, typ: typ}
 
-	case strings.Contains("(){}", string(c)):
+	case strings.Contains("(){},", string(c)):
 		return str{next: notSticky, doEmit: emit, doAdv: adv, typ: typ}
 
 	case strings.Contains("+*/=<>!-", string(c)):

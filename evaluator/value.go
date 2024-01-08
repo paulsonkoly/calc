@@ -1,5 +1,7 @@
 package evaluator
 
+import "github.com/phaul/calc/types"
+
 // type Value represents the evaluation result value
 type Value interface {
 	// Arith is the operator token string, other is the RHS of the operation,
@@ -12,9 +14,9 @@ type ValueInt int
 type ValueFloat float64
 type ValueError string
 type ValueBool bool
+type ValueFunction types.Node
 
 // errors
-var CoercionError = ValueError("coercion error")
 var ZeroDivError = ValueError("division by zero")
 var TypeError = ValueError("type error")
 var InvalidOpError = ValueError("invalid operator")
@@ -31,8 +33,8 @@ func (i ValueInt) Arith(op string, other Value) Value {
 	case ValueFloat:
 		return ValueFloat(builtinArith[float64](op, float64(i), float64(o)))
 
-	case ValueBool:
-		return CoercionError
+	case ValueBool, ValueFunction:
+		return TypeError
 
 	case ValueError:
 		return o
@@ -50,8 +52,8 @@ func (i ValueInt) Relational(op string, other Value) Value {
 	case ValueFloat:
 		return ValueBool(builtinRelational[float64](op, float64(i), float64(o)))
 
-	case ValueBool:
-		return CoercionError
+	case ValueBool, ValueFunction:
+		return TypeError
 
 	case ValueError:
 		return o
@@ -69,8 +71,8 @@ func (f ValueFloat) Arith(op string, other Value) Value {
 	case ValueFloat:
 		return ValueFloat(builtinArith[float64](op, float64(f), float64(o)))
 
-	case ValueBool:
-		return CoercionError
+	case ValueBool, ValueFunction:
+		return TypeError
 
 	case ValueError:
 		return o
@@ -87,8 +89,8 @@ func (f ValueFloat) Relational(op string, other Value) Value {
 	case ValueFloat:
 		return ValueBool(builtinRelational[float64](op, float64(f), float64(o)))
 
-	case ValueBool:
-		return CoercionError
+	case ValueBool, ValueFunction:
+		return TypeError
 
 	case ValueError:
 		return o
@@ -97,13 +99,13 @@ func (f ValueFloat) Relational(op string, other Value) Value {
 	panic("no type conversion")
 }
 
-func (b ValueBool) Arith(_ string, _ Value) Value { return CoercionError }
+func (b ValueBool) Arith(_ string, _ Value) Value { return TypeError }
 
 func (b ValueBool) Relational(op string, other Value) Value {
 	switch o := other.(type) {
 
-	case ValueInt, ValueFloat:
-		return CoercionError
+	case ValueInt, ValueFloat, ValueFunction:
+		return TypeError
 
 	case ValueBool:
 		switch op {
@@ -124,6 +126,10 @@ func (b ValueBool) Relational(op string, other Value) Value {
 
 func (e ValueError) Arith(_ string, _ Value) Value      { return e }
 func (e ValueError) Relational(_ string, _ Value) Value { return e }
+
+func (f ValueFunction) Arith(_ string, _ Value) Value      { return TypeError }
+func (f ValueFunction) Relational(_ string, _ Value) Value { return TypeError }
+func (f ValueFunction) String() string                     { return "function" }
 
 func builtinArith[t int | float64](op string, a, b t) t {
 	switch op {

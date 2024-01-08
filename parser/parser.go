@@ -102,7 +102,7 @@ func paren(input c.RollbackLexer) ([]c.Node, error) {
 }
 
 func atom(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.OneOf(floatLit, intLit, acceptToken("true"), acceptToken("false"), varName, paren)(input)
+	r, err := c.OneOf(function, floatLit, intLit, acceptToken("true"), acceptToken("false"), varName, paren)(input)
 	return r, err
 }
 
@@ -142,7 +142,10 @@ func expression(input c.RollbackLexer) ([]c.Node, error) {
 	return r, err
 }
 
-var assignment = c.Fmap(leftChain, c.Seq(varName, acceptToken("="), expression))
+func assignment(input c.RollbackLexer) ([]c.Node, error) {
+	r, err := c.Fmap(leftChain, c.Seq(varName, acceptToken("="), expression))(input)
+	return r, err
+}
 
 func statement(input c.RollbackLexer) ([]c.Node, error) {
 	r, err := c.OneOf(conditional, loop, assignment, expression)(input)
@@ -160,6 +163,17 @@ func loop(input c.RollbackLexer) ([]c.Node, error) {
 	return r, err
 }
 
+func function(input c.RollbackLexer) ([]c.Node, error) {
+	r, err := c.Fmap(leftChain, c.Seq(arguments, acceptToken("->"), block))(input)
+	return r, err
+}
+
+var arguments = c.Fmap(wrap,
+	c.SurroundedBy(
+		acceptToken("("),
+		c.SeparatedBy(varName, acceptToken(",")),
+		acceptToken(")")))
+
 var eol = acceptTerm(t.EOL, "end of line")
 var eof = acceptTerm(t.EOF, "end of file")
 
@@ -168,10 +182,10 @@ func block(input c.RollbackLexer) ([]c.Node, error) {
 		c.Fmap(wrap,
 			c.SurroundedBy(
 				c.And(acceptToken("{"), eol),
-				c.SeparatedBy(statement, eol),
+				c.JoinedWith(statement, eol),
 				acceptToken("}"))),
 		statement)(input)
 	return r, err
 }
 
-var program = c.Fmap(allButLast, c.And(c.SeparatedBy(block, eol), eof))
+var program = c.Fmap(allButLast, c.And(c.JoinedWith(block, eol), eof))

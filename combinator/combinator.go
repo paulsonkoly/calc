@@ -140,10 +140,22 @@ func Some(a Parser) Parser {
 
 // SeparatedBy parses with a sequence of a, separated by b.
 //
+// It fails if a doesn't succeed at least once. It asserts that a sequence of a
+// is interspersed with b, the sequence not ending with b. The parse results of
+// b are thrown away, it returns the sequenced results of a.
+func SeparatedBy(a, b Parser) Parser {
+	return Or(
+		And(Some(Fmap(func(ab []Node) []Node { return ab[0:1] }, And(a, b))), a),
+		a,
+	)
+}
+
+// JoinedWith parses with a sequence of a, separated by b.
+//
 // It fails if a doesn't succeed at least once. If there is only one a it
 // doesn't assert a subsequent b. Otherwise the sequence has to end with b. The
 // parse results of b are thrown away, it returns the sequenced results of a.
-func SeparatedBy(a, b Parser) Parser {
+func JoinedWith(a, b Parser) Parser {
 	return Or(
 		Some(Fmap(func(ab []Node) []Node { return ab[0:1] }, And(a, b))),
 		a,
@@ -162,7 +174,7 @@ func SurroundedBy(a, b, c Parser) Parser {
 		}
 		bRes, bErr := b(input)
 		if bErr != nil {
-			return nil, aErr
+			return nil, bErr
 		}
 		_, cErr := c(input)
 

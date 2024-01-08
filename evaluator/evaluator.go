@@ -44,6 +44,9 @@ func Evaluate(vars Variables, n types.Node) Value {
 		case "<", "<=", ">", ">=", "==", "!=":
 			return Evaluate(vars, n.Children[0]).Relational(n.Token.Value, Evaluate(vars, n.Children[1]))
 
+		case "->":
+			return ValueFunction(n)
+
 		case "=":
 			v := Evaluate(vars, n.Children[1])
 			vars[n.Children[0].Token.Value] = v
@@ -63,7 +66,7 @@ func Evaluate(vars Variables, n types.Node) Value {
 			return ValueBool(false)
 
 		case "if":
-			c:= Evaluate(vars, n.Children[0])
+			c := Evaluate(vars, n.Children[0])
 			if cc, ok := c.(ValueBool); ok {
 				if cc {
 					return Evaluate(vars, n.Children[1])
@@ -81,7 +84,7 @@ func Evaluate(vars Variables, n types.Node) Value {
 			for {
 				cond := Evaluate(vars, n.Children[0])
 				if ccond, ok := cond.(ValueBool); ok {
-					if ! ccond {
+					if !ccond {
 						return r
 					}
 					r = Evaluate(vars, n.Children[1])
