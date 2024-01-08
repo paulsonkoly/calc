@@ -32,23 +32,25 @@ func main() {
 		for {
 			line, _ := r.ReadString('\n')
 			line = strings.TrimSpace(line)
-			blocksOpen += strings.Count(line, "{") - strings.Count(line, "}")
-			input = join(input, line)
-			if blocksOpen == 0 {
-				t, err := parser.Parse(input)
-				if err != nil {
-					fmt.Println(err)
-					continue
+			if line != "" {
+				blocksOpen += strings.Count(line, "{") - strings.Count(line, "}")
+				input = join(input, line)
+				if blocksOpen == 0 {
+					t, err := parser.Parse(input)
+					if err != nil {
+						fmt.Println(err)
+						continue
+					}
+					if len(t) < 1 {
+						continue
+					}
+					v := evaluator.Evaluate(s, t[0])
+					for _, e := range t[1:] {
+						v = evaluator.Evaluate(s, e)
+					}
+					fmt.Println("> ", v)
+					input = ""
 				}
-				if len(t) < 1 {
-					continue
-				}
-				v := evaluator.Evaluate(s, t[0])
-				for _, e := range t[1:] {
-					v = evaluator.Evaluate(s, e)
-				}
-				fmt.Println("> ", v)
-				input = ""
 			}
 		}
 	}
