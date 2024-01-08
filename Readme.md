@@ -91,7 +91,7 @@ The following tokens are valid (using usual regular expression notation)
  - integer literal /\d+/
  - float literal /\d+.\d+/
  - variable name /[a-z]+/
- - single character token /[+-*/=()<>{}]/
+ - single character token /[+-*/=()<>{}],/
  - double character token /<=|>=|==|!=|->/
  - new line /\n/
 
@@ -116,7 +116,9 @@ Support unary minus at the grammar level as opposed to lexer level for negative 
     addsub: addsub /[+-]/ divmul | divmul
     divmul: divmul /[*/]/ unary | unary
     unary: '-' atom | atom
-    atom: INTL | FLOATL | VARIABLE  | '(' expression ')'
+    atom: function | INTL | FLOATL | VARIABLE  | '(' expression ')'
+    function: '(' arguments ')' '->' block
+    arguments: VARIABLE ',' arguments | VARIABLE
 
 ## Approach
 
