@@ -44,6 +44,6 @@ func TestStack(t * testing.T) {
 	assert.False(t, ok)
 
 	v, ok = s.LookUp("c")
-	assert.Equal(t, types.ValueInt(5), v)
+	assert.Equal(t, types.ValueInt(3), v)
 	assert.True(t, ok)
 }

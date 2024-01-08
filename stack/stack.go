@@ -4,8 +4,9 @@
 // and popping stack frames on returns.
 // We have very simple lookup rules. In case of a variable name lookup start at
 // the most recent frame and keep going up the stack until a variable is found.
-// Use v, ok := style signalling if a variable is not defined in any of the
-// frames.
+// In case of setting a variable we always set the variable in the current
+// frame. Use v, ok := style signalling if a variable is not defined in any of
+// the frames.
 package stack
 
 import (
@@ -35,20 +36,8 @@ func (s Stack) LookUp(name string) (types.Value, bool) {
 	return types.ValueError(fmt.Sprintf("%s not defined", name)), false
 }
 
-// Set sets a variable to a value
+// Set sets a variable to a value in the current frame, ignoring lookup
 func (s Stack) Set(name string, v types.Value) {
-	for i := len(s) - 1; i >= 0; i-- {
-		f := s[i]
-		if _, ok := f[name]; ok {
-			f[name] = v
-			return
-		}
-	}
-	s[len(s)-1][name] = v
-}
-
-// SetLocal sets a variable to a value in the current frame, ignoring lookup
-func (s Stack) SetLocal(name string, v types.Value) {
 	s[len(s)-1][name] = v
 }
 

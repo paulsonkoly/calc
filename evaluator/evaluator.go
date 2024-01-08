@@ -35,7 +35,7 @@ func Evaluate(s stack.Stack, n types.Node) types.Value {
 				if len(args) == len(params) {
 					s.Push()
 					for i := 0; i < len(args); i++ {
-						s.SetLocal(params[i].Token.Value, Evaluate(s, args[i]))
+						s.Set(params[i].Token.Value, Evaluate(s, args[i]))
 					}
 					r := Evaluate(s, types.Node(f.Children[1]))
 					s.Pop()
