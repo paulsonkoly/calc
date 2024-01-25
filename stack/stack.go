@@ -46,7 +46,7 @@ func (s *Stack) Push() {
 	*s = append(*s, make(frame))
 }
 
-// Pop pos a frame from the stack
+// Pop pops a frame from the stack
 func (s *Stack) Pop() {
 	*s = (*s)[:len(*s)-1]
 }
