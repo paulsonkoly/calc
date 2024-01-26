@@ -5,31 +5,25 @@ A simple calculator language / REPL. This project is merely for code practicing,
 The language can be used in a REPL or instructions can be read from a file. The REPL outputs its answer after '>' character.
 
     divides = (a, b) -> {
-      r = false
       s = a
       while s <= b {
         if s == b {
-          r = true
+          return true
         }
         s = s + a
       }
-      r
+      false
     }
     > function
   
     isprime = (n) -> {
-      if n < 2 {
-        false
-      } else {
+      if n < 2 return false
         i = 2
-        r = true
         while i <= n / 2 {
-          if divides(i, n) {
-            r = false
-          }
+          if divides(i, n) return false
           i = i + 1	
         }
-        r
+        true
       }
     }
     > function
@@ -147,11 +141,12 @@ Support unary minus at the grammar level as opposed to lexer level for negative 
     program: block "\n" program | block EOF
     block: "{" "\n" statements "\n" "}" | statement
     statements: statement "\n" statements | statement
-    statement: assigment | loop | conditional | expression
+    statement: assigment | loop | conditional | returning | expression
 
     assignment: VARIABLE '=' block 
     loop: "while" expression block
     conditional: "if" expression block "else" block | "if" expression block
+    returning: "return" expression
 
     expression: relational
     relational: logic /<|>|<=|>=|==|!=/ logic | logic

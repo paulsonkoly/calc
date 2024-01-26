@@ -9,6 +9,11 @@ import (
 )
 
 func Evaluate(s stack.Stack, n types.Node) types.Value {
+	r, _ := evaluate(s, n)
+	return r
+}
+
+func evaluate(s stack.Stack, n types.Node) (types.Value, bool) {
 	switch n.Token.Type {
 
 	case types.IntLit:
@@ -16,14 +21,14 @@ func Evaluate(s stack.Stack, n types.Node) types.Value {
 		if err != nil {
 			panic(err)
 		}
-		return types.ValueInt(i)
+		return types.ValueInt(i), false
 
 	case types.FloatLit:
 		f, err := strconv.ParseFloat(n.Token.Value, 64)
 		if err != nil {
 			panic(err)
 		}
-		return types.ValueFloat(f)
+		return types.ValueFloat(f), false
 
 	case types.Call:
 		fName := n.Children[0].Token.Value
@@ -39,15 +44,15 @@ func Evaluate(s stack.Stack, n types.Node) types.Value {
 					}
 					r := Evaluate(s, types.Node(f.Children[1]))
 					s.Pop()
-					return r
+					return r, false
 				} else {
-					return types.ArgumentError
+					return types.ArgumentError, false
 				}
 			} else {
-				return types.TypeError
+				return types.TypeError, false
 			}
 		} else {
-			return fl
+			return fl, false
 		}
 
 	case types.Sticky:
@@ -58,23 +63,23 @@ func Evaluate(s stack.Stack, n types.Node) types.Value {
 			if len(n.Children) == 1 {
 				r := Evaluate(s, n.Children[0])
 				r = r.Arith("*", types.ValueInt(-1))
-				return r
+				return r, false
 			}
-			return Evaluate(s, n.Children[0]).Arith(n.Token.Value, Evaluate(s, n.Children[1]))
+			return Evaluate(s, n.Children[0]).Arith(n.Token.Value, Evaluate(s, n.Children[1])), false
 
 		case "&", "|":
-			return Evaluate(s, n.Children[0]).Logic(n.Token.Value, Evaluate(s, n.Children[1]))
+			return Evaluate(s, n.Children[0]).Logic(n.Token.Value, Evaluate(s, n.Children[1])), false
 
 		case "<", "<=", ">", ">=", "==", "!=":
-			return Evaluate(s, n.Children[0]).Relational(n.Token.Value, Evaluate(s, n.Children[1]))
+			return Evaluate(s, n.Children[0]).Relational(n.Token.Value, Evaluate(s, n.Children[1])), false
 
 		case "->":
-			return types.ValueFunction(n)
+			return types.ValueFunction(n), false
 
 		case "=":
 			v := Evaluate(s, n.Children[1])
 			s.Set(n.Children[0].Token.Value, v)
-			return v
+			return v, false
 
 		default:
 			log.Panicf("unexpected single character in evaluator: %s", n.Token.Value)
@@ -84,53 +89,56 @@ func Evaluate(s stack.Stack, n types.Node) types.Value {
 		switch n.Token.Value {
 
 		case "true":
-			return types.ValueBool(true)
+			return types.ValueBool(true), false
 
 		case "false":
-			return types.ValueBool(false)
+			return types.ValueBool(false), false
 
 		case "if":
 			c := Evaluate(s, n.Children[0])
 			if cc, ok := c.(types.ValueBool); ok {
 				if cc {
-					return Evaluate(s, n.Children[1])
+					return evaluate(s, n.Children[1])
 				} else if len(n.Children) > 2 {
-					return Evaluate(s, n.Children[2])
+					return evaluate(s, n.Children[2])
 				} else {
-					return types.NoResultError
+					return types.NoResultError, false
 				}
 			} else {
-				return types.TypeError
+				return types.TypeError, false
 			}
 
 		case "while":
 			r := types.Value(types.NoResultError)
+			returning := false
 			for {
 				cond := Evaluate(s, n.Children[0])
 				if ccond, ok := cond.(types.ValueBool); ok {
-					if !ccond {
-						return r
+					if !bool(ccond) || returning {
+						return r, returning
 					}
-					r = Evaluate(s, n.Children[1])
+					r, returning = evaluate(s, n.Children[1])
 				} else {
-					return types.TypeError
+					return types.TypeError, false
 				}
-
 			}
+
+		case "return":
+      return Evaluate(s, n.Children[0]), true
 
 		default:
 			v, _ := s.LookUp(n.Token.Value)
-			return v
+			return v, false
 		}
 	default:
 		if len(n.Children) < 1 {
 			log.Panic("empty block")
 		}
-		r := Evaluate(s, n.Children[0])
-		for _, e := range n.Children[1:] {
-			r = Evaluate(s, e)
-		}
-		return r
+		r, returning := evaluate(s, n.Children[0])
+    for i := 1; i < len(n.Children) && ! returning; i++ {
+      r, returning = evaluate(s, n.Children[i])
+    }
+		return r, returning
 	}
 
 	panic("unsupported node tpye")

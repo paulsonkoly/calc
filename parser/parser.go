@@ -21,10 +21,10 @@ func Parse(input string) ([]t.Node, error) {
 
 type tokenType = t.TokenType
 
-// unOp is used for unary operators
+// unaryOp is used for unary operators
 //
 // It rewrites the pair of nodes putting the second under the first.
-func unOp(nodes []c.Node) []c.Node {
+func unaryOp(nodes []c.Node) []c.Node {
 	if len(nodes) != 2 {
 		log.Panicf("incorrect number of sub nodes for unary operator (%d)", len(nodes))
 	}
@@ -112,7 +112,7 @@ func atom(input c.RollbackLexer) ([]c.Node, error) {
 }
 
 func unary(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.Or(c.Fmap(unOp, (c.Seq(acceptToken("-"), atom))), atom)(input)
+	r, err := c.Or(c.Fmap(unaryOp, (c.Seq(acceptToken("-"), atom))), atom)(input)
 	return r, err
 }
 
@@ -159,7 +159,7 @@ func assignment(input c.RollbackLexer) ([]c.Node, error) {
 }
 
 func statement(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.OneOf(conditional, loop, assignment, expression)(input)
+	r, err := c.OneOf(conditional, loop, returning, assignment, expression)(input)
 	return r, err
 }
 
@@ -171,6 +171,11 @@ func conditional(input c.RollbackLexer) ([]c.Node, error) {
 
 func loop(input c.RollbackLexer) ([]c.Node, error) {
 	r, err := c.Fmap(control, c.Seq(acceptToken("while"), expression, block))(input)
+	return r, err
+}
+
+func returning(input c.RollbackLexer) ([]c.Node, error) {
+	r, err := c.Fmap(unaryOp, c.And(acceptToken("return"), expression))(input)
 	return r, err
 }
 

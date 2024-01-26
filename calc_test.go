@@ -116,6 +116,15 @@ var testData = [...]TestDatum{
 			a(2)
 		}`, nil, types.ValueInt(1),
 	},
+	{"function/return",
+		`{
+			a = (n) -> {
+        return 1
+        2
+      }
+			a(2)
+		}`, nil, types.ValueInt(1),
+	},
 }
 
 func TestCalc(t *testing.T) {
