@@ -3,12 +3,12 @@ package stack_test
 import (
 	"testing"
 
-	"github.com/phaul/calc/types"
 	"github.com/phaul/calc/stack"
+	"github.com/phaul/calc/types"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestStack(t * testing.T) {
+func TestStack(t *testing.T) {
 	s := stack.NewStack()
 
 	v, ok := s.LookUp("something")

@@ -124,7 +124,7 @@ func evaluate(s stack.Stack, n types.Node) (types.Value, bool) {
 			}
 
 		case "return":
-      return Evaluate(s, n.Children[0]), true
+			return Evaluate(s, n.Children[0]), true
 
 		default:
 			v, _ := s.LookUp(n.Token.Value)
@@ -135,9 +135,9 @@ func evaluate(s stack.Stack, n types.Node) (types.Value, bool) {
 			log.Panic("empty block")
 		}
 		r, returning := evaluate(s, n.Children[0])
-    for i := 1; i < len(n.Children) && ! returning; i++ {
-      r, returning = evaluate(s, n.Children[i])
-    }
+		for i := 1; i < len(n.Children) && !returning; i++ {
+			r, returning = evaluate(s, n.Children[i])
+		}
 		return r, returning
 	}
 

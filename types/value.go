@@ -137,7 +137,7 @@ func (b ValueBool) Logic(op string, other Value) Value {
 
 	case ValueBool:
 		switch op {
-    case "&":
+		case "&":
 			return ValueBool(bool(b) && bool(o))
 		case "|":
 			return ValueBool(bool(b) || bool(o))
@@ -151,7 +151,6 @@ func (b ValueBool) Logic(op string, other Value) Value {
 	}
 	panic("no type conversion")
 }
-
 
 func (e ValueError) Arith(_ string, _ Value) Value      { return e }
 func (e ValueError) Relational(_ string, _ Value) Value { return e }

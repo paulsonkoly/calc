@@ -43,7 +43,7 @@ func main() {
 					t, err := parser.Parse(input)
 					if err != nil {
 						fmt.Println(err)
-            input = ""
+						input = ""
 						continue
 					}
 					if len(t) < 1 {
