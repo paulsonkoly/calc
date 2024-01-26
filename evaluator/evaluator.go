@@ -62,6 +62,9 @@ func Evaluate(s stack.Stack, n types.Node) types.Value {
 			}
 			return Evaluate(s, n.Children[0]).Arith(n.Token.Value, Evaluate(s, n.Children[1]))
 
+		case "&", "|":
+			return Evaluate(s, n.Children[0]).Logic(n.Token.Value, Evaluate(s, n.Children[1]))
+
 		case "<", "<=", ">", ">=", "==", "!=":
 			return Evaluate(s, n.Children[0]).Relational(n.Token.Value, Evaluate(s, n.Children[1]))
 

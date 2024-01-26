@@ -39,7 +39,7 @@ func newSTR(c rune, typ t.TokenType, emit, adv bool, format string, args ...any)
 	case strings.Contains("(){},", string(c)):
 		return str{next: notSticky, doEmit: emit, doAdv: adv, typ: typ}
 
-	case strings.Contains("+*/=<>!-", string(c)):
+	case strings.Contains("+*/=<>!-&|", string(c)):
 		return str{next: sticky, doEmit: emit, doAdv: adv, typ: typ}
 
 	default:
@@ -90,7 +90,7 @@ func notSticky(c rune) str {
 
 func sticky(c rune) str {
 	switch {
-	case strings.Contains("+*/=<>!-", string(c)):
+	case strings.Contains("+*/=<>!-&|", string(c)):
 		return str{next: sticky}
 
 	default:

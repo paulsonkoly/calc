@@ -128,6 +128,12 @@ func addsub(input c.RollbackLexer) ([]c.Node, error) {
 	return r, err
 }
 
+func logic(input c.RollbackLexer) ([]c.Node, error) {
+	op := c.Or(acceptToken("&"), acceptToken("|"))
+	r, err := c.Or(c.Fmap(leftChain, c.And(c.Some(c.And(addsub, op)), addsub)), addsub)(input)
+	return r, err
+}
+
 var relOp = c.OneOf(
 	acceptToken("=="),
 	acceptToken("!="),
@@ -138,7 +144,7 @@ var relOp = c.OneOf(
 )
 
 func relational(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.Or(c.Fmap(leftChain, c.Seq(addsub, relOp, addsub)), addsub)(input)
+	r, err := c.Or(c.Fmap(leftChain, c.Seq(logic, relOp, logic)), logic)(input)
 	return r, err
 }
 

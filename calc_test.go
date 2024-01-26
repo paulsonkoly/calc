@@ -60,6 +60,12 @@ var testData = [...]TestDatum{
 	{"relop/float<=float true", "1.0<=1.0", nil, types.ValueBool(true)},
 	{"relop/bool<=bool", "true<=true", nil, types.InvalidOpError},
 
+	{"logicop/bool&bool true", "true&true", nil, types.ValueBool(true)},
+	{"logicop/bool&bool false", "true&false", nil, types.ValueBool(false)},
+	{"logicop/bool|bool true", "true|false", nil, types.ValueBool(true)},
+	{"logicop/bool|bool false", "false|false", nil, types.ValueBool(false)},
+	{"logicop/bool|int", "false|1", nil, types.TypeError},
+
 	{"block/single line", "{\n1\n}", nil, types.ValueInt(1)},
 	{"block/multi line", "{\n1\n2\n}", nil, types.ValueInt(2)},
 

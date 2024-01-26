@@ -6,6 +6,7 @@ type Value interface {
 	// possibly different type in which case type coercion happens
 	Arith(op string, other Value) Value
 	Relational(op string, other Value) Value
+	Logic(op string, other Value) Value
 }
 
 type ValueInt int
@@ -62,6 +63,8 @@ func (i ValueInt) Relational(op string, other Value) Value {
 	panic("no type conversion")
 }
 
+func (i ValueInt) Logic(_ string, _ Value) Value { return TypeError }
+
 func (f ValueFloat) Arith(op string, other Value) Value {
 	switch o := other.(type) {
 
@@ -99,6 +102,8 @@ func (f ValueFloat) Relational(op string, other Value) Value {
 	panic("no type conversion")
 }
 
+func (f ValueFloat) Logic(_ string, _ Value) Value { return TypeError }
+
 func (b ValueBool) Arith(_ string, _ Value) Value { return TypeError }
 
 func (b ValueBool) Relational(op string, other Value) Value {
@@ -124,11 +129,37 @@ func (b ValueBool) Relational(op string, other Value) Value {
 	panic("no type conversion")
 }
 
+func (b ValueBool) Logic(op string, other Value) Value {
+	switch o := other.(type) {
+
+	case ValueInt, ValueFloat, ValueFunction:
+		return TypeError
+
+	case ValueBool:
+		switch op {
+    case "&":
+			return ValueBool(bool(b) && bool(o))
+		case "|":
+			return ValueBool(bool(b) || bool(o))
+		default:
+			return InvalidOpError
+		}
+
+	case ValueError:
+		return o
+
+	}
+	panic("no type conversion")
+}
+
+
 func (e ValueError) Arith(_ string, _ Value) Value      { return e }
 func (e ValueError) Relational(_ string, _ Value) Value { return e }
+func (e ValueError) Logic(_ string, _ Value) Value      { return e }
 
 func (f ValueFunction) Arith(_ string, _ Value) Value      { return TypeError }
 func (f ValueFunction) Relational(_ string, _ Value) Value { return TypeError }
+func (f ValueFunction) Logic(_ string, _ Value) Value      { return TypeError }
 func (f ValueFunction) String() string                     { return "function" }
 
 func builtinArith[t int | float64](op string, a, b t) t {
