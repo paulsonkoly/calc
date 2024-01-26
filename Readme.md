@@ -18,13 +18,12 @@ The language can be used in a REPL or instructions can be read from a file. The 
   
     isprime = (n) -> {
       if n < 2 return false
-        i = 2
-        while i <= n / 2 {
-          if divides(i, n) return false
-          i = i + 1	
-        }
-        true
+      i = 2
+      while i <= n / 2 {
+        if divides(i, n) return false
+        i = i + 1	
       }
+      true
     }
     > function
   
