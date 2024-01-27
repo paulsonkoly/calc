@@ -1,4 +1,4 @@
-// stack provides the call stack to our interpretter.
+// stack provides the call stack to our interpreter.
 //
 // It implements variable lookup and pushing stack frames on function calls,
 // and popping stack frames on returns.
@@ -12,41 +12,56 @@ package stack
 import (
 	"fmt"
 
-	"github.com/phaul/calc/types"
+	"github.com/phaul/calc/types/value"
 )
 
-type Stack []frame
+type sframe = value.Frame
+type svalue = value.Type
 
-type frame map[string]types.Value
+type Stack []sframe
 
 // NewStack creates a new stack
 func NewStack() Stack {
-	topF := make(frame)
-	return []frame{topF}
+	topF := make(sframe)
+	return []sframe{topF}
 }
 
 // LookUp looks up a variable value
-func (s Stack) LookUp(name string) (types.Value, bool) {
+func (s Stack) LookUp(name string) (svalue, bool) {
 	for i := len(s) - 1; i >= 0; i-- {
 		f := s[i]
 		if v, ok := f[name]; ok {
 			return v, true
 		}
 	}
-	return types.ValueError(fmt.Sprintf("%s not defined", name)), false
+	return value.Error(fmt.Sprintf("%s not defined", name)), false
 }
 
 // Set sets a variable to a value in the current frame, ignoring lookup
-func (s Stack) Set(name string, v types.Value) {
+func (s Stack) Set(name string, v svalue) {
 	s[len(s)-1][name] = v
 }
 
 // Push pushes a new frame on the stack
-func (s *Stack) Push() {
-	*s = append(*s, make(frame))
+func (s *Stack) Push(fr *sframe) {
+	if fr == nil {
+		*s = append(*s, make(sframe))
+	} else {
+		*s = append(*s, *fr)
+	}
 }
 
 // Pop pops a frame from the stack
+//
+// It returns a pointer to the frame popped, in case of a function returning a
+// function value, as a closure we need to keep reference to the enclosing
+// environment. It will be attached to the returned function value. Otherwise
+// the value can be ignored by the caller.
 func (s *Stack) Pop() {
 	*s = (*s)[:len(*s)-1]
+}
+
+func (s *Stack) Top() *sframe {
+	r := (*s)[len(*s)-1]
+	return &r
 }

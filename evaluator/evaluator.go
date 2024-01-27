@@ -6,14 +6,15 @@ import (
 
 	"github.com/phaul/calc/stack"
 	"github.com/phaul/calc/types"
+	"github.com/phaul/calc/types/value"
 )
 
-func Evaluate(s stack.Stack, n types.Node) types.Value {
+func Evaluate(s stack.Stack, n types.Node) value.Type {
 	r, _ := evaluate(s, n)
 	return r
 }
 
-func evaluate(s stack.Stack, n types.Node) (types.Value, bool) {
+func evaluate(s stack.Stack, n types.Node) (value.Type, bool) {
 	switch n.Token.Type {
 
 	case types.IntLit:
@@ -21,35 +22,44 @@ func evaluate(s stack.Stack, n types.Node) (types.Value, bool) {
 		if err != nil {
 			panic(err)
 		}
-		return types.ValueInt(i), false
+		return value.Int(i), false
 
 	case types.FloatLit:
 		f, err := strconv.ParseFloat(n.Token.Value, 64)
 		if err != nil {
 			panic(err)
 		}
-		return types.ValueFloat(f), false
+		return value.Float(f), false
 
 	case types.Call:
 		fName := n.Children[0].Token.Value
 		if fl, ok := s.LookUp(fName); ok {
-			s.Push()
-			if f, ok := fl.(types.ValueFunction); ok {
+			if f, ok := fl.(value.Function); ok {
 				args := n.Children[1].Children
-				params := f.Children[0].Children
+				params := f.Node.Children[0].Children
 				if len(args) == len(params) {
-					s.Push()
-					for i := 0; i < len(args); i++ {
-						s.Set(params[i].Token.Value, Evaluate(s, args[i]))
+					// push 2 frames, one is the closure environment, the other is the frame for arguments
+					if f.Frame != nil {
+						s.Push(f.Frame)
 					}
-					r := Evaluate(s, types.Node(f.Children[1]))
+					frm := make(value.Frame)
+					if f.Frame != nil {
+					}
+					for i := 0; i < len(args); i++ {
+						frm[params[i].Token.Value] = Evaluate(s, args[i])
+					}
+					s.Push(&frm)
+					r := Evaluate(s, types.Node(f.Node.Children[1]))
+					if f.Frame != nil {
+						s.Pop()
+					}
 					s.Pop()
 					return r, false
 				} else {
-					return types.ArgumentError, false
+					return value.ArgumentError, false
 				}
 			} else {
-				return types.TypeError, false
+				return value.TypeError, false
 			}
 		} else {
 			return fl, false
@@ -62,7 +72,7 @@ func evaluate(s stack.Stack, n types.Node) (types.Value, bool) {
 			// special case unary -
 			if len(n.Children) == 1 {
 				r := Evaluate(s, n.Children[0])
-				r = r.Arith("*", types.ValueInt(-1))
+				r = r.Arith("*", value.Int(-1))
 				return r, false
 			}
 			return Evaluate(s, n.Children[0]).Arith(n.Token.Value, Evaluate(s, n.Children[1])), false
@@ -74,7 +84,11 @@ func evaluate(s stack.Stack, n types.Node) (types.Value, bool) {
 			return Evaluate(s, n.Children[0]).Relational(n.Token.Value, Evaluate(s, n.Children[1])), false
 
 		case "->":
-			return types.ValueFunction(n), false
+			if len(s) == 1 {
+				return value.Function{Node: n}, false
+			} else {
+				return value.Function{Node: n, Frame: s.Top()}, false
+			}
 
 		case "=":
 			v := Evaluate(s, n.Children[1])
@@ -89,37 +103,37 @@ func evaluate(s stack.Stack, n types.Node) (types.Value, bool) {
 		switch n.Token.Value {
 
 		case "true":
-			return types.ValueBool(true), false
+			return value.Bool(true), false
 
 		case "false":
-			return types.ValueBool(false), false
+			return value.Bool(false), false
 
 		case "if":
 			c := Evaluate(s, n.Children[0])
-			if cc, ok := c.(types.ValueBool); ok {
+			if cc, ok := c.(value.Bool); ok {
 				if cc {
 					return evaluate(s, n.Children[1])
 				} else if len(n.Children) > 2 {
 					return evaluate(s, n.Children[2])
 				} else {
-					return types.NoResultError, false
+					return value.NoResultError, false
 				}
 			} else {
-				return types.TypeError, false
+				return value.TypeError, false
 			}
 
 		case "while":
-			r := types.Value(types.NoResultError)
+			r := value.Type(value.NoResultError)
 			returning := false
 			for {
 				cond := Evaluate(s, n.Children[0])
-				if ccond, ok := cond.(types.ValueBool); ok {
+				if ccond, ok := cond.(value.Bool); ok {
 					if !bool(ccond) || returning {
 						return r, returning
 					}
 					r, returning = evaluate(s, n.Children[1])
 				} else {
-					return types.TypeError, false
+					return value.TypeError, false
 				}
 			}
 

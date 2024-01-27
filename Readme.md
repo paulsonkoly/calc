@@ -36,7 +36,7 @@ Supported features:
  - variables
  - conditionals
  - loops
- - functions
+ - functions as closures
  - arithmetic operations +, -, *, /; relational operations <, <=, >, >=, ==, !=; boolean operations & |.
  - explicit evaluation order by parenthesis
  - being functional in the sense that functions are first class values
@@ -70,29 +70,62 @@ Incorrect operations result in error, any further calculation with an error resu
     c*2
     >  variable b not defined
 
-## Variable lookup, shadowing
+## Variable lookup, shadowing, closures
 
-The language has very simple variable lookup rules. Function calls create new stack frames, function returns pop stack frames. Variables on read are looked up starting at the current frame, traversing each frame upwards in the stack until the variable is found. Variable writes set the variable in the current frame.
+Function calls create new stack frames, function returns pop stack frames. Variables on read are looked up starting at the current frame, traversing each frame upwards in the stack until the variable is found. Variable writes always set the variable in the current frame.
 
     a = 13
     >  13
+
     f = (n) -> {
         a = a+1
     }
     >  function
+
     f(1)
     >  14
+
     a
     >  13
 
 We set a to 13 at the top frame. We set f to a function value. We call f passing argument 1. This does the following steps:
 
-   1. push a new empty frame on the stack
-   2. set n in the new frame to 1
+   1. create a new frame with the arguments populated, setting n to 1
+   2. push the frame
    3. evaluate the function body, which sets a in the current frame to 14 (reading 13 from the frame above).
-   4. pops the last frame from the stack
+   4. pop the last frame from the stack
 
 Now a is 13 as the variable was shadowed in the function call.
+
+When a function is not a top level function but defined within a function, it becomes a closure. This is done by the call and the return pushing and popping 2 frames respectively. The first frame pushed is the frame the function was defined in, the second frame contains the arguments.
+
+    f = (n) -> {
+      a = 1
+      (b) -> a + b + n
+    }
+    >  function
+
+    foo = f(2)
+    >  function
+
+    foo(3)
+    >  6
+
+In this example the function returned from f holds reference to the frame that was pushed on the call of f. This frame contains both a=1 and n=2. The anonymous function is assigned to foo later, and at the call of foo, we push this frame, and a second frame containing b=3.
+
+This allows us to implement Currying.
+
+    curry = (f, a) -> (b) -> f(a, b)
+    >  function
+
+    sum = (a, b) -> a + b
+    >  function
+
+    plusthree = curry(sum, 3)
+    >  function
+
+    plusthree(5)
+    >  8
 
 ## Language
 
@@ -150,9 +183,9 @@ The following tokens are valid (using usual regular expression notation)
 
 tokens are separated with white-spaces.
 
-### Grammar
+### BNF
 
-Support unary minus at the grammar level as opposed to lexer level for negative number literals. This means that "- 5" is minus five with white-space or 2+-(3+1) works. In the following BNF non-terminals are lower case, terminals are upper case or quoted strings.
+In the following BNF non-terminals are lower case, terminals are upper case or quoted strings.
 
     program: block "\n" program | block EOF
     block: "{" "\n" statements "\n" "}" | statement
