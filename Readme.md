@@ -175,7 +175,15 @@ All operators are left associative thus following the natural notations. 1-2+1 i
 
 ### Assignment
 
-Any value type can be assigned to a variable. The variable name is not defined in the scope of the assignment right hand side, so when writing a recursive function one cannot use the variable the function is assigned to to do the recursive call. Instead the rec keyword can be used. Although assignments return the assigned value, they cannot be used in expressions, only as a statement.
+Any value type can be assigned to a variable. The variable name is not defined in the scope of the assignment right hand side. Although assignments return the assigned value, they cannot be used in expressions, only as a statement.
+
+Recursive call to a function using the variable name the function is assigned to works however because the function body is only evaluated when the function is called.
+
+    f = (n) -> if n <= 0 0 else n + f(n-1)
+    > function
+
+    f(5)
+    > 15
 
 ### Loop and Conditionals
 
