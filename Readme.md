@@ -5,14 +5,7 @@ A simple calculator language / REPL. This project is merely for code practicing,
 The language can be used in a REPL or instructions can be read from a file. The REPL outputs its answer after '>' character.
 
     divides = (a, b) -> {
-      s = a
-      while s <= b {
-        if s == b {
-          return true
-        }
-        s = s + a
-      }
-      false
+      b/a*a == b
     }
     > function
   
