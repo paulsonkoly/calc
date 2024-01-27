@@ -23,6 +23,20 @@ The language can be used in a REPL or instructions can be read from a file. The 
     isprime(13)
     > true
 
+Functional programming / Currying
+
+    curry = (f, a) -> (b) -> f(a, b)
+    >  function
+
+    sum = (a, b) -> a + b
+    >  function
+
+    plusthree = curry(sum, 3)
+    >  function
+
+    plusthree(5)
+    >  8
+
 Supported features:
 
  - integer, floating point and boolean literals
@@ -105,20 +119,6 @@ When a function is not a top level function but defined within a function, it be
     >  6
 
 In this example the function returned from f holds reference to the frame that was pushed on the call of f. This frame contains both a=1 and n=2. The anonymous function is assigned to foo later, and at the call of foo, we push this frame, and a second frame containing b=3.
-
-This allows us to implement Currying.
-
-    curry = (f, a) -> (b) -> f(a, b)
-    >  function
-
-    sum = (a, b) -> a + b
-    >  function
-
-    plusthree = curry(sum, 3)
-    >  function
-
-    plusthree(5)
-    >  8
 
 Note however that only the last frame of the function definition is retained, thus the following results in error:
 
