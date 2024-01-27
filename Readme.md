@@ -127,7 +127,7 @@ This allows us to implement Currying.
     plusthree(5)
     >  8
 
-Note however that only the top level frame of the function definition is retained, thus the following results in error:
+Note however that only the last frame of the function definition is retained, thus the following results in error:
 
     f = (x) -> {
       (y) -> {
