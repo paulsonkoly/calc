@@ -185,6 +185,13 @@ Recursive call to a function using the variable name the function is assigned to
     f(5)
     > 15
 
+One caveat is that the variable lookup on the function name increases linearly in time complexity as the top level frame holding the function value gets further away in the call stack. One can mitigate this effect by wrapping the recursion in a function, so the recursive function becomes a closure, holding an immediate pointer to the stack frame that contains its definition.
+
+    f = (n) -> {
+      rec = (m) -> if m <= 0 0 else m + rec(m-1)
+      rec(n)
+    }
+
 ### Loop and Conditionals
 
 The only loop syntax is the while loop. Conditional code can be written with the if or the if .. else .. structures. As these are statements they end at the first newline, but one can use blocks to write multi line body loops and conditionals. This should explain why the first two examples are valid, but the third one is not.
