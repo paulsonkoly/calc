@@ -145,6 +145,25 @@ Note however that only the last frame of the function definition is retained, th
     second(3) 
     >  x not defined
 
+One can make this example work by making an explicit copy of x:
+
+    f = (x) -> {
+      (y) -> {
+        x = x
+        (z) -> x + y + z
+      }
+    }
+    >  function
+
+    first = f(1)
+    >  function
+
+    second = first(2)
+    >  function
+
+    second(3)
+    >  6
+
 ## Language
 
 The token { defines a multi-line block, until the corresponding } is found. The REPL doesn't output for lines inside a block. The top level non-terminal is the program, a program consists of statements. Statements are on a single line up to the first new line character, blocks span across multiple lines.
