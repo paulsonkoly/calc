@@ -1,6 +1,6 @@
 package value
 
-import "github.com/phaul/calc/types"
+import "github.com/phaul/calc/types/node"
 
 // type Type represents the evaluation result value
 type Type interface {
@@ -16,7 +16,7 @@ type Float float64
 type Error string
 type Bool bool
 type Function struct {
-	Node  types.Node
+	Node  node.Type
 	Frame *Frame
 }
 

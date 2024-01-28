@@ -5,17 +5,17 @@ import (
 
 	c "github.com/phaul/calc/combinator"
 	l "github.com/phaul/calc/lexer"
-	t "github.com/phaul/calc/types"
+	"github.com/phaul/calc/types/node"
 	"github.com/phaul/calc/types/token"
 )
 
-func Parse(input string) ([]t.Node, error) {
+func Parse(input string) ([]node.Type, error) {
 	l := l.NewTLexer(input)
-	rn := make([]t.Node, 0)
+	rn := make([]node.Type, 0)
 
 	r, err := program(&l)
 	for _, e := range r {
-		rn = append(rn, e.(t.Node))
+		rn = append(rn, e.(node.Type))
 	}
 	return rn, err
 }
@@ -30,8 +30,8 @@ func unaryOp(nodes []c.Node) []c.Node {
 		log.Panicf("incorrect number of sub nodes for unary operator (%d)", len(nodes))
 	}
 
-	r := nodes[0].(t.Node)
-	r.Children = []t.Node{nodes[1].(t.Node)}
+	r := nodes[0].(node.Type)
+	r.Children = []node.Type{nodes[1].(node.Type)}
 	return []c.Node{r}
 }
 
@@ -51,23 +51,23 @@ func leftChain(nodes []c.Node) []c.Node {
 	}
 	r := nodes[0]
 	for i := 1; i+1 < len(nodes); i += 2 {
-		n := nodes[i].(t.Node)
-		n.Children = []t.Node{r.(t.Node), nodes[i+1].(t.Node)}
+		n := nodes[i].(node.Type)
+		n.Children = []node.Type{r.(node.Type), nodes[i+1].(node.Type)}
 		r = n
 	}
 	return []c.Node{r}
 }
 
 func wrap(nodes []c.Node) []c.Node {
-	r := t.Node{Children: make([]t.Node, 0)}
+	r := node.Type{Children: make([]node.Type, 0)}
 	for _, n := range nodes {
-		r.Children = append(r.Children, n.(t.Node))
+		r.Children = append(r.Children, n.(node.Type))
 	}
 	return []c.Node{r}
 }
 
 func mkFCall(nodes []c.Node) []c.Node {
-	r := t.Node{Token: token.Type{Type: token.Call}, Children: []t.Node{nodes[0].(t.Node), nodes[1].(t.Node)}}
+	r := node.Type{Token: token.Type{Type: token.Call}, Children: []node.Type{nodes[0].(node.Type), nodes[1].(node.Type)}}
 	return []c.Node{r}
 }
 
@@ -75,10 +75,10 @@ func control(nodes []c.Node) []c.Node {
 	if len(nodes) != 3 && len(nodes) != 5 {
 		log.Panicf("incorrect number of sub nodes for control (%d)", len(nodes))
 	}
-	r := nodes[0].(t.Node)
-	r.Children = []t.Node{nodes[1].(t.Node), nodes[2].(t.Node)}
+	r := nodes[0].(node.Type)
+	r.Children = []node.Type{nodes[1].(node.Type), nodes[2].(node.Type)}
 	if len(nodes) == 5 {
-		r.Children = append(r.Children, nodes[4].(t.Node))
+		r.Children = append(r.Children, nodes[4].(node.Type))
 	}
 	return []c.Node{r}
 }
@@ -89,7 +89,7 @@ type tokenWrapper struct{}
 
 // TODO rename once t doesn't conlict
 func (_ tokenWrapper) Wrap(tok c.Token) c.Node {
-	return t.Node{Token: tok.(token.Type)}
+	return node.Type{Token: tok.(token.Type)}
 }
 
 func acceptTerm(tokType tokenType, msg string) c.Parser {

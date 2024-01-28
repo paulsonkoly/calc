@@ -1,14 +1,13 @@
 package main_test
 
 import (
-	// "errors"
 	"errors"
 	"testing"
 
 	"github.com/phaul/calc/evaluator"
 	"github.com/phaul/calc/parser"
 	"github.com/phaul/calc/stack"
-	"github.com/phaul/calc/types"
+	"github.com/phaul/calc/types/node"
 	"github.com/phaul/calc/types/value"
 	"github.com/stretchr/testify/assert"
 )
@@ -104,12 +103,12 @@ var testData = [...]TestDatum{
 	}
 }`, nil, value.TypeError},
 
-	{"function definition", "(n) -> 1", nil, value.Function{Node: types.Node{}}},
+	{"function definition", "(n) -> 1", nil, value.Function{Node: node.Type{}}},
 	{"function/no argument", "() -> 1", errors.New("Parser: ( expected, got )"), nil},
 	{"function/block",
 		`(n) -> {
 		n + 1
-  }`, nil, value.Function{Node: types.Node{}}},
+  }`, nil, value.Function{Node: node.Type{}}},
 
 	{"call",
 		`{

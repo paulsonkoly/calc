@@ -1,4 +1,4 @@
-package types
+package node
 
 import (
 	"fmt"
@@ -7,14 +7,14 @@ import (
 	"github.com/phaul/calc/types/token"
 )
 
-type Node struct {
+type Type struct {
 	Token    token.Type
-	Children []Node
+	Children []Type
 }
 
-func (n Node) PrettyPrint() { recurse(0, n) }
+func (n Type) PrettyPrint() { recurse(0, n) }
 
-func recurse(depth int, n Node) {
+func recurse(depth int, n Type) {
 	fmt.Printf("%s %v\n", strings.Repeat(" ", 3*depth), n.Token)
 	for _, c := range n.Children {
 		recurse(depth+1, c)

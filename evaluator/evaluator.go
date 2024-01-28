@@ -5,17 +5,17 @@ import (
 	"strconv"
 
 	"github.com/phaul/calc/stack"
-	"github.com/phaul/calc/types"
+	"github.com/phaul/calc/types/node"
 	"github.com/phaul/calc/types/token"
 	"github.com/phaul/calc/types/value"
 )
 
-func Evaluate(s stack.Stack, n types.Node) value.Type {
+func Evaluate(s stack.Stack, n node.Type) value.Type {
 	r, _ := evaluate(s, n)
 	return r
 }
 
-func evaluate(s stack.Stack, n types.Node) (value.Type, bool) {
+func evaluate(s stack.Stack, n node.Type) (value.Type, bool) {
 	switch n.Token.Type {
 
 	case token.IntLit:
@@ -50,7 +50,7 @@ func evaluate(s stack.Stack, n types.Node) (value.Type, bool) {
 						s.Push(f.Frame)
 					}
 					s.Push(&frm)
-					r := Evaluate(s, types.Node(f.Node.Children[1]))
+					r := Evaluate(s, node.Type(f.Node.Children[1]))
 					if f.Frame != nil {
 						s.Pop()
 					}
