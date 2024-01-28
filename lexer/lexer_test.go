@@ -4,62 +4,62 @@ import (
 	"testing"
 
 	"github.com/phaul/calc/lexer"
-	t "github.com/phaul/calc/types"
+	"github.com/phaul/calc/types/token"
 	"github.com/stretchr/testify/assert"
 )
 
 type testDatum struct {
 	title string
 	input string
-	dat   []t.Token
+	dat   []token.Type
 }
 
-var eol = t.Token{Value: "\n", Type: t.EOL}
-var eof = t.Token{Value: string(lexer.EOF), Type: t.EOF}
+var eol = token.Type{Value: "\n", Type: token.EOL}
+var eof = token.Type{Value: string(lexer.EOF), Type: token.EOF}
 
 var testData = []testDatum{
-	{"single lexeme", "13", []t.Token{{Value: "13", Type: t.IntLit}, eof}},
-	{"single lexeme", "a", []t.Token{{Value: "a", Type: t.Name}, eof}},
-	{"single lexeme", "ab", []t.Token{{Value: "ab", Type: t.Name}, eof}},
-	{"single lexeme", "13.6", []t.Token{{Value: "13.6", Type: t.FloatLit}, eof}},
-	{"single lexeme", "+", []t.Token{{Value: "+", Type: t.Sticky}, eof}},
-	{"single lexeme", "-", []t.Token{{Value: "-", Type: t.Sticky}, eof}},
-	{"single lexeme", "*", []t.Token{{Value: "*", Type: t.Sticky}, eof}},
-	{"single lexeme", "/", []t.Token{{Value: "/", Type: t.Sticky}, eof}},
-	{"single lexeme", "(", []t.Token{{Value: "(", Type: t.NotSticky}, eof}},
-	{"single lexeme", ")", []t.Token{{Value: ")", Type: t.NotSticky}, eof}},
-	{"single lexeme", "{", []t.Token{{Value: "{", Type: t.NotSticky}, eof}},
-	{"single lexeme", "}", []t.Token{{Value: "}", Type: t.NotSticky}, eof}},
-	{"single lexeme", "&", []t.Token{{Value: "&", Type: t.Sticky}, eof}},
-	{"single lexeme", "|", []t.Token{{Value: "|", Type: t.Sticky}, eof}},
-	{"sticky double", "<=", []t.Token{{Value: "<=", Type: t.Sticky}, eof}},
-	{"non-sticky double", "((", []t.Token{{Value: "(", Type: t.NotSticky}, {Value: "(", Type: t.NotSticky}, eof}},
-	{"new line lexeme", "a\nb", []t.Token{{Value: "a", Type: t.Name}, eol, {Value: "b", Type: t.Name}, eof}},
-	{"whitespace at front", "   )", []t.Token{{Value: ")", Type: t.NotSticky}, eof}},
-	{"whitespace at back", ")    ", []t.Token{{Value: ")", Type: t.NotSticky}, eof}},
+	{"single lexeme", "13", []token.Type{{Value: "13", Type: token.IntLit}, eof}},
+	{"single lexeme", "a", []token.Type{{Value: "a", Type: token.Name}, eof}},
+	{"single lexeme", "ab", []token.Type{{Value: "ab", Type: token.Name}, eof}},
+	{"single lexeme", "13.6", []token.Type{{Value: "13.6", Type: token.FloatLit}, eof}},
+	{"single lexeme", "+", []token.Type{{Value: "+", Type: token.Sticky}, eof}},
+	{"single lexeme", "-", []token.Type{{Value: "-", Type: token.Sticky}, eof}},
+	{"single lexeme", "*", []token.Type{{Value: "*", Type: token.Sticky}, eof}},
+	{"single lexeme", "/", []token.Type{{Value: "/", Type: token.Sticky}, eof}},
+	{"single lexeme", "(", []token.Type{{Value: "(", Type: token.NotSticky}, eof}},
+	{"single lexeme", ")", []token.Type{{Value: ")", Type: token.NotSticky}, eof}},
+	{"single lexeme", "{", []token.Type{{Value: "{", Type: token.NotSticky}, eof}},
+	{"single lexeme", "}", []token.Type{{Value: "}", Type: token.NotSticky}, eof}},
+	{"single lexeme", "&", []token.Type{{Value: "&", Type: token.Sticky}, eof}},
+	{"single lexeme", "|", []token.Type{{Value: "|", Type: token.Sticky}, eof}},
+	{"sticky double", "<=", []token.Type{{Value: "<=", Type: token.Sticky}, eof}},
+	{"non-sticky double", "((", []token.Type{{Value: "(", Type: token.NotSticky}, {Value: "(", Type: token.NotSticky}, eof}},
+	{"new line lexeme", "a\nb", []token.Type{{Value: "a", Type: token.Name}, eol, {Value: "b", Type: token.Name}, eof}},
+	{"whitespace at front", "   )", []token.Type{{Value: ")", Type: token.NotSticky}, eof}},
+	{"whitespace at back", ")    ", []token.Type{{Value: ")", Type: token.NotSticky}, eof}},
 	{"complex example",
 		"13.6+a-(3 / 9)\n",
-		[]t.Token{
-			{Value: "13.6", Type: t.FloatLit},
-			{Value: "+", Type: t.Sticky},
-			{Value: "a", Type: t.Name},
-			{Value: "-", Type: t.Sticky},
-			{Value: "(", Type: t.NotSticky},
-			{Value: "3", Type: t.IntLit},
-			{Value: "/", Type: t.Sticky},
-			{Value: "9", Type: t.IntLit},
-			{Value: ")", Type: t.NotSticky},
+		[]token.Type{
+			{Value: "13.6", Type: token.FloatLit},
+			{Value: "+", Type: token.Sticky},
+			{Value: "a", Type: token.Name},
+			{Value: "-", Type: token.Sticky},
+			{Value: "(", Type: token.NotSticky},
+			{Value: "3", Type: token.IntLit},
+			{Value: "/", Type: token.Sticky},
+			{Value: "9", Type: token.IntLit},
+			{Value: ")", Type: token.NotSticky},
 			eol, eof,
 		},
 	},
 	{"assignment",
 		"a=2+3",
-		[]t.Token{
-			{Value: "a", Type: t.Name},
-			{Value: "=", Type: t.Sticky},
-			{Value: "2", Type: t.IntLit},
-			{Value: "+", Type: t.Sticky},
-			{Value: "3", Type: t.IntLit},
+		[]token.Type{
+			{Value: "a", Type: token.Name},
+			{Value: "=", Type: token.Sticky},
+			{Value: "2", Type: token.IntLit},
+			{Value: "+", Type: token.Sticky},
+			{Value: "3", Type: token.IntLit},
 			eof,
 		},
 	},

@@ -2,11 +2,11 @@ package lexer
 
 import (
 	"github.com/phaul/calc/combinator"
-	t "github.com/phaul/calc/types"
+	"github.com/phaul/calc/types/token"
 )
 
 type lexerResult struct {
-	token t.Token
+	token token.Type
 	err   error
 }
 

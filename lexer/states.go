@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	t "github.com/phaul/calc/types"
+	"github.com/phaul/calc/types/token"
 )
 
 // stateFuncResult
@@ -13,13 +13,13 @@ type str struct {
 	next   stateFunc // next state function
 	doEmit bool      // lexer emits token
 	doAdv  bool      // lexer advances from to to (current token becomes empty)
-	typ    t.TokenType
+	typ    token.TokenType
 	err    error
 }
 
 type stateFunc func(c rune) str
 
-func newSTR(c rune, typ t.TokenType, emit, adv bool, format string, args ...any) str {
+func newSTR(c rune, typ token.TokenType, emit, adv bool, format string, args ...any) str {
 	switch {
 	case c == ' ' || c == '\t':
 		return str{next: whiteSpace, doEmit: emit, doAdv: adv, typ: typ}
@@ -48,7 +48,7 @@ func newSTR(c rune, typ t.TokenType, emit, adv bool, format string, args ...any)
 }
 
 func whiteSpace(c rune) str {
-	return newSTR(c, t.InvalidToken, false, true, "Lexer: unexpected char %c", c)
+	return newSTR(c, token.InvalidToken, false, true, "Lexer: unexpected char %c", c)
 }
 
 func intLit(c rune) str {
@@ -60,7 +60,7 @@ func intLit(c rune) str {
 		return str{next: floatLit}
 
 	default:
-		return newSTR(c, t.IntLit, true, false, "Lexer: unexpected char %c in integer literal", c)
+		return newSTR(c, token.IntLit, true, false, "Lexer: unexpected char %c in integer literal", c)
 	}
 }
 
@@ -70,7 +70,7 @@ func floatLit(c rune) str {
 		return str{next: floatLit}
 
 	default:
-		return newSTR(c, t.FloatLit, true, false, "Lexer: unexpected char %c in float literal", c)
+		return newSTR(c, token.FloatLit, true, false, "Lexer: unexpected char %c in float literal", c)
 	}
 }
 
@@ -80,12 +80,12 @@ func varName(c rune) str {
 		return str{next: varName}
 
 	default:
-		return newSTR(c, t.Name, true, false, "Lexer: unexpected char %c in variable name", c)
+		return newSTR(c, token.Name, true, false, "Lexer: unexpected char %c in variable name", c)
 	}
 }
 
 func notSticky(c rune) str {
-	return newSTR(c, t.NotSticky, true, false, "Lexer: unexpected char %c", c)
+	return newSTR(c, token.NotSticky, true, false, "Lexer: unexpected char %c", c)
 }
 
 func sticky(c rune) str {
@@ -94,12 +94,12 @@ func sticky(c rune) str {
 		return str{next: sticky}
 
 	default:
-		return newSTR(c, t.Sticky, true, false, "Lexer: unexpected char %c following operator", c)
+		return newSTR(c, token.Sticky, true, false, "Lexer: unexpected char %c following operator", c)
 	}
 }
 
 func eol(c rune) str {
-	return newSTR(c, t.EOL, true, false, "Lexer: unexpected char %c following new line", c)
+	return newSTR(c, token.EOL, true, false, "Lexer: unexpected char %c following new line", c)
 }
 
 func eof(c rune) str {

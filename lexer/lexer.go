@@ -15,15 +15,15 @@ package lexer
 import (
 	"strings"
 
-	t "github.com/phaul/calc/types"
+	"github.com/phaul/calc/types/token"
 )
 
 type Lexer struct {
 	input    string
 	rdr      strings.Reader
 	from, to int
-	Token    t.Token // the next token
-	Err      error   // if there was an error this will be set
+	Token    token.Type // the next token
+	Err      error      // if there was an error this will be set
 	state    stateFunc
 	eof      bool
 }
@@ -59,7 +59,7 @@ func (l *Lexer) Next() bool {
 		st = str.next
 
 		if str.doEmit {
-			l.Token = t.Token{Value: l.input[l.from:l.to], Type: str.typ}
+			l.Token = token.Type{Value: l.input[l.from:l.to], Type: str.typ}
 			l.state = str.next
 			l.from = l.to
 			l.to += s
@@ -71,7 +71,7 @@ func (l *Lexer) Next() bool {
 	}
 	if !l.eof {
 		l.eof = true
-		l.Token = t.Token{Value: string(EOF), Type: t.EOF}
+		l.Token = token.Type{Value: string(EOF), Type: token.EOF}
 		l.Err = nil
 		return true
 	}

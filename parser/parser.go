@@ -6,6 +6,7 @@ import (
 	c "github.com/phaul/calc/combinator"
 	l "github.com/phaul/calc/lexer"
 	t "github.com/phaul/calc/types"
+	"github.com/phaul/calc/types/token"
 )
 
 func Parse(input string) ([]t.Node, error) {
@@ -19,7 +20,7 @@ func Parse(input string) ([]t.Node, error) {
 	return rn, err
 }
 
-type tokenType = t.TokenType
+type tokenType = token.TokenType
 
 // unaryOp is used for unary operators
 //
@@ -66,7 +67,7 @@ func wrap(nodes []c.Node) []c.Node {
 }
 
 func mkFCall(nodes []c.Node) []c.Node {
-	r := t.Node{Token: t.Token{Type: t.Call}, Children: []t.Node{nodes[0].(t.Node), nodes[1].(t.Node)}}
+	r := t.Node{Token: token.Type{Type: token.Call}, Children: []t.Node{nodes[0].(t.Node), nodes[1].(t.Node)}}
 	return []c.Node{r}
 }
 
@@ -84,18 +85,27 @@ func control(nodes []c.Node) []c.Node {
 
 func allButLast(nodes []c.Node) []c.Node { return nodes[0 : len(nodes)-1] }
 
+type tokenWrapper struct{}
+
+// TODO rename once t doesn't conlict
+func (_ tokenWrapper) Wrap(tok c.Token) c.Node {
+	return t.Node{Token: tok.(token.Type)}
+}
+
 func acceptTerm(tokType tokenType, msg string) c.Parser {
-	return c.Accept(func(tok c.Token) bool { return tok.(t.Token).Type == tokType }, msg)
+	tokenWrap := tokenWrapper{}
+	return c.Accept(func(tok c.Token) bool { return tok.(token.Type).Type == tokType }, msg, tokenWrap)
 }
 
 func acceptToken(str string) c.Parser {
-	return c.Accept(func(tok c.Token) bool { return tok.(t.Token).Value == str }, str)
+	tokenWrap := tokenWrapper{}
+	return c.Accept(func(tok c.Token) bool { return tok.(token.Type).Value == str }, str, tokenWrap)
 }
 
 // The grammar
-var intLit = acceptTerm(t.IntLit, "integer literal")
-var floatLit = acceptTerm(t.FloatLit, "float literal")
-var varName = acceptTerm(t.Name, "variable name")
+var intLit = acceptTerm(token.IntLit, "integer literal")
+var floatLit = acceptTerm(token.FloatLit, "float literal")
+var varName = acceptTerm(token.Name, "variable name")
 
 // these can't be defined as variables as there are cycles in their
 // definitions, otherwise we could write:
@@ -204,8 +214,8 @@ func arguments(input c.RollbackLexer) ([]c.Node, error) {
 	return r, err
 }
 
-var eol = acceptTerm(t.EOL, "end of line")
-var eof = acceptTerm(t.EOF, "end of file")
+var eol = acceptTerm(token.EOL, "end of line")
+var eof = acceptTerm(token.EOF, "end of file")
 
 func block(input c.RollbackLexer) ([]c.Node, error) {
 	r, err := c.Or(

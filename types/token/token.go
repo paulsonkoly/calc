@@ -1,9 +1,7 @@
-package types
+package token
 
 import (
 	"fmt"
-
-	"github.com/phaul/calc/combinator"
 )
 
 type TokenType int
@@ -23,12 +21,12 @@ const (
 )
 
 // Token as produced by the lexer
-type Token struct {
+type Type struct {
 	Value string    // the slice into the input containing the token value
 	Type  TokenType // the type of the token
 }
 
-func (t Token) String() string {
+func (t Type) String() string {
 	switch t.Type {
 
 	case EOL, EOF:
@@ -40,9 +38,4 @@ func (t Token) String() string {
 	default:
 		return fmt.Sprintf("<\"%v\" %v>", t.Value, t.Type)
 	}
-}
-
-// fulfills the combinator.Token interface
-func (t Token) Node() combinator.Node {
-	return Node{Token: t}
 }

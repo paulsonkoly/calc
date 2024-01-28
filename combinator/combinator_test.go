@@ -16,8 +16,15 @@ type testDatum struct {
 	err       string
 }
 
+type tokenWrapper struct{}
+
+func (_ tokenWrapper) Wrap(t combinator.Token) combinator.Node {
+	return testNode{token: t.(testToken)}
+}
+
 func accept(t string) combinator.Parser {
-	return combinator.Accept(func(a combinator.Token) bool { return string(a.(testToken)) == t }, "?")
+	tokenWrap := tokenWrapper{}
+	return combinator.Accept(func(a combinator.Token) bool { return string(a.(testToken)) == t }, "?", tokenWrap)
 }
 
 var testData = []testDatum{

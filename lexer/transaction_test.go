@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/phaul/calc/lexer"
-	ty "github.com/phaul/calc/types"
+	"github.com/phaul/calc/types/token"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,29 +14,29 @@ func TestTransaction(t *testing.T) {
 
 	tl.Snapshot()
 	assert.True(t, tl.Next())
-	assert.Equal(t, "a", tl.Token().(ty.Token).Value)
+	assert.Equal(t, "a", tl.Token().(token.Type).Value)
 	assert.True(t, tl.Next())
-	assert.Equal(t, "=", tl.Token().(ty.Token).Value)
+	assert.Equal(t, "=", tl.Token().(token.Type).Value)
 	tl.Snapshot()
 	assert.True(t, tl.Next())
-	assert.Equal(t, "2", tl.Token().(ty.Token).Value)
+	assert.Equal(t, "2", tl.Token().(token.Type).Value)
 
 	tl.Rollback()
 	tl.Rollback()
 	assert.True(t, tl.Next())
-	assert.Equal(t, "a", tl.Token().(ty.Token).Value)
+	assert.Equal(t, "a", tl.Token().(token.Type).Value)
 
 	tl.Snapshot()
 	assert.True(t, tl.Next())
-	assert.Equal(t, "=", tl.Token().(ty.Token).Value)
+	assert.Equal(t, "=", tl.Token().(token.Type).Value)
 	assert.True(t, tl.Next())
-	assert.Equal(t, "2", tl.Token().(ty.Token).Value)
+	assert.Equal(t, "2", tl.Token().(token.Type).Value)
 
 	tl.Snapshot()
 	assert.True(t, tl.Next())
-	assert.Equal(t, "-", tl.Token().(ty.Token).Value)
+	assert.Equal(t, "-", tl.Token().(token.Type).Value)
 
 	tl.Rollback()
 	assert.True(t, tl.Next())
-	assert.Equal(t, "-", tl.Token().(ty.Token).Value)
+	assert.Equal(t, "-", tl.Token().(token.Type).Value)
 }

@@ -6,13 +6,16 @@ import "fmt"
 // seems one can write haskell in every language
 
 // Token represents a lexeme from a lexer
-type Token interface {
-	Node() Node // lift a lexer token to an AST node that holds that single token
-}
+type Token any
 
 // Node is an AST node, with pointers to sub-tree nodes and potentially some
 // parse information data
 type Node any
+
+// TokenWrapper wraps a token in a single AST node containing the token
+type TokenWrapper interface {
+	Wrap(Token) Node
+}
 
 // Lexer produces a stream of tokens. Next() advances the lexer and
 // returns true until all tokens are returned. Err() and Token() do not modify
@@ -188,7 +191,7 @@ func SurroundedBy(a, b, c Parser) Parser {
 // is true for the next token provided by l, and then returns the node holding
 // that token.
 // If p is false or the lexer fails then Accept fails.
-func Accept(p func(Token) bool, msg string) Parser {
+func Accept(p func(Token) bool, msg string, wrp TokenWrapper) Parser {
 	return func(input RollbackLexer) ([]Node, error) {
 		if !input.Next() {
 			return nil, fmt.Errorf("Parser: unexpected end of input")
@@ -200,7 +203,7 @@ func Accept(p func(Token) bool, msg string) Parser {
 		if !p(tok) {
 			return nil, fmt.Errorf("Parser: %s expected, got %v", msg, tok)
 		}
-		return []Node{tok.Node()}, nil
+		return []Node{wrp.Wrap(tok)}, nil
 	}
 }
 

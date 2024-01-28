@@ -3,10 +3,12 @@ package types
 import (
 	"fmt"
 	"strings"
+
+	"github.com/phaul/calc/types/token"
 )
 
 type Node struct {
-	Token    Token
+	Token    token.Type
 	Children []Node
 }
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/phaul/calc/stack"
 	"github.com/phaul/calc/types"
+	"github.com/phaul/calc/types/token"
 	"github.com/phaul/calc/types/value"
 )
 
@@ -17,21 +18,21 @@ func Evaluate(s stack.Stack, n types.Node) value.Type {
 func evaluate(s stack.Stack, n types.Node) (value.Type, bool) {
 	switch n.Token.Type {
 
-	case types.IntLit:
+	case token.IntLit:
 		i, err := strconv.Atoi(n.Token.Value)
 		if err != nil {
 			panic(err)
 		}
 		return value.Int(i), false
 
-	case types.FloatLit:
+	case token.FloatLit:
 		f, err := strconv.ParseFloat(n.Token.Value, 64)
 		if err != nil {
 			panic(err)
 		}
 		return value.Float(f), false
 
-	case types.Call:
+	case token.Call:
 		fName := n.Children[0].Token.Value
 		if fl, ok := s.LookUp(fName); ok {
 			if f, ok := fl.(value.Function); ok {
@@ -65,7 +66,7 @@ func evaluate(s stack.Stack, n types.Node) (value.Type, bool) {
 			return fl, false
 		}
 
-	case types.Sticky:
+	case token.Sticky:
 		switch n.Token.Value {
 
 		case "+", "-", "*", "/":
@@ -99,7 +100,7 @@ func evaluate(s stack.Stack, n types.Node) (value.Type, bool) {
 			log.Panicf("unexpected single character in evaluator: %s", n.Token.Value)
 		}
 
-	case types.Name:
+	case token.Name:
 		switch n.Token.Value {
 
 		case "true":
