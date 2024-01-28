@@ -39,14 +39,14 @@ func evaluate(s stack.Stack, n types.Node) (value.Type, bool) {
 				params := f.Node.Children[0].Children
 				if len(args) == len(params) {
 					// push 2 frames, one is the closure environment, the other is the frame for arguments
-					if f.Frame != nil {
-						s.Push(f.Frame)
-					}
+					// the arguments have to be evaluated before we push anything on the stack because what we push
+					// ie the closure frame migth contain variables that affect the argument evaluation
 					frm := make(value.Frame)
-					if f.Frame != nil {
-					}
 					for i := 0; i < len(args); i++ {
 						frm[params[i].Token.Value] = Evaluate(s, args[i])
+					}
+					if f.Frame != nil {
+						s.Push(f.Frame)
 					}
 					s.Push(&frm)
 					r := Evaluate(s, types.Node(f.Node.Children[1]))
