@@ -48,7 +48,7 @@ func newSTR(c rune, typ token.TokenType, emit, adv bool, format string, args ...
 }
 
 func whiteSpace(c rune) str {
-	return newSTR(c, token.InvalidToken, false, true, "Lexer: unexpected char %c", c)
+	return newSTR(c, token.Invalid, false, true, "Lexer: unexpected char %c", c)
 }
 
 func intLit(c rune) str {

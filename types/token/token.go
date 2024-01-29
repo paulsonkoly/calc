@@ -7,8 +7,8 @@ import (
 type TokenType int
 
 const (
-	// InvalidToken should not be produced by the lexer, however the parser uses it in compound AST nodes
-	InvalidToken = TokenType(iota)
+	// Invalid should not be produced by the lexer, however the parser uses it in compound AST nodes
+	Invalid = TokenType(iota)
 	EOL          // end of line
 	EOF          // end of file (end of input)
 	IntLit       // integer literal
@@ -16,8 +16,6 @@ const (
 	Name         // sequence of alphabeth chars, variable names or keywords
 	Sticky       // one of +, -, *, /, =, <, >, ! a sequence of these stick together in a single lexeme
 	NotSticky    // one of (, ), {, }, `,` a sequence of these gives a sequence of single char lexemes
-	// TODO it shouldn't be a token type
-	Call
 )
 
 // Token as produced by the lexer
