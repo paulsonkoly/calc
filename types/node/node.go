@@ -12,14 +12,14 @@ type Invalid struct{}
 
 // Call is function call
 type Call struct {
-	Name      string
-	Arguments List
+	Name      string // Name of the function called
+	Arguments List   // Arguments passed to the function
 }
 
 // Function is a function definition
 type Function struct {
-	Parameters List
-	Body       Type
+	Parameters List // Parameters of the function
+	Body       Type // Body of the function
 }
 
 // Int is integer literal
@@ -30,39 +30,39 @@ type Float string
 
 // BinOp is a binary operator of any kind, anything from "=", etc.
 type BinOp struct {
-	Op    string
-	Left  Type
-	Right Type
+	Op    string // Op is the operator string
+	Left  Type   // Left operand
+	Right Type   // Right operand
 }
 
 // UnOp is a unary operator of any kind, ie. '-'
 type UnOp struct {
-	Op     string
-	Target Type
+	Op     string // Op is the operator string
+	Target Type   // Target is the operand
 }
 
 // If is a conditional construct without an else case
 type If struct {
-	Condition Type
-	TrueCase  Type
+	Condition Type // Condition is the condition for the if statement
+	TrueCase  Type // TrueCase is executed if condition evaluates to true
 }
 
 // IfElse is a conditional construct
 type IfElse struct {
-	Condition Type
-	TrueCase  Type
-	FalseCase Type
+	Condition Type // Condition is the condition for the if statement
+	TrueCase  Type // TrueCase is executed if condition evaluates to true
+	FalseCase Type // FalseCase is executed if condition evaluates to false
 }
 
 // While is a loop construct
 type While struct {
-	Condition Type
-	Body      Type
+	Condition Type // Condition is the condition for the loop
+	Body      Type // Body is the loop body
 }
 
 // Return is a return statement
 type Return struct {
-	Target Type
+	Target Type // Target is the returned value
 }
 
 // Variable name (also "true", "false" etc.)
@@ -70,12 +70,12 @@ type Name string
 
 // Block is a code block / sequence that was in '{', '}'
 type Block struct {
-	Body []Type
+	Body []Type // Body is the block body
 }
 
-// List is a list of arguments or parameters
+// List is a list of arguments or parameters depending on whether it's a function call or definition
 type List struct {
-	Elems []Type
+	Elems []Type // Elems are the parameters or arguments
 }
 
 func (i Invalid) Token() string  { return "" }

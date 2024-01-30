@@ -50,6 +50,7 @@ func main() {
 						continue
 					}
 					v := evaluator.Evaluate(s, t[0])
+          t[0].PrettyPrint(0)
 					for _, e := range t[1:] {
 						v = evaluator.Evaluate(s, e)
 					}
