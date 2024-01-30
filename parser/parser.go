@@ -118,11 +118,11 @@ func returning(input c.RollbackLexer) ([]c.Node, error) {
 }
 
 func function(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.Fmap(mkLeftChain, c.Seq(parameters, acceptToken("->"), block))(input)
+	r, err := c.Fmap(mkFunction, c.Seq(parameters, acceptToken("->"), block))(input)
 	return r, err
 }
 
-var parameters = c.Fmap(wrap,
+var parameters = c.Fmap(mkList,
 	c.SurroundedBy(
 		acceptToken("("),
 		c.SeparatedBy(varName, acceptToken(",")),
@@ -134,7 +134,7 @@ func call(input c.RollbackLexer) ([]c.Node, error) {
 }
 
 func arguments(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.Fmap(wrap,
+	r, err := c.Fmap(mkList,
 		c.SurroundedBy(
 			acceptToken("("),
 			c.SeparatedBy(expression, acceptToken(",")),

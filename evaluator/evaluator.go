@@ -15,41 +15,42 @@ func Evaluate(s stack.Stack, n node.Type) value.Type {
 }
 
 func evaluate(s stack.Stack, n node.Type) (value.Type, bool) {
-	switch n.Kind {
+	switch realN := n.(type) {
 
 	case node.Int:
-		i, err := strconv.Atoi(n.Token)
+		i, err := strconv.Atoi(n.Token())
 		if err != nil {
 			panic(err)
 		}
 		return value.Int(i), false
 
 	case node.Float:
-		f, err := strconv.ParseFloat(n.Token, 64)
+		f, err := strconv.ParseFloat(n.Token(), 64)
 		if err != nil {
 			panic(err)
 		}
 		return value.Float(f), false
 
 	case node.Call:
-		fName := n.Children[0].Token
+		fName := realN.Name
 		if fl, ok := s.LookUp(fName); ok {
 			if f, ok := fl.(value.Function); ok {
-				args := n.Children[1].Children
-				params := f.Node.Children[0].Children
+				args := realN.Arguments.Elems
+				fNode := (*f.Node)
+				params := fNode.Parameters.Elems
 				if len(args) == len(params) {
 					// push 2 frames, one is the closure environment, the other is the frame for arguments
 					// the arguments have to be evaluated before we push anything on the stack because what we push
 					// ie the closure frame migth contain variables that affect the argument evaluation
 					frm := make(value.Frame)
 					for i := 0; i < len(args); i++ {
-						frm[params[i].Token] = Evaluate(s, args[i])
+						frm[params[i].Token()] = Evaluate(s, args[i])
 					}
 					if f.Frame != nil {
 						s.Push(f.Frame)
 					}
 					s.Push(&frm)
-					r := Evaluate(s, node.Type(f.Node.Children[1]))
+					r := Evaluate(s, node.Type(fNode.Body))
 					if f.Frame != nil {
 						s.Pop()
 					}
@@ -65,42 +66,45 @@ func evaluate(s stack.Stack, n node.Type) (value.Type, bool) {
 			return fl, false
 		}
 
-	case node.Op:
-		switch n.Token {
+	case node.UnOp:
+		if n.Token() == "-" {
+			r := Evaluate(s, realN.Target)
+			r = r.Arith("*", value.Int(-1))
+			return r, false
+		} else {
+			log.Panicf("unexpected unary op: %s\n", n.Token())
+		}
+
+	case node.BinOp:
+		switch n.Token() {
 
 		case "+", "-", "*", "/":
-			// special case unary -
-			if len(n.Children) == 1 {
-				r := Evaluate(s, n.Children[0])
-				r = r.Arith("*", value.Int(-1))
-				return r, false
-			}
-			return Evaluate(s, n.Children[0]).Arith(n.Token, Evaluate(s, n.Children[1])), false
+			return Evaluate(s, realN.Left).Arith(n.Token(), Evaluate(s, realN.Right)), false
 
 		case "&", "|":
-			return Evaluate(s, n.Children[0]).Logic(n.Token, Evaluate(s, n.Children[1])), false
+			return Evaluate(s, realN.Left).Logic(n.Token(), Evaluate(s, realN.Right)), false
 
 		case "<", "<=", ">", ">=", "==", "!=":
-			return Evaluate(s, n.Children[0]).Relational(n.Token, Evaluate(s, n.Children[1])), false
-
-		case "->":
-			if len(s) == 1 {
-				return value.Function{Node: n}, false
-			} else {
-				return value.Function{Node: n, Frame: s.Top()}, false
-			}
+			return Evaluate(s, realN.Left).Relational(n.Token(), Evaluate(s, realN.Right)), false
 
 		case "=":
-			v := Evaluate(s, n.Children[1])
-			s.Set(n.Children[0].Token, v)
+			v := Evaluate(s, realN.Right)
+			s.Set(realN.Left.Token(), v)
 			return v, false
 
 		default:
-			log.Panicf("unexpected single character in evaluator: %s", n.Token)
+			log.Panicf("unexpected single character in evaluator: %s", n.Token())
+		}
+
+	case node.Function:
+		if len(s) == 1 {
+			return value.Function{Node: &realN}, false
+		} else {
+			return value.Function{Node: &realN, Frame: s.Top()}, false
 		}
 
 	case node.Name:
-		switch n.Token {
+		switch n.Token() {
 
 		case "true":
 			return value.Bool(true), false
@@ -109,19 +113,29 @@ func evaluate(s stack.Stack, n node.Type) (value.Type, bool) {
 			return value.Bool(false), false
 
 		default:
-			v, _ := s.LookUp(n.Token)
+			v, _ := s.LookUp(n.Token())
 			return v, false
 		}
 
 	case node.If:
-		c := Evaluate(s, n.Children[0])
+		c := Evaluate(s, realN.Condition)
 		if cc, ok := c.(value.Bool); ok {
 			if cc {
-				return evaluate(s, n.Children[1])
-			} else if len(n.Children) > 2 {
-				return evaluate(s, n.Children[2])
+				return evaluate(s, realN.TrueCase)
 			} else {
 				return value.NoResultError, false
+			}
+		} else {
+			return value.TypeError, false
+		}
+
+	case node.IfElse:
+		c := Evaluate(s, realN.Condition)
+		if cc, ok := c.(value.Bool); ok {
+			if cc {
+				return evaluate(s, realN.TrueCase)
+			} else {
+				return evaluate(s, realN.FalseCase)
 			}
 		} else {
 			return value.TypeError, false
@@ -131,32 +145,32 @@ func evaluate(s stack.Stack, n node.Type) (value.Type, bool) {
 		r := value.Type(value.NoResultError)
 		returning := false
 		for {
-			cond := Evaluate(s, n.Children[0])
+			cond := Evaluate(s, realN.Condition)
 			if ccond, ok := cond.(value.Bool); ok {
 				if !bool(ccond) || returning {
 					return r, returning
 				}
-				r, returning = evaluate(s, n.Children[1])
+				r, returning = evaluate(s, realN.Body)
 			} else {
 				return value.TypeError, false
 			}
 		}
 
 	case node.Return:
-		return Evaluate(s, n.Children[0]), true
+		return Evaluate(s, realN.Target), true
 
 	case node.Block:
-		if len(n.Children) < 1 {
-			log.Panic("empty block")
+		if len(realN.Body) < 1 {
+			panic("empty block")
 		}
-		r, returning := evaluate(s, n.Children[0])
-		for i := 1; i < len(n.Children) && !returning; i++ {
-			r, returning = evaluate(s, n.Children[i])
+		r, returning := evaluate(s, realN.Body[0])
+		for i := 1; i < len(realN.Body) && !returning; i++ {
+			r, returning = evaluate(s, realN.Body[i])
 		}
 		return r, returning
 	}
 
-	n.PrettyPrint()
-	log.Panicf("unsupported node type %v", n.Kind)
-	return value.Int(0), false // unreachable
+	n.PrettyPrint(0)
+	log.Panicf("unsupported node type %T", n)
+	panic("unreachable code")
 }

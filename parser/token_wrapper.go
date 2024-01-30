@@ -16,34 +16,25 @@ type tokenWrapper struct{}
 
 func (_ tokenWrapper) Wrap(t combinator.Token) combinator.Node {
 	realT := t.(token.Type)
-	var kind node.NodeType
 
 	switch realT.Type {
 	case token.IntLit:
-		kind = node.Int
+		return node.Int(realT.Value)
 
 	case token.FloatLit:
-		kind = node.Float
+		return node.Float(realT.Value)
 
 	case token.Sticky:
-		switch realT.Value {
-		case "+", "-", "*", "/", "|", "&", "<", ">", "<=", ">=", "==", "!=", "->", "=":
-			kind = node.Op
-		default:
-			log.Panicf("unexpected sticky token to wrap %s", realT.Value)
-		}
-
-	case token.NotSticky:
-		kind = node.Invalid
+		return node.BinOp{Op: realT.Value}
 
 	case token.Name:
-		kind = node.Name
+		return node.Name(realT.Value)
 
-	case token.EOF, token.EOL:
-		kind = node.Invalid
+	case token.NotSticky, token.EOF, token.EOL:
+		return node.Invalid{}
 
 	default:
 		log.Panicf("unexpected token type to wrap %v", realT)
 	}
-	return node.Type{Token: realT.Value, Kind: kind}
+	panic("unreachable code")
 }

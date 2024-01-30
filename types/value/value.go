@@ -16,7 +16,7 @@ type Float float64
 type Error string
 type Bool bool
 type Function struct {
-	Node  node.Type
+	Node  *node.Function
 	Frame *Frame
 }
 

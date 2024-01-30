@@ -103,12 +103,12 @@ var testData = [...]TestDatum{
 	}
 }`, nil, value.TypeError},
 
-	{"function definition", "(n) -> 1", nil, value.Function{Node: node.Type{}}},
+	{"function definition", "(n) -> 1", nil, value.Function{Node: &node.Function{}}},
 	{"function/no argument", "() -> 1", errors.New("Parser: ( expected, got )"), nil},
 	{"function/block",
 		`(n) -> {
 		n + 1
-  }`, nil, value.Function{Node: node.Type{}}},
+  }`, nil, value.Function{Node: &node.Function{}}},
 
 	{"call",
 		`{
