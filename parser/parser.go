@@ -50,26 +50,22 @@ func atom(input c.RollbackLexer) ([]c.Node, error) {
 }
 
 func unary(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.Or(c.Fmap(mkUnaryOp, (c.Seq(acceptToken("-"), atom))), atom)(input)
-	return r, err
+	return c.Or(c.Fmap(mkUnaryOp, (c.And(acceptToken("-"), atom))), atom)(input)
 }
 
 func divmul(input c.RollbackLexer) ([]c.Node, error) {
 	op := c.Or(acceptToken("*"), acceptToken("/"))
-	r, err := c.Or(c.Fmap(mkLeftChain, c.And(c.Some(c.And(unary, op)), unary)), unary)(input)
-	return r, err
+	return c.Fmap(mkLeftChain, c.And(unary, c.Any(c.And(op, unary))))(input)
 }
 
 func addsub(input c.RollbackLexer) ([]c.Node, error) {
 	op := c.Or(acceptToken("+"), acceptToken("-"))
-	r, err := c.Or(c.Fmap(mkLeftChain, c.And(c.Some(c.And(divmul, op)), divmul)), divmul)(input)
-	return r, err
+	return c.Fmap(mkLeftChain, c.And(divmul, c.Any(c.And(op, divmul))))(input)
 }
 
 func logic(input c.RollbackLexer) ([]c.Node, error) {
 	op := c.Or(acceptToken("&"), acceptToken("|"))
-	r, err := c.Or(c.Fmap(mkLeftChain, c.And(c.Some(c.And(addsub, op)), addsub)), addsub)(input)
-	return r, err
+	return c.Fmap(mkLeftChain, c.And(addsub, c.Any(c.And(op, addsub))))(input)
 }
 
 var relOp = c.OneOf(
@@ -82,44 +78,36 @@ var relOp = c.OneOf(
 )
 
 func relational(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.Or(c.Fmap(mkLeftChain, c.Seq(logic, relOp, logic)), logic)(input)
-	return r, err
+	return c.Or(c.Fmap(mkLeftChain, c.Seq(logic, relOp, logic)), logic)(input)
 }
 
 func expression(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := relational(input)
-	return r, err
+	return relational(input)
 }
 
 func assignment(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.Fmap(mkLeftChain, c.Seq(varName, acceptToken("="), expression))(input)
-	return r, err
+	return c.Fmap(mkLeftChain, c.Seq(varName, acceptToken("="), expression))(input)
 }
 
 func statement(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.OneOf(conditional, loop, returning, assignment, expression)(input)
-	return r, err
+	return c.OneOf(conditional, loop, returning, assignment, expression)(input)
 }
 
 func conditional(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.Fmap(mkIf,
+	return c.Fmap(mkIf,
 		c.Seq(acceptToken("if"), expression, c.Or(c.Seq(block, acceptToken("else"), block), block)))(input)
-	return r, err
 }
 
 func loop(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.Fmap(mkWhile, c.Seq(acceptToken("while"), expression, block))(input)
-	return r, err
+	return c.Fmap(mkWhile, c.Seq(acceptToken("while"), expression, block))(input)
 }
 
 func returning(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.Fmap(mkReturn, c.And(acceptToken("return"), expression))(input)
-	return r, err
+	return c.Fmap(mkReturn, c.And(acceptToken("return"), expression))(input)
 }
 
 func function(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.Fmap(mkFunction, c.Seq(parameters, acceptToken("->"), block))(input)
-	return r, err
+	return c.Fmap(mkFunction, c.Seq(parameters, acceptToken("->"), block))(input)
 }
 
 var parameters = c.Fmap(mkList,
@@ -129,31 +117,28 @@ var parameters = c.Fmap(mkList,
 		acceptToken(")")))
 
 func call(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.Fmap(mkFCall, c.Seq(varName, arguments))(input)
-	return r, err
+	return c.Fmap(mkFCall, c.Seq(varName, arguments))(input)
 }
 
 func arguments(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.Fmap(mkList,
+	return c.Fmap(mkList,
 		c.SurroundedBy(
 			acceptToken("("),
 			c.SeparatedBy(expression, acceptToken(",")),
 			acceptToken(")")))(input)
-	return r, err
 }
 
 var eol = acceptTerm(token.EOL, "end of line")
 var eof = acceptTerm(token.EOF, "end of file")
 
 func block(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.Or(
+	return c.Or(
 		c.Fmap(mkBlock,
 			c.SurroundedBy(
 				c.And(acceptToken("{"), eol),
 				c.JoinedWith(statement, eol),
 				acceptToken("}"))),
 		statement)(input)
-	return r, err
 }
 
 var program = c.Fmap(allButLast, c.And(c.JoinedWith(block, eol), eof))

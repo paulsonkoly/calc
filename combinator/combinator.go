@@ -73,7 +73,7 @@ func Or(a, b Parser) Parser {
 // fail.
 func OneOf(args ...Parser) Parser {
 	if len(args) < 1 {
-		panic("Parser: Any needs at least one parser")
+		panic("Parser: OneOf needs at least one parser")
 	}
 	r := args[0]
 	for _, p := range args[1:] {
@@ -116,9 +116,7 @@ func Seq(args ...Parser) Parser {
 // Some runs the given parser a as many times as it would succeed
 //
 // Some fails if a doesn't succeed at least once and succeeds otherwise. It
-// returns the concatenated result of all successful runs. Useful for left
-// recursive rules, where a rule such as A -> A b can be expressed as
-// Some(b).
+// returns the concatenated result of all successful runs.
 func Some(a Parser) Parser {
 	return func(input RollbackLexer) ([]Node, error) {
 		aRes, aErr := a(input)
@@ -129,6 +127,30 @@ func Some(a Parser) Parser {
 		for aErr == nil {
 			input.Snapshot()
 			aRes, aErr = a(input)
+			if aErr == nil {
+				input.Commit()
+				r = append(r, aRes...)
+			} else {
+				input.Rollback()
+				break
+			}
+		}
+		return r, nil
+	}
+}
+
+// Any runs the given parser a as many times as it would succeed
+//
+// Any never fails, and it returns the concatenated result of all successful
+// runs which can be potentially empty. Useful for left recursive rules, where
+// a rule such as A -> A b can be expressed as Some(b).
+func Any(a Parser) Parser {
+	return func(input RollbackLexer) ([]Node, error) {
+		r := make([]Node, 0)
+
+		for {
+			input.Snapshot()
+			aRes, aErr := a(input)
 			if aErr == nil {
 				input.Commit()
 				r = append(r, aRes...)

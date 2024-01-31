@@ -32,7 +32,6 @@ type While node.While
 type Return node.Return
 type Block node.Block
 
-
 func wrap(n node.Type) Evaluator {
 	switch realN := n.(type) {
 	case node.Int:

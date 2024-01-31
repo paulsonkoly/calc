@@ -22,9 +22,9 @@ func (c Call) PrettyPrint(d int) {
 }
 
 func (f Function) PrettyPrint(d int) {
-  f.Parameters.PrettyPrint(d+1)
-  fmt.Println(indent(d, "->"))
-  f.Body.PrettyPrint(d+1)
+	f.Parameters.PrettyPrint(d + 1)
+	fmt.Println(indent(d, "->"))
+	f.Body.PrettyPrint(d + 1)
 }
 
 func (i Int) PrettyPrint(d int) { fmt.Println(indent(d, string(i))) }

@@ -81,7 +81,7 @@ var testData = []testDatum{
 		err:       "",
 	},
 	{
-		name:      "Any",
+		name:      "OneOf",
 		parser:    combinator.OneOf(accept("a"), accept("b"), accept("c")),
 		lexerOut:  []testToken{"b"},
 		parserOut: []testNode{{token: testToken("b")}},
@@ -92,6 +92,20 @@ var testData = []testDatum{
 		parser:    combinator.Some(accept("a")),
 		lexerOut:  []testToken{"a", "a", "a", "b"},
 		parserOut: []testNode{{token: testToken("a")}, {token: testToken("a")}, {token: testToken("a")}},
+		err:       "",
+	},
+	{
+		name:      "Any (none)",
+		parser:    combinator.Any(accept("a")),
+		lexerOut:  []testToken{"b", "b", "b", "b"},
+		parserOut: []testNode{},
+		err:       "",
+	},
+	{
+		name:      "Any (some)",
+		parser:    combinator.Any(accept("a")),
+		lexerOut:  []testToken{"a", "a", "b", "b"},
+		parserOut: []testNode{{token: testToken("a")}, {token: testToken("a")}},
 		err:       "",
 	},
 	{

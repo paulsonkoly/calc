@@ -41,7 +41,7 @@ func mkReturn(nodes []c.Node) []c.Node {
 //	| `-b
 //	`-c
 func mkLeftChain(nodes []c.Node) []c.Node {
-	if len(nodes) < 3 || len(nodes)%2 == 0 {
+	if len(nodes)%2 == 0 {
 		log.Panicf("incorrect number of sub nodes for left chain (%d)", len(nodes))
 	}
 	r := nodes[0]
@@ -73,16 +73,16 @@ func mkBlock(nodes []c.Node) []c.Node {
 
 // mkFCall creates a function call node
 func mkFCall(nodes []c.Node) []c.Node {
-  r := node.Call{Name: nodes[0].(node.Type).Token(), Arguments: nodes[1].(node.List)}
+	r := node.Call{Name: nodes[0].(node.Type).Token(), Arguments: nodes[1].(node.List)}
 	return []c.Node{r}
 }
 
 func mkFunction(nodes []c.Node) []c.Node {
-  if len(nodes) != 3 {
+	if len(nodes) != 3 {
 		log.Panicf("incorrect number of sub nodes for function (%d)", len(nodes))
-  }
+	}
 
-  r := node.Function{Parameters: nodes[0].(node.List), Body: nodes[2].(node.Type)}
+	r := node.Function{Parameters: nodes[0].(node.List), Body: nodes[2].(node.Type)}
 	return []c.Node{r}
 }
 
