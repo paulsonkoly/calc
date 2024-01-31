@@ -118,32 +118,13 @@ func Seq(args ...Parser) Parser {
 // Some fails if a doesn't succeed at least once and succeeds otherwise. It
 // returns the concatenated result of all successful runs.
 func Some(a Parser) Parser {
-	return func(input RollbackLexer) ([]Node, error) {
-		aRes, aErr := a(input)
-		if aErr != nil {
-			return aRes, aErr
-		}
-		r := aRes
-		for aErr == nil {
-			input.Snapshot()
-			aRes, aErr = a(input)
-			if aErr == nil {
-				input.Commit()
-				r = append(r, aRes...)
-			} else {
-				input.Rollback()
-				break
-			}
-		}
-		return r, nil
-	}
+  return And(a, Any(a))
 }
 
 // Any runs the given parser a as many times as it would succeed
 //
 // Any never fails, and it returns the concatenated result of all successful
-// runs which can be potentially empty. Useful for left recursive rules, where
-// a rule such as A -> A b can be expressed as Some(b).
+// runs which can be potentially empty. 
 func Any(a Parser) Parser {
 	return func(input RollbackLexer) ([]Node, error) {
 		r := make([]Node, 0)
