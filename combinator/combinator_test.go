@@ -130,6 +130,13 @@ var testData = []testDatum{
 		err:       "",
 	},
 	{
+		name:      "Separated by/doesnt consume last spearator",
+		parser:    combinator.And(combinator.SeparatedBy(accept("a"), accept("b")), combinator.And(accept("b"), accept("c"))),
+		lexerOut:  []testToken{"a", "b", "c" },
+		parserOut: []testNode{{token: testToken("a")}, {token: testToken("b")}, {token: testToken("c")}},
+		err:       "",
+	},
+	{
 		name:      "Joined with (single token)",
 		parser:    combinator.JoinedWith(accept("a"), accept("b")),
 		lexerOut:  []testToken{"a"},

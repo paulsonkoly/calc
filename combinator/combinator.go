@@ -165,8 +165,6 @@ func SeparatedBy(a, b Parser) Parser {
         input.Rollback()
         return r, nil
       }
-      input.Commit()
-      input.Snapshot()
       aRes, aErr := a(input)
       if aErr != nil {
         input.Rollback()
