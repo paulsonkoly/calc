@@ -1,7 +1,6 @@
 package main_test
 
 import (
-	"errors"
 	"testing"
 
 	"github.com/phaul/calc/evaluator"
@@ -104,7 +103,7 @@ var testData = [...]TestDatum{
 }`, nil, value.TypeError},
 
 	{"function definition", "(n) -> 1", nil, value.Function{Node: &node.Function{}}},
-	{"function/no argument", "() -> 1", errors.New("Parser: ( expected, got )"), nil},
+	{"function/no argument", "() -> 1", nil, value.Function{Node: &node.Function{}}},
 	{"function/block",
 		`(n) -> {
 		n + 1
@@ -114,6 +113,12 @@ var testData = [...]TestDatum{
 		`{
 			a = (n) -> 1
 			a(2)
+		}`, nil, value.Int(1),
+	},
+	{"call/no argument",
+		`{
+			a = () -> 1
+			a()
 		}`, nil, value.Int(1),
 	},
 	{"function/return",

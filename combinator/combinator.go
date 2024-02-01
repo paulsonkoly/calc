@@ -118,13 +118,13 @@ func Seq(args ...Parser) Parser {
 // Some fails if a doesn't succeed at least once and succeeds otherwise. It
 // returns the concatenated result of all successful runs.
 func Some(a Parser) Parser {
-  return And(a, Any(a))
+	return And(a, Any(a))
 }
 
 // Any runs the given parser a as many times as it would succeed
 //
 // Any never fails, and it returns the concatenated result of all successful
-// runs which can be potentially empty. 
+// runs which can be potentially empty.
 func Any(a Parser) Parser {
 	return func(input RollbackLexer) ([]Node, error) {
 		r := make([]Node, 0)
@@ -146,14 +146,36 @@ func Any(a Parser) Parser {
 
 // SeparatedBy parses with a sequence of a, separated by b.
 //
-// It fails if a doesn't succeed at least once. It asserts that a sequence of a
+// It never fails, but result might be empty. It asserts that a sequence of a
 // is interspersed with b, the sequence not ending with b. The parse results of
 // b are thrown away, it returns the sequenced results of a.
 func SeparatedBy(a, b Parser) Parser {
-	return Or(
-		And(Some(Fmap(func(ab []Node) []Node { return ab[0:1] }, And(a, b))), a),
-		a,
-	)
+  return func(input RollbackLexer) ([]Node, error) {
+    input.Snapshot()
+    r, aErr := a(input)
+    if aErr != nil {
+      input.Rollback()
+      return []Node{}, nil
+    }
+    input.Commit()
+    for {
+      input.Snapshot()
+      _, bErr := b(input)
+      if bErr != nil {
+        input.Rollback()
+        return r, nil
+      }
+      input.Commit()
+      input.Snapshot()
+      aRes, aErr := a(input)
+      if aErr != nil {
+        input.Rollback()
+        return r, nil
+      }
+      input.Commit()
+      r = append(r, aRes...)
+    }
+  }
 }
 
 // JoinedWith parses with a sequence of a, separated by b.
