@@ -78,7 +78,7 @@ var relOp = c.OneOf(
 )
 
 func relational(input c.RollbackLexer) ([]c.Node, error) {
-	return c.Or(c.Fmap(mkLeftChain, c.Seq(logic, relOp, logic)), logic)(input)
+	return c.Fmap(mkLeftChain, c.And(logic, c.Any(c.And(relOp, logic))))(input)
 }
 
 func expression(input c.RollbackLexer) ([]c.Node, error) {
