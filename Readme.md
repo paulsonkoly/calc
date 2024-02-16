@@ -202,7 +202,7 @@ The language has the following statement types:
  - conditional
  - return
 
- The followings are keywords: if, else, while, read, write, true, false. A variable name cannot be one of the keywords.
+The followings are keywords: if, else, while, read, write, true, false. A variable name cannot be one of the keywords.
 
 ### Expressions
 
@@ -248,7 +248,7 @@ The only loop syntax is the while loop. Conditional code can be written with the
 
 ### Return
 
-Returns from the current function call or block. Returns are valid outside of a function and they produce the returned value. They have an effect on the containing structure. For blocks the containing block evaluates to the return value without evaluating subsequent lines. For loops, encountering a return breaks out of the loop (and the result of the loop will be the return value.
+Returns from the current function call or block. Returns are valid outside of a function and they produce the returned value. They have an effect on the containing structure. For blocks the containing block evaluates to the return value without evaluating subsequent lines. For loops, encountering a return breaks out of the loop and the result of the loop will be the return value.
 
 ### Tokens
 
@@ -285,7 +285,7 @@ In the following BNF non-terminals are lower case, terminals are upper case or q
     addsub: addsub /[+-]/ divmul | divmul
     divmul: divmul /[*/]/ unary | unary
     unary: '-' atom | atom
-    atom: function | call | INTL | FLOATL | VARIABLE  | '(' expression ')'
+    atom: function | call | INTL | FLOATL | BOOLL | VARIABLE  | '(' expression ')'
 
     function: '(' parameters ')' '->' block
     parameters: VARIABLE ',' parameters | VARIABLE
