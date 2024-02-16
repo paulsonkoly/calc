@@ -5,7 +5,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/phaul/calc/types/token"
+	"github.com/paulsonkoly/calc/types/token"
 )
 
 // stateFuncResult

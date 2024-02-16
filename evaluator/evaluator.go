@@ -1,12 +1,16 @@
 package evaluator
 
 import (
+	"bufio"
+	"fmt"
 	"log"
+	"os"
 	"strconv"
 
-	"github.com/phaul/calc/stack"
-	"github.com/phaul/calc/types/node"
-	"github.com/phaul/calc/types/value"
+	"github.com/paulsonkoly/calc/parser"
+	"github.com/paulsonkoly/calc/stack"
+	"github.com/paulsonkoly/calc/types/node"
+	"github.com/paulsonkoly/calc/types/value"
 )
 
 // Evaluate evaluates the given AST node producing a Value
@@ -30,6 +34,8 @@ type If node.If
 type IfElse node.IfElse
 type While node.While
 type Return node.Return
+type Read node.Read
+type Write node.Write
 type Block node.Block
 
 func wrap(n node.Type) Evaluator {
@@ -56,6 +62,10 @@ func wrap(n node.Type) Evaluator {
 		return While(realN)
 	case node.Return:
 		return Return(realN)
+	case node.Read:
+		return Read(realN)
+	case node.Write:
+		return Write(realN)
 	case node.Block:
 		return Block(realN)
 	}
@@ -226,6 +236,29 @@ func (w While) Evaluate(s stack.Stack) (value.Type, bool) {
 func (r Return) Evaluate(s stack.Stack) (value.Type, bool) {
 	n := node.Return(r)
 	return Evaluate(s, n.Target), true
+}
+
+func (r Read) Evaluate(s stack.Stack) (value.Type, bool) {
+	n := node.Read(r)
+	b := bufio.NewReader(os.Stdin)
+	line, err := b.ReadString('\n')
+	if err != nil {
+		return value.Error(fmt.Sprintf("read error %s", err)), false
+	}
+	t, err := parser.ParseImmediate(line)
+	if err != nil {
+		return value.Error(fmt.Sprintf("read error %s", err)), false
+	}
+	empty := stack.NewStack()
+	s.Set(n.Target.Token(), Evaluate(empty, t))
+	return Evaluate(s, n.Target), true
+}
+
+func (w Write) Evaluate(s stack.Stack) (value.Type, bool) {
+	n := node.Write(w)
+	v := Evaluate(s, n.Value)
+	fmt.Println(v)
+	return v, false
 }
 
 func (b Block) Evaluate(s stack.Stack) (value.Type, bool) {

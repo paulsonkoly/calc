@@ -3,9 +3,9 @@ package parser
 import (
 	"log"
 
-	"github.com/phaul/calc/combinator"
-	"github.com/phaul/calc/types/node"
-	"github.com/phaul/calc/types/token"
+	"github.com/paulsonkoly/calc/combinator"
+	"github.com/paulsonkoly/calc/types/node"
+	"github.com/paulsonkoly/calc/types/token"
 )
 
 // tokenWrapper wraps a single lexeme/token in AST node. We basically translate

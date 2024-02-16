@@ -15,7 +15,7 @@ package lexer
 import (
 	"strings"
 
-	"github.com/phaul/calc/types/token"
+	"github.com/paulsonkoly/calc/types/token"
 )
 
 type Lexer struct {

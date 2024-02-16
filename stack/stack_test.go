@@ -3,8 +3,8 @@ package stack_test
 import (
 	"testing"
 
-	"github.com/phaul/calc/stack"
-	"github.com/phaul/calc/types/value"
+	"github.com/paulsonkoly/calc/stack"
+	"github.com/paulsonkoly/calc/types/value"
 	"github.com/stretchr/testify/assert"
 )
 

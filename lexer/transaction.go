@@ -1,8 +1,8 @@
 package lexer
 
 import (
-	"github.com/phaul/calc/combinator"
-	"github.com/phaul/calc/types/token"
+	"github.com/paulsonkoly/calc/combinator"
+	"github.com/paulsonkoly/calc/types/token"
 )
 
 type lexerResult struct {

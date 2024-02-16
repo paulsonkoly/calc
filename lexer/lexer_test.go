@@ -3,8 +3,8 @@ package lexer_test
 import (
 	"testing"
 
-	"github.com/phaul/calc/lexer"
-	"github.com/phaul/calc/types/token"
+	"github.com/paulsonkoly/calc/lexer"
+	"github.com/paulsonkoly/calc/types/token"
 	"github.com/stretchr/testify/assert"
 )
 

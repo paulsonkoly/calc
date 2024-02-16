@@ -1,6 +1,6 @@
 # Calc
 
-A simple calculator language / REPL. This project is merely for code practicing, not intended to be used.
+A simple calculator language / REPL.
 
 The language can be used in a REPL or instructions can be read from a file. The REPL outputs its answer after '>' character.
 
@@ -47,6 +47,39 @@ Supported features:
  - arithmetic operations +, -, *, /; relational operations <, <=, >, >=, ==, !=; boolean operations & |.
  - explicit evaluation order by parenthesis
  - being functional in the sense that functions are first class values
+
+## IO
+
+The language is meant to be a calculator REPL, and as such takes care of input/output automatically, but given it can also read source from a file it also supports some basic input output primitives. The calc program can run in 3 modes: reading a single line expression from its command line argument, running code from a REPL or reading code from a file.
+
+### REPL
+
+If there is no input file given and no command line argument to evaluate then the input is assumed to come from a terminal and we assume REPL mode. In this mode readline library is used to ease line editing. The token { defines a multi-line block, until the corresponding } is found. The REPL doesn't evaluate until multi line blocks are closed, and it automatically outputs the result after each evaluation.
+
+### Command line argument
+
+A single line statement can be passed as a command line argument:
+
+    % ./calc -eval "1+2"
+    3
+
+Calc doesn't prefix the answer with '> ' in this case.
+
+## File evaluation
+
+If a single file name is provided on the command line the input is redirected from this file, in this case calc doesn't output evaluation results at all, for any output the program has to contain write statements.
+
+    % cat x.calc
+    write 3
+    % ./calc x.calc
+    3
+
+## IO primitives
+
+Read and write are supported via keywords and statements. A read statement prompts the user for input, and results in the value read. The read keyword has to be followed by a variable name which will contain the value read assuming correct input. Integer, float and boolean literals can be read this way. Similar to assignment read implies a statement not an expression so the return value cannot be directly used to calculate with. However, its value can be used as the last statement of a block and with that a return value of a function. Write writes a value to the output, results in the written value and has the same restrictions as read. One can wrap statements in a function which allows it to be used in expressions:
+
+    reader = () -> read a
+    write reader() + reader()
 
 ## Type coercions
 
@@ -159,7 +192,7 @@ One can make this example work by making an explicit copy of x:
 
 ## Language
 
-The token { defines a multi-line block, until the corresponding } is found. The REPL doesn't output for lines inside a block. The top level non-terminal is the program, a program consists of statements. Statements are on a single line up to the first new line character, blocks span across multiple lines.
+The top level non-terminal is the program, a program consists of statements. Statements are on a single line up to the first new line character, blocks span across multiple lines.
 
 The language has the following statement types:
 
@@ -168,6 +201,8 @@ The language has the following statement types:
  - loop
  - conditional
  - return
+
+ The followings are keywords: if, else, while, read, write, true, false. A variable name cannot be one of the keywords.
 
 ### Expressions
 
@@ -235,12 +270,14 @@ In the following BNF non-terminals are lower case, terminals are upper case or q
     program: block "\n" program | block EOF
     block: "{" "\n" statements "\n" "}" | statement
     statements: statement "\n" statements | statement
-    statement: assigment | loop | conditional | returning | expression
+    statement: read | write | loop | conditional | returning | assignment| expression
 
     assignment: VARIABLE '=' block 
     loop: "while" expression block
     conditional: "if" expression block "else" block | "if" expression block
     returning: "return" expression
+    read: "read" VARIABLE
+    write: "write" expression
 
     expression: relational
     relational: logic /<|>|<=|>=|==|!=/ logic | logic

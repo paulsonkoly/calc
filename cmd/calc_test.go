@@ -1,13 +1,15 @@
 package main_test
 
 import (
+	"errors"
+	"strings"
 	"testing"
 
-	"github.com/phaul/calc/evaluator"
-	"github.com/phaul/calc/parser"
-	"github.com/phaul/calc/stack"
-	"github.com/phaul/calc/types/node"
-	"github.com/phaul/calc/types/value"
+	"github.com/paulsonkoly/calc/evaluator"
+	"github.com/paulsonkoly/calc/parser"
+	"github.com/paulsonkoly/calc/stack"
+	"github.com/paulsonkoly/calc/types/node"
+	"github.com/paulsonkoly/calc/types/value"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -139,25 +141,30 @@ var testData = [...]TestDatum{
       x(2)
 		}`, nil, value.Int(3),
 	},
+	{"keyword violation", "true = false", errors.New("Parser: "), nil},
 }
 
 func TestCalc(t *testing.T) {
 	for _, test := range testData {
 		s := stack.NewStack()
 		ast, err := parser.Parse(test.input)
-		if test.parseError == nil {
-			assert.NoError(t, err, test.name)
-			var v value.Type
-			for _, stmnt := range ast {
-				v = evaluator.Evaluate(s, stmnt)
-			}
-			if f, ok := test.value.(value.Function); ok {
-				assert.IsType(t, f, v, "test.name")
+		t.Run(test.name, func(t *testing.T) {
+			if test.parseError == nil {
+				assert.NoError(t, err)
+				var v value.Type
+				for _, stmnt := range ast {
+					v = evaluator.Evaluate(s, stmnt)
+				}
+				if f, ok := test.value.(value.Function); ok {
+					assert.IsType(t, f, v)
+				} else {
+					assert.Equal(t, test.value, v)
+				}
 			} else {
-				assert.Equal(t, test.value, v, test.name)
+				if !strings.HasPrefix(err.Error(), test.parseError.Error()) {
+					t.Errorf("not the expected error: %s %s", test.parseError.Error(), err.Error())
+				}
 			}
-		} else {
-			assert.EqualError(t, err, test.parseError.Error(), test.name)
-		}
+		})
 	}
 }

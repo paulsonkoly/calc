@@ -1,11 +1,13 @@
 package parser
 
 import (
-	c "github.com/phaul/calc/combinator"
-	"github.com/phaul/calc/lexer"
-	"github.com/phaul/calc/types/node"
-	"github.com/phaul/calc/types/token"
+	c "github.com/paulsonkoly/calc/combinator"
+	"github.com/paulsonkoly/calc/lexer"
+	"github.com/paulsonkoly/calc/types/node"
+	"github.com/paulsonkoly/calc/types/token"
 )
+
+var Keywords = [...]string{"if", "else", "while", "read", "write", "return", "true", "false"}
 
 func Parse(input string) ([]node.Type, error) {
 	l := lexer.NewTLexer(input)
@@ -16,6 +18,15 @@ func Parse(input string) ([]node.Type, error) {
 		rn = append(rn, e.(node.Type))
 	}
 	return rn, err
+}
+
+func ParseImmediate(input string) (node.Type, error) {
+	l := lexer.NewTLexer(input)
+	r, err := immediate(&l)
+	if len(r) != 1 {
+		return nil, err
+	}
+	return r[0].(node.Type), err
 }
 
 func allButLast(nodes []c.Node) []c.Node { return nodes[0 : len(nodes)-1] }
@@ -33,20 +44,40 @@ func acceptToken(str string) c.Parser {
 // The grammar
 var intLit = acceptTerm(token.IntLit, "integer literal")
 var floatLit = acceptTerm(token.FloatLit, "float literal")
-var varName = acceptTerm(token.Name, "variable name")
+
+func varName(input c.RollbackLexer) ([]c.Node, error) {
+	return c.Accept(
+		func(tok c.Token) bool {
+			ctok := tok.(token.Type)
+			if ctok.Type != token.Name {
+				return false
+			}
+			for _, kw := range Keywords {
+				if kw == ctok.Value {
+					return false
+				}
+			}
+			return true
+		},
+		"variable name",
+		tokenWrapper{},
+	)(input)
+}
 
 // these can't be defined as variables as there are cycles in their
 // definitions, otherwise we could write:
 //
 //	var paren = c.Fmap(second, c.Seq(acceptToken("("), expression, acceptToken(")")))
 func paren(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.SurroundedBy(acceptToken("("), expression, acceptToken(")"))(input)
-	return r, err
+	return c.SurroundedBy(acceptToken("("), expression, acceptToken(")"))(input)
+}
+
+func immediate(input c.RollbackLexer) ([]c.Node, error) {
+	return c.OneOf(floatLit, intLit, acceptToken("true"), acceptToken("false"))(input)
 }
 
 func atom(input c.RollbackLexer) ([]c.Node, error) {
-	r, err := c.OneOf(function, call, floatLit, intLit, acceptToken("true"), acceptToken("false"), varName, paren)(input)
-	return r, err
+	return c.OneOf(function, call, immediate, varName, paren)(input)
 }
 
 func unary(input c.RollbackLexer) ([]c.Node, error) {
@@ -90,7 +121,7 @@ func assignment(input c.RollbackLexer) ([]c.Node, error) {
 }
 
 func statement(input c.RollbackLexer) ([]c.Node, error) {
-	return c.OneOf(conditional, loop, returning, assignment, expression)(input)
+	return c.OneOf(conditional, loop, returning, read, write, assignment, expression)(input)
 }
 
 func conditional(input c.RollbackLexer) ([]c.Node, error) {
@@ -104,6 +135,14 @@ func loop(input c.RollbackLexer) ([]c.Node, error) {
 
 func returning(input c.RollbackLexer) ([]c.Node, error) {
 	return c.Fmap(mkReturn, c.And(acceptToken("return"), expression))(input)
+}
+
+func read(input c.RollbackLexer) ([]c.Node, error) {
+	return c.Fmap(mkRead, c.And(acceptToken("read"), varName))(input)
+}
+
+func write(input c.RollbackLexer) ([]c.Node, error) {
+	return c.Fmap(mkWrite, c.And(acceptToken("write"), expression))(input)
 }
 
 func function(input c.RollbackLexer) ([]c.Node, error) {

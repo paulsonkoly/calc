@@ -150,30 +150,30 @@ func Any(a Parser) Parser {
 // is interspersed with b, the sequence not ending with b. The parse results of
 // b are thrown away, it returns the sequenced results of a.
 func SeparatedBy(a, b Parser) Parser {
-  return func(input RollbackLexer) ([]Node, error) {
-    input.Snapshot()
-    r, aErr := a(input)
-    if aErr != nil {
-      input.Rollback()
-      return []Node{}, nil
-    }
-    input.Commit()
-    for {
-      input.Snapshot()
-      _, bErr := b(input)
-      if bErr != nil {
-        input.Rollback()
-        return r, nil
-      }
-      aRes, aErr := a(input)
-      if aErr != nil {
-        input.Rollback()
-        return r, nil
-      }
-      input.Commit()
-      r = append(r, aRes...)
-    }
-  }
+	return func(input RollbackLexer) ([]Node, error) {
+		input.Snapshot()
+		r, aErr := a(input)
+		if aErr != nil {
+			input.Rollback()
+			return []Node{}, nil
+		}
+		input.Commit()
+		for {
+			input.Snapshot()
+			_, bErr := b(input)
+			if bErr != nil {
+				input.Rollback()
+				return r, nil
+			}
+			aRes, aErr := a(input)
+			if aErr != nil {
+				input.Rollback()
+				return r, nil
+			}
+			input.Commit()
+			r = append(r, aRes...)
+		}
+	}
 }
 
 // JoinedWith parses with a sequence of a, separated by b.

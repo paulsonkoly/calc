@@ -1,6 +1,6 @@
 package value
 
-import "github.com/phaul/calc/types/node"
+import "github.com/paulsonkoly/calc/types/node"
 
 // type Type represents the evaluation result value
 type Type interface {

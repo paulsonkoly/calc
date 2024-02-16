@@ -65,6 +65,14 @@ type Return struct {
 	Target Type // Target is the returned value
 }
 
+type Read struct {
+	Target Name // Target is the variable name the read will be assigned to
+}
+
+type Write struct {
+	Value Type // Value is the written value
+}
+
 // Variable name (also "true", "false" etc.)
 type Name string
 
@@ -89,6 +97,8 @@ func (i If) Token() string       { return "" }
 func (i IfElse) Token() string   { return "" }
 func (w While) Token() string    { return "" }
 func (r Return) Token() string   { return "" }
+func (r Read) Token() string     { return "" }
+func (w Write) Token() string    { return "" }
 func (n Name) Token() string     { return string(n) }
 func (b Block) Token() string    { return "" }
 func (l List) Token() string     { return "" }

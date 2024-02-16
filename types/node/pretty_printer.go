@@ -67,6 +67,16 @@ func (r Return) PrettyPrint(d int) {
 	r.Target.PrettyPrint(0)
 }
 
+func (r Read) PrettyPrint(d int) {
+	fmt.Print(indent(d, "read "))
+	r.Target.PrettyPrint(0)
+}
+
+func (w Write) PrettyPrint(d int) {
+	fmt.Print(indent(d, "write "))
+	w.Value.PrettyPrint(0)
+}
+
 func (n Name) PrettyPrint(d int) { fmt.Print(indent(d, string(n))) }
 
 func (b Block) PrettyPrint(d int) {
