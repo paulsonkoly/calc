@@ -37,18 +37,7 @@ Functional programming / Currying
     plusthree(5)
     >  8
 
-Supported features:
-
- - integer, floating point and boolean literals
- - variables
- - conditionals
- - loops
- - functions and closures
- - arithmetic operations +, -, *, /; relational operations <, <=, >, >=, ==, !=; boolean operations & |.
- - explicit evaluation order by parenthesis
- - being functional in the sense that functions are first class values
-
-## IO
+## Running calc
 
 The language is meant to be a calculator REPL, and as such takes care of input/output automatically, but given it can also read source from a file it also supports some basic input output primitives. The calc program can run in 3 modes: reading a single line expression from its command line argument, running code from a REPL or reading code from a file.
 
@@ -295,14 +284,3 @@ In the following BNF non-terminals are lower case, terminals are upper case or q
     parameters: VARIABLE ',' parameters | VARIABLE
     call: VARIABLE '(' arguments ')'
     arguments: expression ',' arguments | expression
-
-
-## Approach
-
-A finite state machine based hand written lexer combined with a hand written parser using the parser combinator style approach to effectively create a recursive descent parser.
-
-                         tokens           AST
-    input text -> lexer --------> parser -----> logic --> output
-    var state ------------------------------------^ |
-          ^                                         |
-          `--- write back --------------------------'
