@@ -12,6 +12,7 @@ package stack
 import (
 	"fmt"
 
+	"github.com/paulsonkoly/calc/builtin"
 	"github.com/paulsonkoly/calc/types/value"
 )
 
@@ -23,6 +24,9 @@ type Stack []sframe
 // NewStack creates a new stack
 func NewStack() Stack {
 	topF := make(sframe)
+	for name, f := range builtin.All {
+		topF[name] = f
+	}
 	return []sframe{topF}
 }
 

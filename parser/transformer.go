@@ -108,21 +108,3 @@ func mkWhile(nodes []c.Node) []c.Node {
 	n := node.While{Condition: nodes[1].(node.Type), Body: nodes[2].(node.Type)}
 	return []c.Node{n}
 }
-
-// mkRead is for read statements
-func mkRead(nodes []c.Node) []c.Node {
-	if len(nodes) != 2 {
-		log.Panicf("incorrect number of sub nodes for read (%d)", len(nodes))
-	}
-	n := node.Read{Target: nodes[1].(node.Name)}
-	return []c.Node{n}
-}
-
-// mkWrite is for write statements
-func mkWrite(nodes []c.Node) []c.Node {
-	if len(nodes) != 2 {
-		log.Panicf("incorrect number of sub nodes for write (%d)", len(nodes))
-	}
-	n := node.Write{Value: nodes[1].(node.Type)}
-	return []c.Node{n}
-}

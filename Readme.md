@@ -67,19 +67,21 @@ Calc doesn't prefix the answer with '> ' in this case.
 
 ## File evaluation
 
-If a single file name is provided on the command line the input is redirected from this file, in this case calc doesn't output evaluation results at all, for any output the program has to contain write statements.
+If a single file name is provided on the command line the input is redirected from this file, in this case calc doesn't output evaluation results at all, for any output the program has to use the write function.
 
     % cat x.calc
     write 3
     % ./calc x.calc
     3
 
-## IO primitives
+## Builtin functions
 
-Read and write are supported via keywords and statements. A read statement prompts the user for input, and results in the value read. The read keyword has to be followed by a variable name which will contain the value read assuming correct input. Integer, float and boolean literals can be read this way. Similar to assignment read implies a statement not an expression so the return value cannot be directly used to calculate with. However, its value can be used as the last statement of a block and with that a return value of a function. Write writes a value to the output, results in the written value and has the same restrictions as read. One can wrap statements in a function which allows it to be used in expressions:
+Built in functions are loaded in the top level frame on the interpreter start up. They provide functionality that cannot be implemented in calc itself. In any other aspect they are just regular function values.
 
-    reader = () -> read a
-    write reader() + reader()
+| function | arity | description                                                         |
+|----------|-------|---------------------------------------------------------------------|
+| read     | 0     | Prompts the user for input expecting an int, float or boolean value |
+| write    | 1     | Writes the given value to the output                                |
 
 ## Type coercions
 
@@ -202,7 +204,7 @@ The language has the following statement types:
  - conditional
  - return
 
-The followings are keywords: if, else, while, read, write, true, false. A variable name cannot be one of the keywords.
+The followings are keywords: if, else, while, true, false. A variable name cannot be one of the keywords.
 
 ### Expressions
 
@@ -270,14 +272,12 @@ In the following BNF non-terminals are lower case, terminals are upper case or q
     program: block "\n" program | block EOF
     block: "{" "\n" statements "\n" "}" | statement
     statements: statement "\n" statements | statement
-    statement: read | write | loop | conditional | returning | assignment| expression
+    statement: loop | conditional | returning | assignment| expression
 
     assignment: VARIABLE '=' block 
     loop: "while" expression block
     conditional: "if" expression block "else" block | "if" expression block
     returning: "return" expression
-    read: "read" VARIABLE
-    write: "write" expression
 
     expression: relational
     relational: logic /<|>|<=|>=|==|!=/ logic | logic

@@ -7,7 +7,7 @@ import (
 	"github.com/paulsonkoly/calc/types/token"
 )
 
-var Keywords = [...]string{"if", "else", "while", "read", "write", "return", "true", "false"}
+var Keywords = [...]string{"if", "else", "while", "return", "true", "false"}
 
 func Parse(input string) ([]node.Type, error) {
 	l := lexer.NewTLexer(input)
@@ -121,7 +121,7 @@ func assignment(input c.RollbackLexer) ([]c.Node, error) {
 }
 
 func statement(input c.RollbackLexer) ([]c.Node, error) {
-	return c.OneOf(conditional, loop, returning, read, write, assignment, expression)(input)
+	return c.OneOf(conditional, loop, returning, assignment, expression)(input)
 }
 
 func conditional(input c.RollbackLexer) ([]c.Node, error) {
@@ -135,14 +135,6 @@ func loop(input c.RollbackLexer) ([]c.Node, error) {
 
 func returning(input c.RollbackLexer) ([]c.Node, error) {
 	return c.Fmap(mkReturn, c.And(acceptToken("return"), expression))(input)
-}
-
-func read(input c.RollbackLexer) ([]c.Node, error) {
-	return c.Fmap(mkRead, c.And(acceptToken("read"), varName))(input)
-}
-
-func write(input c.RollbackLexer) ([]c.Node, error) {
-	return c.Fmap(mkWrite, c.And(acceptToken("write"), expression))(input)
 }
 
 func function(input c.RollbackLexer) ([]c.Node, error) {

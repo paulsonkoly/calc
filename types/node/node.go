@@ -65,14 +65,6 @@ type Return struct {
 	Target Type // Target is the returned value
 }
 
-type Read struct {
-	Target Name // Target is the variable name the read will be assigned to
-}
-
-type Write struct {
-	Value Type // Value is the written value
-}
-
 // Variable name (also "true", "false" etc.)
 type Name string
 
@@ -84,6 +76,15 @@ type Block struct {
 // List is a list of arguments or parameters depending on whether it's a function call or definition
 type List struct {
 	Elems []Type // Elems are the parameters or arguments
+}
+
+// builtins
+type Read struct {
+	Target Name // Target is the variable name the read will be assigned to
+}
+
+type Write struct {
+	Value Type // Value is the written value
 }
 
 func (i Invalid) Token() string  { return "" }
