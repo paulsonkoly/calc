@@ -70,7 +70,7 @@ Calc doesn't prefix the answer with '> ' in this case.
 If a single file name is provided on the command line the input is redirected from this file, in this case calc doesn't output evaluation results at all, for any output the program has to use the write function.
 
     % cat x.calc
-    write 3
+    write(3)
     % ./calc x.calc
     3
 
