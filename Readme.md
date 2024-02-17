@@ -78,7 +78,7 @@ Built in functions are loaded in the top level frame on the interpreter start up
 
 ## Type coercions
 
-There are 5 value types: integers, floats, booleans, functions, strings and errors.
+There are 6 value types: integers, floats, booleans, functions, strings and errors.
 
 Arithmetic operations and relational operations work on numbers, an expression containing only integers results in integer (or error), an expression containing a float results in a float. Relational operations work both on numbers, booleans and strings, logic operations work only on booleans.
 
@@ -290,7 +290,7 @@ In the following BNF non-terminals are lower case, terminals are upper case or q
     divmul: divmul /[*/]/ unary | unary
     unary: '-' index | index
     index: atom '@' atom ':' atom | atom '@' atom | atom
-    atom: function | call | INTL | FLOATL | BOOLL | VARIABLE  | '(' expression ')'
+    atom: function | call | INTL | FLOATL | BOOLL | STRINGL | VARIABLE  | '(' expression ')'
 
     function: '(' parameters ')' '->' block
     parameters: VARIABLE ',' parameters | VARIABLE
