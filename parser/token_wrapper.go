@@ -24,6 +24,9 @@ func (_ tokenWrapper) Wrap(t combinator.Token) combinator.Node {
 	case token.FloatLit:
 		return node.Float(realT.Value)
 
+	case token.StringLit:
+		return node.String(realT.Value)
+
 	case token.Sticky:
 		return node.BinOp{Op: realT.Value}
 

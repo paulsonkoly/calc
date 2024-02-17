@@ -31,6 +31,8 @@ func (i Int) PrettyPrint(d int) { fmt.Println(indent(d, string(i))) }
 
 func (f Float) PrettyPrint(d int) { fmt.Println(indent(d, string(f))) }
 
+func (s String) PrettyPrint(d int) { fmt.Println(indent(d, string(s))) }
+
 func (b BinOp) PrettyPrint(d int) {
 	fmt.Println(indent(d, b.Op))
 	b.Left.PrettyPrint(d + 1)
@@ -40,6 +42,20 @@ func (b BinOp) PrettyPrint(d int) {
 func (u UnOp) PrettyPrint(d int) {
 	fmt.Println(indent(d, u.Op))
 	u.Target.PrettyPrint(d + 1)
+}
+
+func (i IndexAt) PrettyPrint(d int) {
+	i.Ary.PrettyPrint(d)
+	fmt.Print("@")
+	i.At.PrettyPrint(0)
+}
+
+func (i IndexFromTo) PrettyPrint(d int) {
+	i.Ary.PrettyPrint(d)
+	fmt.Print("@")
+	i.From.PrettyPrint(0)
+	fmt.Print(":")
+	i.To.PrettyPrint(0)
 }
 
 func (i If) PrettyPrint(d int) {

@@ -8,6 +8,11 @@ import (
 	"github.com/paulsonkoly/calc/types/token"
 )
 
+const (
+	stickyChars     = "+*/=<>!-&|@:"
+	nonStrickyChars = "(){},"
+)
+
 // stateFuncResult
 type str struct {
 	next   stateFunc // next state function
@@ -36,10 +41,13 @@ func newSTR(c rune, typ token.TokenType, emit, adv bool, format string, args ...
 	case 'a' <= c && c <= 'z':
 		return str{next: varName, doEmit: emit, doAdv: adv, typ: typ}
 
-	case strings.Contains("(){},", string(c)):
+	case c == '"':
+		return str{next: stringLit, doEmit: emit, doAdv: adv, typ: typ}
+
+	case strings.Contains(nonStrickyChars, string(c)):
 		return str{next: notSticky, doEmit: emit, doAdv: adv, typ: typ}
 
-	case strings.Contains("+*/=<>!-&|", string(c)):
+	case strings.Contains(stickyChars, string(c)):
 		return str{next: sticky, doEmit: emit, doAdv: adv, typ: typ}
 
 	default:
@@ -84,13 +92,34 @@ func varName(c rune) str {
 	}
 }
 
+func stringLit(c rune) str {
+	switch {
+	case c == '"':
+		return str{next: stringLitEnd}
+
+	case c == '\\':
+		return str{next: escapeStringLit}
+
+	default:
+		return str{next: stringLit}
+	}
+}
+
+func escapeStringLit(c rune) str {
+	return str{next: stringLit}
+}
+
+func stringLitEnd(c rune) str {
+	return newSTR(c, token.StringLit, true, false, "Lexer: unexpected char %c in string literal", c)
+}
+
 func notSticky(c rune) str {
 	return newSTR(c, token.NotSticky, true, false, "Lexer: unexpected char %c", c)
 }
 
 func sticky(c rune) str {
 	switch {
-	case strings.Contains("+*/=<>!-&|", string(c)):
+	case strings.Contains(stickyChars, string(c)):
 		return str{next: sticky}
 
 	default:

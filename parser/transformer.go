@@ -54,6 +54,22 @@ func mkLeftChain(nodes []c.Node) []c.Node {
 	return []c.Node{r}
 }
 
+// mkIndex rewrites a sequence describing an array indexing into an Index node
+func mkIndex(nodes []c.Node) []c.Node {
+	switch len(nodes) {
+
+	case 5: // ary@from:to
+		return []c.Node{node.IndexFromTo{Ary: nodes[0].(node.Type), From: nodes[2].(node.Type), To: nodes[4].(node.Type)}}
+
+	case 3: // ary@at
+		return []c.Node{node.IndexAt{Ary: nodes[0].(node.Type), At: nodes[2].(node.Type)}}
+
+	default:
+		log.Panicf("incorrect number of sub nodes for indexing (%d)", len(nodes))
+	}
+	panic("unreachable code")
+}
+
 func mkList(nodes []c.Node) []c.Node {
 	r := node.List{Elems: make([]node.Type, 0)}
 	for _, n := range nodes {

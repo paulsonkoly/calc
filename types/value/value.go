@@ -1,6 +1,10 @@
 package value
 
-import "github.com/paulsonkoly/calc/types/node"
+import (
+	"fmt"
+
+	"github.com/paulsonkoly/calc/types/node"
+)
 
 // type Type represents the evaluation result value
 type Type interface {
@@ -9,10 +13,12 @@ type Type interface {
 	Arith(op string, other Type) Type
 	Relational(op string, other Type) Type
 	Logic(op string, other Type) Type
+	Index(index ...Type) Type
 }
 
 type Int int
 type Float float64
+type String string
 type Error string
 type Bool bool
 type Function struct {
@@ -26,6 +32,7 @@ var TypeError = Error("type error")
 var InvalidOpError = Error("invalid operator")
 var NoResultError = Error("no result")
 var ArgumentError = Error("argument error")
+var IndexError = Error("index error")
 
 func (i Int) Arith(op string, other Type) Type {
 	switch o := other.(type) {
@@ -39,7 +46,7 @@ func (i Int) Arith(op string, other Type) Type {
 	case Float:
 		return Float(builtinArith[float64](op, float64(i), float64(o)))
 
-	case Bool, Function:
+	case Bool, Function, String:
 		return TypeError
 
 	case Error:
@@ -58,7 +65,7 @@ func (i Int) Relational(op string, other Type) Type {
 	case Float:
 		return Bool(builtinRelational[float64](op, float64(i), float64(o)))
 
-	case Bool, Function:
+	case Bool, Function, String:
 		return TypeError
 
 	case Error:
@@ -69,6 +76,7 @@ func (i Int) Relational(op string, other Type) Type {
 }
 
 func (i Int) Logic(_ string, _ Type) Type { return TypeError }
+func (i Int) Index(_ ...Type) Type        { return TypeError }
 
 func (f Float) Arith(op string, other Type) Type {
 	switch o := other.(type) {
@@ -79,7 +87,7 @@ func (f Float) Arith(op string, other Type) Type {
 	case Float:
 		return Float(builtinArith[float64](op, float64(f), float64(o)))
 
-	case Bool, Function:
+	case Bool, Function, String:
 		return TypeError
 
 	case Error:
@@ -97,7 +105,7 @@ func (f Float) Relational(op string, other Type) Type {
 	case Float:
 		return Bool(builtinRelational[float64](op, float64(f), float64(o)))
 
-	case Bool, Function:
+	case Bool, Function, String:
 		return TypeError
 
 	case Error:
@@ -109,12 +117,93 @@ func (f Float) Relational(op string, other Type) Type {
 
 func (f Float) Logic(_ string, _ Type) Type { return TypeError }
 
+func (f Float) Index(_ ...Type) Type { return TypeError }
+
+func (s String) Arith(op string, other Type) Type {
+	switch other := other.(type) {
+	case String:
+		if op == "+" {
+			return String(string(s) + string(other))
+		} else {
+			return InvalidOpError
+		}
+
+	case Error:
+		return other
+
+	default:
+		return TypeError
+	}
+}
+
+func (s String) Relational(op string, other Type) Type {
+	switch other := other.(type) {
+	case String:
+		switch op {
+		case "==":
+			return Bool(s == other)
+
+		case "!=":
+			return Bool(s != other)
+
+		default:
+			return InvalidOpError
+		}
+	case Error:
+		return other
+
+	default:
+		return TypeError
+	}
+}
+
+func (s String) Logic(_ string, _ Type) Type { return TypeError }
+
+func (s String) Index(index ...Type) Type {
+	iix := []int{}
+
+	for _, t := range index {
+		if conv, ok := t.(Int); ok {
+			iix = append(iix, int(conv))
+			continue
+		}
+		return TypeError
+	}
+
+	switch len(iix) {
+	case 2:
+		if iix[0] < 0 || iix[0] >= len(s) {
+			return IndexError
+		}
+
+		if iix[1] < iix[0] || iix[1] > len(s) {
+			return IndexError
+		}
+
+		return String(string(s)[iix[0]:iix[1]])
+
+	case 1:
+		if iix[0] < 0 || iix[0] >= len(s) {
+			return IndexError
+		}
+
+		return String(string(s)[iix[0]])
+
+	default:
+		panic("evaluator called index incorrectly")
+	}
+}
+
+func (s String) String() string {
+	return fmt.Sprintf("\"%s\"", string(s))
+}
+
 func (b Bool) Arith(_ string, _ Type) Type { return TypeError }
 
 func (b Bool) Relational(op string, other Type) Type {
 	switch o := other.(type) {
 
-	case Int, Float, Function:
+	case Int, Float, Function, String:
 		return TypeError
 
 	case Bool:
@@ -137,7 +226,7 @@ func (b Bool) Relational(op string, other Type) Type {
 func (b Bool) Logic(op string, other Type) Type {
 	switch o := other.(type) {
 
-	case Int, Float, Function:
+	case Int, Float, Function, String:
 		return TypeError
 
 	case Bool:
@@ -157,13 +246,17 @@ func (b Bool) Logic(op string, other Type) Type {
 	panic("no type conversion")
 }
 
+func (b Bool) Index(_ ...Type) Type { return TypeError }
+
 func (e Error) Arith(_ string, _ Type) Type      { return e }
 func (e Error) Relational(_ string, _ Type) Type { return e }
 func (e Error) Logic(_ string, _ Type) Type      { return e }
+func (e Error) Index(_ ...Type) Type             { return e }
 
 func (f Function) Arith(_ string, _ Type) Type      { return TypeError }
 func (f Function) Relational(_ string, _ Type) Type { return TypeError }
 func (f Function) Logic(_ string, _ Type) Type      { return TypeError }
+func (f Function) Index(_ ...Type) Type             { return TypeError }
 func (f Function) String() string                   { return "function" }
 
 func builtinArith[t int | float64](op string, a, b t) t {

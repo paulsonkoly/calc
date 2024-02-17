@@ -28,6 +28,9 @@ type Int string
 // Float is float literal
 type Float string
 
+// String is string literal
+type String string
+
 // BinOp is a binary operator of any kind, anything from "=", etc.
 type BinOp struct {
 	Op    string // Op is the operator string
@@ -39,6 +42,17 @@ type BinOp struct {
 type UnOp struct {
 	Op     string // Op is the operator string
 	Target Type   // Target is the operand
+}
+
+type IndexAt struct {
+	Ary Type // Ary is the indexed node
+	At  Type // At is the index
+}
+
+type IndexFromTo struct {
+	Ary  Type // Ary is the indexed node
+	From Type // From is the start of the range
+	To   Type // To is the end of the range
 }
 
 // If is a conditional construct without an else case
@@ -89,20 +103,23 @@ type Write struct {
 
 type Repl struct{}
 
-func (i Invalid) Token() string  { return "" }
-func (c Call) Token() string     { return "" }
-func (f Function) Token() string { return "" }
-func (i Int) Token() string      { return string(i) }
-func (f Float) Token() string    { return string(f) }
-func (b BinOp) Token() string    { return b.Op }
-func (u UnOp) Token() string     { return u.Op }
-func (i If) Token() string       { return "" }
-func (i IfElse) Token() string   { return "" }
-func (w While) Token() string    { return "" }
-func (r Return) Token() string   { return "" }
-func (r Read) Token() string     { return "" }
-func (w Write) Token() string    { return "" }
-func (n Name) Token() string     { return string(n) }
-func (b Block) Token() string    { return "" }
-func (l List) Token() string     { return "" }
-func (r Repl) Token() string     { return "" }
+func (i Invalid) Token() string     { return "" }
+func (c Call) Token() string        { return "" }
+func (f Function) Token() string    { return "" }
+func (i Int) Token() string         { return string(i) }
+func (f Float) Token() string       { return string(f) }
+func (s String) Token() string      { return string(s) }
+func (b BinOp) Token() string       { return b.Op }
+func (u UnOp) Token() string        { return u.Op }
+func (u IndexAt) Token() string     { return "" }
+func (u IndexFromTo) Token() string { return "" }
+func (i If) Token() string          { return "" }
+func (i IfElse) Token() string      { return "" }
+func (w While) Token() string       { return "" }
+func (r Return) Token() string      { return "" }
+func (r Read) Token() string        { return "" }
+func (w Write) Token() string       { return "" }
+func (n Name) Token() string        { return string(n) }
+func (b Block) Token() string       { return "" }
+func (l List) Token() string        { return "" }
+func (r Repl) Token() string        { return "" }

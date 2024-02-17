@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/paulsonkoly/calc/parser"
 	"github.com/paulsonkoly/calc/stack"
@@ -25,9 +26,12 @@ type Evaluator interface {
 
 type Int node.Int
 type Float node.Float
+type String node.String
 type Call node.Call
 type UnOp node.UnOp
 type BinOp node.BinOp
+type IndexAt node.IndexAt
+type IndexFromTo node.IndexFromTo
 type Function node.Function
 type Name node.Name
 type If node.If
@@ -40,37 +44,43 @@ type Repl node.Repl
 type Block node.Block
 
 func wrap(n node.Type) Evaluator {
-	switch realN := n.(type) {
+	switch n := n.(type) {
 	case node.Int:
-		return Int(realN)
+		return Int(n)
 	case node.Float:
-		return Float(realN)
+		return Float(n)
+	case node.String:
+		return String(n)
 	case node.Call:
-		return Call(realN)
+		return Call(n)
 	case node.UnOp:
-		return UnOp(realN)
+		return UnOp(n)
 	case node.BinOp:
-		return BinOp(realN)
+		return BinOp(n)
+	case node.IndexAt:
+		return IndexAt(n)
+	case node.IndexFromTo:
+		return IndexFromTo(n)
 	case node.Function:
-		return Function(realN)
+		return Function(n)
 	case node.Name:
-		return Name(realN)
+		return Name(n)
 	case node.If:
-		return If(realN)
+		return If(n)
 	case node.IfElse:
-		return IfElse(realN)
+		return IfElse(n)
 	case node.While:
-		return While(realN)
+		return While(n)
 	case node.Return:
-		return Return(realN)
+		return Return(n)
 	case node.Read:
-		return Read(realN)
+		return Read(n)
 	case node.Write:
-		return Write(realN)
+		return Write(n)
 	case node.Repl:
-		return Repl(realN)
+		return Repl(n)
 	case node.Block:
-		return Block(realN)
+		return Block(n)
 	}
 
 	n.PrettyPrint(0)
@@ -92,6 +102,14 @@ func (f Float) Evaluate(s stack.Stack) (value.Type, bool) {
 		panic(err)
 	}
 	return value.Float(x), false
+}
+
+func (s String) Evaluate(_ stack.Stack) (value.Type, bool) {
+	tok := node.String(s).Token()
+	// remove the first and last quotes, and replace escaped quotes with quotes
+	tok = strings.ReplaceAll(tok, "\\\"", "\"")
+	tok = tok[1 : len(tok)-1]
+	return value.String(tok), false
 }
 
 func (c Call) Evaluate(s stack.Stack) (value.Type, bool) {
@@ -164,6 +182,19 @@ func (b BinOp) Evaluate(s stack.Stack) (value.Type, bool) {
 		log.Panicf("unexpected single character in evaluator: %s", n.Token())
 	}
 	panic("unreachable code")
+}
+
+func (i IndexAt) Evaluate(s stack.Stack) (value.Type, bool) {
+	ary := Evaluate(s, i.Ary)
+	at := Evaluate(s, i.At)
+	return ary.Index(at), false
+}
+
+func (i IndexFromTo) Evaluate(s stack.Stack) (value.Type, bool) {
+	ary := Evaluate(s, i.Ary)
+	from := Evaluate(s, i.From)
+	to := Evaluate(s, i.To)
+	return ary.Index(from, to), false
 }
 
 func (f Function) Evaluate(s stack.Stack) (value.Type, bool) {

@@ -24,10 +24,20 @@ var testData = [...]TestDatum{
 	{"simple literal/integer", "1", nil, value.Int(1)},
 	{"simple literal/float", "3.14", nil, value.Float(3.14)},
 	{"simple literal/bool", "false", nil, value.Bool(false)},
+	{"simple literal/string", "\"abc\"", nil, value.String("abc")},
 
 	{"simple arithmetic/addition", "1+2", nil, value.Int(3)},
 	{"simple arithmetic/coercion", "1+2.0", nil, value.Float(3)},
 	{"simple arithmetic/coercion", "1.0+2", nil, value.Float(3)},
+
+	{"string indexing/simple", "\"apple\" @ 1", nil, value.String("p")},
+	{"string indexing/complex empty", "\"apple\" @ 1 : 1", nil, value.String("")},
+	{"string indexing/complex", "\"apple\" @ 1 : 3", nil, value.String("pp")},
+	{"string indexing/outside", "\"apple\" @ (-1)", nil, value.IndexError},
+
+	{"string concatenation", "\"abc\" + \"def\"", nil, value.String("abcdef")},
+	{"string equality/false", "\"abc\" == \"ab\"", nil, value.Bool(false)},
+	{"string equality/true", "\"abc\" == \"abc\"", nil, value.Bool(true)},
 
 	{"arithmetics/left assoc", "1-2+1", nil, value.Int(0)},
 	{"arithmetics/parenthesis", "1-(2+1)", nil, value.Int(-2)},

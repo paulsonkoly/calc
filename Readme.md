@@ -78,17 +78,24 @@ Built in functions are loaded in the top level frame on the interpreter start up
 
 ## Type coercions
 
-There are 5 value types: integers, floats, booleans, functions and errors.
+There are 5 value types: integers, floats, booleans, functions, strings and errors.
 
-Arithmetic operations and relational operations work on numbers, an expression containing only integers results in integer (or error), an expression containing a float results in a float. Relational operations work both on numbers and booleans, logic operations work only on booleans.
+Arithmetic operations and relational operations work on numbers, an expression containing only integers results in integer (or error), an expression containing a float results in a float. Relational operations work both on numbers, booleans and strings, logic operations work only on booleans.
 
-There are 5 precedence groups (from lowest to highest): 
+There are 6 precedence groups (from lowest to highest): 
 
     - relational
     - logic
     - + or -
     - * or /
     - unary minus
+    - index operator
+
+### Index operator
+
+The index operator has 2 forms: "apple" @ 1 results in p; "apple" @ 1:3 results in "pp". Indexing outside, or using a lower value for the upper index than the lower index results in index error. To avoid language ambiguity the operands have to be atoms see [language BNF](#BNF).
+
+### Errors
 
 Incorrect operations result in error, any further calculation with an error results in the same error. Functions as values used in calculations result in error.
 
@@ -104,6 +111,10 @@ Incorrect operations result in error, any further calculation with an error resu
     >  variable b not defined
     c*2
     >  variable b not defined
+
+### Strings
+
+String literals can be written using double quotes ("). Within a string a double quote has to be escaped: "\"" is a string with a single element containing a double quote. Line breaks and any other character can be inserted within a string normally. Strings can be concatenated and indexed.
 
 ## Variable lookup, shadowing, closures
 
@@ -277,7 +288,8 @@ In the following BNF non-terminals are lower case, terminals are upper case or q
     logic: logic /[|&]/ addsub | addsub
     addsub: addsub /[+-]/ divmul | divmul
     divmul: divmul /[*/]/ unary | unary
-    unary: '-' atom | atom
+    unary: '-' index | index
+    index: atom '@' atom ':' atom | atom '@' atom | atom
     atom: function | call | INTL | FLOATL | BOOLL | VARIABLE  | '(' expression ')'
 
     function: '(' parameters ')' '->' block

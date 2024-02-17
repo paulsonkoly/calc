@@ -44,6 +44,7 @@ func acceptToken(str string) c.Parser {
 // The grammar
 var intLit = acceptTerm(token.IntLit, "integer literal")
 var floatLit = acceptTerm(token.FloatLit, "float literal")
+var stringLit = acceptTerm(token.StringLit, "string literal")
 
 func varName(input c.RollbackLexer) ([]c.Node, error) {
 	return c.Accept(
@@ -77,11 +78,21 @@ func immediate(input c.RollbackLexer) ([]c.Node, error) {
 }
 
 func atom(input c.RollbackLexer) ([]c.Node, error) {
-	return c.OneOf(function, call, immediate, varName, paren)(input)
+	return c.OneOf(function, call, immediate, stringLit, varName, paren)(input)
+}
+
+func index(input c.RollbackLexer) ([]c.Node, error) {
+	return c.Or(
+		c.Fmap(mkIndex,
+			c.Or(
+				c.Seq(atom, acceptToken("@"), atom, acceptToken(":"), atom),
+				c.Seq(atom, acceptToken("@"), atom),
+			),
+		), atom)(input)
 }
 
 func unary(input c.RollbackLexer) ([]c.Node, error) {
-	return c.Or(c.Fmap(mkUnaryOp, (c.And(acceptToken("-"), atom))), atom)(input)
+	return c.Or(c.Fmap(mkUnaryOp, (c.And(acceptToken("-"), index))), index)(input)
 }
 
 func divmul(input c.RollbackLexer) ([]c.Node, error) {

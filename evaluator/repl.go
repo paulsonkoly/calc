@@ -53,6 +53,7 @@ func (f fReader) Close() error { return f.r.Close() }
 
 func Loop(r lineReader, s stack.Stack, doOut bool) {
 	blocksOpen := 0
+	quotesOpen := 0
 	input := ""
 
 	for {
@@ -67,9 +68,10 @@ func Loop(r lineReader, s stack.Stack, doOut bool) {
 		}
 
 		blocksOpen += strings.Count(line, "{") - strings.Count(line, "}")
+		quotesOpen += strings.Count(line, "\"") - strings.Count(line, "\\\"")
 		input = join(input, line)
 
-		if blocksOpen == 0 {
+		if blocksOpen == 0 && quotesOpen%2 == 0 {
 			t, err := parser.Parse(input)
 			if err != nil {
 				fmt.Println(err)
