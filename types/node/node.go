@@ -87,6 +87,8 @@ type Write struct {
 	Value Type // Value is the written value
 }
 
+type Repl struct{}
+
 func (i Invalid) Token() string  { return "" }
 func (c Call) Token() string     { return "" }
 func (f Function) Token() string { return "" }
@@ -103,3 +105,4 @@ func (w Write) Token() string    { return "" }
 func (n Name) Token() string     { return string(n) }
 func (b Block) Token() string    { return "" }
 func (l List) Token() string     { return "" }
+func (r Repl) Token() string     { return "" }

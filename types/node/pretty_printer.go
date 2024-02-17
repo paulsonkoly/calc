@@ -77,6 +77,8 @@ func (w Write) PrettyPrint(d int) {
 	w.Value.PrettyPrint(0)
 }
 
+func (r Repl) PrettyPrint(d int) { fmt.Print(indent(d, "repl")) }
+
 func (n Name) PrettyPrint(d int) { fmt.Print(indent(d, string(n))) }
 
 func (b Block) PrettyPrint(d int) {

@@ -36,6 +36,7 @@ type While node.While
 type Return node.Return
 type Read node.Read
 type Write node.Write
+type Repl node.Repl
 type Block node.Block
 
 func wrap(n node.Type) Evaluator {
@@ -66,6 +67,8 @@ func wrap(n node.Type) Evaluator {
 		return Read(realN)
 	case node.Write:
 		return Write(realN)
+	case node.Repl:
+		return Repl(realN)
 	case node.Block:
 		return Block(realN)
 	}
@@ -259,6 +262,14 @@ func (w Write) Evaluate(s stack.Stack) (value.Type, bool) {
 	v := Evaluate(s, n.Value)
 	fmt.Println(v)
 	return v, false
+}
+
+func (r Repl) Evaluate(s stack.Stack) (value.Type, bool) {
+	rl := NewRLReader()
+	defer rl.Close()
+	Loop(rl, s, true)
+
+	return value.NoResultError, false
 }
 
 func (b Block) Evaluate(s stack.Stack) (value.Type, bool) {

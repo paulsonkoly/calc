@@ -56,6 +56,9 @@ The language is meant to be a calculator REPL, and as such takes care of input/o
 
 If there is no input file given and no command line argument to evaluate then the input is assumed to come from a terminal and we assume REPL mode. In this mode readline library is used to ease line editing. The token { defines a multi-line block, until the corresponding } is found. The REPL doesn't evaluate until multi line blocks are closed, and it automatically outputs the result after each evaluation.
 
+The built in function repl can be used to debug calc programs. It starts an interactive repl with the frames loaded from its caller. Variables can be printed or any code evaluated. When the debug repl exits, the script evaluation resumes at the point where it was interrupted. Any variables that were written in the repl will be lost however.
+The repl() call will return "no result" error in the context of it's caller.
+
 ### Command line argument
 
 A single line statement can be passed as a command line argument:
@@ -65,7 +68,7 @@ A single line statement can be passed as a command line argument:
 
 Calc doesn't prefix the answer with '> ' in this case.
 
-## File evaluation
+### File evaluation
 
 If a single file name is provided on the command line the input is redirected from this file, in this case calc doesn't output evaluation results at all, for any output the program has to use the write function.
 
@@ -82,6 +85,7 @@ Built in functions are loaded in the top level frame on the interpreter start up
 |----------|-------|---------------------------------------------------------------------|
 | read     | 0     | Prompts the user for input expecting an int, float or boolean value |
 | write    | 1     | Writes the given value to the output                                |
+| repl     | 0     | starts an interactive calc repl at the context of the call          |
 
 ## Type coercions
 
