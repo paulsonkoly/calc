@@ -157,8 +157,6 @@ func (c Call) Evaluate(s stack.Stack) (value.Type, bool) {
 				s.Pop()
 				return r, false
 			} else {
-        fmt.Println(fName)
-        fmt.Println(n.Arguments)
 				return value.ArgumentError, false
 			}
 		} else {
