@@ -263,12 +263,13 @@ The following tokens are valid (using usual regular expression notation)
 
  - integer literal /\d+/
  - float literal /\d+.\d+/
+ - string literal /"([^"]|\\")*"/
  - variable name /[a-z]+/
- - single character token /[+-*/=()<>{}],/
- - double character token /<=|>=|==|!=|->/
+ - non sticky chars /[(){},]/
+ - sticky chars /[+*/=<>!-&|@:]/
  - new line /\n/
 
-tokens are separated with white-spaces.
+Tokens are separated with white-spaces. Sticky chars together are returned from the lexer as single lexeme. For example "<=" is a single lexeme.
 
 ### BNF
 
@@ -293,7 +294,7 @@ In the following BNF non-terminals are lower case, terminals are upper case or q
     index: atom '@' atom ':' atom | atom '@' atom | atom
     atom: function | call | INTL | FLOATL | BOOLL | STRINGL | VARIABLE  | '(' expression ')'
 
-    function: '(' parameters ')' '->' block
+    function: "()" "->" block | '(' parameters ')' "->" block
     parameters: VARIABLE ',' parameters | VARIABLE
-    call: VARIABLE '(' arguments ')'
+    call: VARIABLE "()" | VARIABLE '(' arguments ')'
     arguments: expression ',' arguments | expression
