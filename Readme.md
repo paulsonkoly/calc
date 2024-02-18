@@ -37,6 +37,31 @@ Functional programming / Currying
     plusthree(5)
     >  8
 
+Qsort
+
+    filter = (pred, ary) -> {
+      i = 0
+      r = []
+      while i < #ary {
+        if pred(ary@i) r = r + [ary@i] 
+        i = i + 1
+      }
+      r
+    }
+    > function
+
+    qsort = (ary) -> {
+      if #ary <= 1 ary else {
+        pivot = ary@0
+        tail = ary @ 1 : #ary
+        qsort(filter((n) -> n <= pivot, tail)) + [pivot] + qsort(filter((n) -> n > pivot, tail))
+      } 
+    }
+    > function
+
+    qsort([5, 2, 4, 3, 1, 8])
+    > [1, 2, 3, 4, 5, 8]
+
 ## Running calc
 
 The language is meant to be a calculator REPL, and as such takes care of input/output automatically, but given it can also read source from a file it also supports some basic input output primitives. The calc program can run in 3 modes: reading a single line expression from its command line argument, running code from a REPL or reading code from a file.
@@ -90,12 +115,21 @@ There are 6 precedence groups (from lowest to highest):
     - logic
     - + or -
     - * or /
-    - unary minus
+    - unary minus '-', and length '#'
     - index operator
+
+### Length operator
+
+    #[1,2,3]
+    > 3
 
 ### Index operator
 
-The index operator has 2 forms: "apple" @ 1 results in "p"; "apple" @ 1:3 results in "pp". Indexing outside, or using a lower value for the upper index than the lower index results in index error. To avoid language ambiguity the operands have to be atoms see [language BNF](#BNF).
+The index operator has 2 forms: "apple" @ 1 results in "p"; "apple" @ 1:3 results in "pp". Indexing outside, or using a lower value for the upper index than the lower index results in index error. To avoid language ambiguity the index operands have to be unaryAtoms see [language BNF](#BNF).
+
+    string = "string"
+    string @ 2 : #string
+    > "ring"
 
 ### Errors
 
@@ -291,8 +325,9 @@ In the following BNF non-terminals are lower case, terminals are upper case or q
     logic: logic /[|&]/ addsub | addsub
     addsub: addsub /[+-]/ divmul | divmul
     divmul: divmul /[*/]/ unary | unary
-    unary: '-' index | index
-    index: atom '@' atom ':' atom | atom '@' atom | atom
+    unary: /[-#]/ index | index
+    unaryAtom : /[-#]/ atom | atom
+    index: atom '@' unaryAtom ':' unaryAtom | atom '@' unaryAtom | atom
     atom: function | call | INTL | FLOATL | BOOLL | STRINGL | VARIABLE  | '(' expression ')'
 
     function: "()" "->" block | '(' parameters ')' "->" block

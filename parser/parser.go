@@ -20,15 +20,6 @@ func Parse(input string) ([]node.Type, error) {
 	return rn, err
 }
 
-func ParseImmediate(input string) (node.Type, error) {
-	l := lexer.NewTLexer(input)
-	r, err := immediate(&l)
-	if len(r) != 1 {
-		return nil, err
-	}
-	return r[0].(node.Type), err
-}
-
 func allButLast(nodes []c.Node) []c.Node { return nodes[0 : len(nodes)-1] }
 
 func acceptTerm(tokType token.TokenType, msg string) c.Parser {
@@ -73,26 +64,46 @@ func paren(input c.RollbackLexer) ([]c.Node, error) {
 	return c.SurroundedBy(acceptToken("("), expression, acceptToken(")"))(input)
 }
 
-func immediate(input c.RollbackLexer) ([]c.Node, error) {
-	return c.OneOf(floatLit, intLit, acceptToken("true"), acceptToken("false"))(input)
+func arrayLit(input c.RollbackLexer) ([]c.Node, error) {
+	return c.Fmap(mkList,
+		c.SurroundedBy(
+			acceptToken("["),
+			c.SeparatedBy(expression, acceptToken(",")),
+			acceptToken("]")))(input)
 }
 
 func atom(input c.RollbackLexer) ([]c.Node, error) {
-	return c.OneOf(function, call, immediate, stringLit, varName, paren)(input)
+	return c.OneOf(
+		function,
+		call,
+		floatLit,
+		intLit,
+		acceptToken("true"),
+		acceptToken("false"),
+		stringLit,
+		arrayLit,
+		varName,
+		paren)(input)
 }
 
 func index(input c.RollbackLexer) ([]c.Node, error) {
 	return c.Or(
 		c.Fmap(mkIndex,
 			c.Or(
-				c.Seq(atom, acceptToken("@"), atom, acceptToken(":"), atom),
-				c.Seq(atom, acceptToken("@"), atom),
+				c.Seq(atom, acceptToken("@"), unaryAtom, acceptToken(":"), unaryAtom),
+				c.Seq(atom, acceptToken("@"), unaryAtom),
 			),
 		), atom)(input)
 }
 
 func unary(input c.RollbackLexer) ([]c.Node, error) {
-	return c.Or(c.Fmap(mkUnaryOp, (c.And(acceptToken("-"), index))), index)(input)
+	op := c.Or(acceptToken("-"), acceptToken("#"))
+	return c.Or(c.Fmap(mkUnaryOp, (c.And(op, index))), index)(input)
+}
+
+func unaryAtom(input c.RollbackLexer) ([]c.Node, error) {
+	op := c.Or(acceptToken("-"), acceptToken("#"))
+	return c.Or(c.Fmap(mkUnaryOp, (c.And(op, atom))), atom)(input)
 }
 
 func divmul(input c.RollbackLexer) ([]c.Node, error) {

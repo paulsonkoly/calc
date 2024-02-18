@@ -25,6 +25,8 @@ var testData = [...]TestDatum{
 	{"simple literal/float", "3.14", nil, value.Float(3.14)},
 	{"simple literal/bool", "false", nil, value.Bool(false)},
 	{"simple literal/string", "\"abc\"", nil, value.String("abc")},
+	{"simple literal/array empty", "[]", nil, value.Array([]value.Type{})},
+	{"simple literal/array", "[1, false]", nil, value.Array([]value.Type{value.Int(1), value.Bool(false)})},
 
 	{"simple arithmetic/addition", "1+2", nil, value.Int(3)},
 	{"simple arithmetic/coercion", "1+2.0", nil, value.Float(3)},
@@ -158,6 +160,29 @@ var testData = [...]TestDatum{
 
 	{"builtin/error", "error(\"hi\")", nil, value.Error("hi")},
 	{"builtin/error type error", "error(1)", nil, value.TypeError},
+	{"qsort",
+		`{
+        filter = (pred, ary) -> {
+          i = 0
+          r = []
+          while i < #ary {
+            if pred(ary@i) r = r + [ary@i] 
+            i = i + 1
+          }
+          r
+        }
+        qsort = (ary) -> {
+          if #ary <= 1 ary else {
+            pivot = ary@0
+            tail = ary @ 1 : #ary
+            qsort(filter((n) -> n <= pivot, tail)) + [pivot] + qsort(filter((n) -> n > pivot, tail))
+          } 
+        }
+        qsort([5, 2, 4, 3, 1, 8])
+     }`,
+		nil,
+		value.Array([]value.Type{value.Int(1), value.Int(2), value.Int(3), value.Int(4), value.Int(5), value.Int(8)}),
+	},
 }
 
 func TestCalc(t *testing.T) {

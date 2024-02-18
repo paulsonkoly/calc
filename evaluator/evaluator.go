@@ -26,6 +26,7 @@ type Evaluator interface {
 type Int node.Int
 type Float node.Float
 type String node.String
+type Array node.List
 type Call node.Call
 type UnOp node.UnOp
 type BinOp node.BinOp
@@ -52,6 +53,8 @@ func wrap(n node.Type) Evaluator {
 		return Float(n)
 	case node.String:
 		return String(n)
+	case node.List:
+		return Array(n)
 	case node.Call:
 		return Call(n)
 	case node.UnOp:
@@ -117,6 +120,17 @@ func (s String) Evaluate(_ stack.Stack) (value.Type, bool) {
 	return value.String(tok), false
 }
 
+func (a Array) Evaluate(s stack.Stack) (value.Type, bool) {
+	elems := node.List(a).Elems
+	evalElems := make(value.Array, 0)
+
+	for _, e := range elems {
+		evalElems = append(evalElems, Evaluate(s, e))
+	}
+
+	return evalElems, false
+}
+
 func (c Call) Evaluate(s stack.Stack) (value.Type, bool) {
 	n := node.Call(c)
 	fName := n.Name
@@ -143,6 +157,8 @@ func (c Call) Evaluate(s stack.Stack) (value.Type, bool) {
 				s.Pop()
 				return r, false
 			} else {
+        fmt.Println(fName)
+        fmt.Println(n.Arguments)
 				return value.ArgumentError, false
 			}
 		} else {
@@ -155,11 +171,18 @@ func (c Call) Evaluate(s stack.Stack) (value.Type, bool) {
 
 func (u UnOp) Evaluate(s stack.Stack) (value.Type, bool) {
 	n := node.UnOp(u)
-	if n.Token() == "-" {
+	switch n.Token() {
+
+	case "-":
 		r := Evaluate(s, n.Target)
 		r = r.Arith("*", value.Int(-1))
 		return r, false
-	} else {
+
+	case "#":
+		r := Evaluate(s, n.Target)
+		return r.Len(), false
+
+	default:
 		log.Panicf("unexpected unary op: %s\n", n.Token())
 	}
 	panic("unreachable code")
@@ -175,7 +198,17 @@ func (b BinOp) Evaluate(s stack.Stack) (value.Type, bool) {
 	case "&", "|":
 		return Evaluate(s, n.Left).Logic(n.Token(), Evaluate(s, n.Right)), false
 
-	case "<", "<=", ">", ">=", "==", "!=":
+	case "==":
+		return Evaluate(s, n.Left).Eq(Evaluate(s, n.Right)), false
+
+	case "!=":
+		eq := Evaluate(s, n.Left).Eq(Evaluate(s, n.Right))
+		if eq, ok := eq.(value.Bool); ok {
+			return value.Bool(!eq), false
+		}
+		return eq, false
+
+	case "<", "<=", ">", ">=":
 		return Evaluate(s, n.Left).Relational(n.Token(), Evaluate(s, n.Right)), false
 
 	case "=":
