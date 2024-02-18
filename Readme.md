@@ -155,7 +155,7 @@ Incorrect operations result in error, any further calculation with an error resu
 
 ### Strings
 
-String literals can be written using double quotes ("). Within a string a double quote has to be escaped: "\"" is a string with a single element containing a double quote. Line breaks and any other character can be inserted within a string normally. Strings can be concatenated and indexed.
+String literals can be written using double quotes ("). Within a string a double quote has to be escaped: "\\"" is a string with a single element containing a double quote. Line breaks and any other character can be inserted within a string normally. Strings can be concatenated and indexed.
 
 ## Variable lookup, shadowing, closures
 
