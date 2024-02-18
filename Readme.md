@@ -301,13 +301,13 @@ Returns from the current function call or block. Returns are valid outside of a 
 
 The following tokens are valid (using usual regular expression notation)
 
- - integer literal /\d+/
- - float literal /\d+.\d+/
- - string literal /"([^"]|\\")*"/
- - variable name /[a-z]+/
- - non sticky chars /[(){},]/
- - sticky chars /[+*/=<>!-&|@:]/
- - new line /\n/
+ - integer literal `/\d+/`
+ - float literal `/\d+.\d+/`
+ - string literal `/"([^"]|\\")*"/`
+ - variable name `/[a-z]+/`
+ - non sticky chars `/[(){},\[\]]/`
+ - sticky chars `/[+*/=<>!-&|@:]/`
+ - new line `/\n/`
 
 Tokens are separated with white-spaces. Sticky chars together are returned from the lexer as single lexeme. For example "<=" is a single lexeme.
 
