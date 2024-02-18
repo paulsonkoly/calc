@@ -120,8 +120,8 @@ There are 6 precedence groups (from lowest to highest):
     - logic
     - + or -
     - * or /
-    - unary minus '-', and length '#'
     - index operator
+    - unary minus '-', and length '#'
 
 ### Length operator
 
