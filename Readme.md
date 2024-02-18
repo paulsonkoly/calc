@@ -130,11 +130,16 @@ There are 6 precedence groups (from lowest to highest):
 
 ### Index operator
 
-The index operator has 2 forms: "apple" @ 1 results in "p"; "apple" @ 1:3 results in "pp". Indexing outside, or using a lower value for the upper index than the lower index results in index error. To avoid language ambiguity the index operands have to be unaryAtoms see [language BNF](#BNF).
+The index operator has 2 forms: "apple" @ 1 results in "p"; "apple" @ 1:3 results in "pp". Indexing outside, or using a lower value for the upper index than the lower index results in index error.
 
-    string = "string"
-    string @ 2 : #string
-    > "ring"
+The precedence difference between unary operators and indexing is such that one can write expressions in a natural way without additional parenthesis. In the first example here indexing bind stronger, while in the second example the length operator binds stronger. For exact details see [BNF](#BNF). Note though that whitespace between : and # are required.
+
+    #[[1], [1,2]]@1
+    >  2
+    a = [1,2,3]
+    >  [1, 2, 3]
+    a @ 1 : #a
+    >  [2, 3]
 
 ### Errors
 
