@@ -93,16 +93,21 @@ type List struct {
 }
 
 // builtins
+
+// Read reads a string from stdin
 type Read struct{}
 
-type Write struct {
-	Value Type // Value is the written value
-}
+// Write writes a value to stdout
+type Write struct{ Value Type }
 
 // Aton converts a string to a number type
 type Aton struct{ Value Type }
 
+// Repl starts a calc repl session
 type Repl struct{}
+
+// Error converts a string to an error
+type Error struct{ Value Type }
 
 func (i Invalid) Token() string     { return "" }
 func (c Call) Token() string        { return "" }
@@ -125,3 +130,4 @@ func (n Name) Token() string        { return string(n) }
 func (b Block) Token() string       { return "" }
 func (l List) Token() string        { return "" }
 func (r Repl) Token() string        { return "" }
+func (e Error) Token() string       { return "" }

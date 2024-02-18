@@ -155,6 +155,9 @@ var testData = [...]TestDatum{
 	{"builtin/aton int", "aton(\"12\")", nil, value.Int(12)},
 	{"builtin/aton float", "aton(\"1.2\")", nil, value.Float(1.2)},
 	{"builtin/aton error", "aton(\"abc\")", nil, value.ConversionError},
+
+	{"builtin/error", "error(\"hi\")", nil, value.Error("hi")},
+	{"builtin/error type error", "error(1)", nil, value.TypeError},
 }
 
 func TestCalc(t *testing.T) {

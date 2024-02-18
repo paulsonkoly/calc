@@ -41,6 +41,7 @@ type Read node.Read
 type Write node.Write
 type Aton node.Aton
 type Repl node.Repl
+type Error node.Error
 type Block node.Block
 
 func wrap(n node.Type) Evaluator {
@@ -77,10 +78,12 @@ func wrap(n node.Type) Evaluator {
 		return Read(n)
 	case node.Write:
 		return Write(n)
-  case node.Aton:
-    return Aton(n)
+	case node.Aton:
+		return Aton(n)
 	case node.Repl:
 		return Repl(n)
+	case node.Error:
+		return Error(n)
 	case node.Block:
 		return Block(n)
 	}
@@ -301,9 +304,9 @@ func (r Repl) Evaluate(s stack.Stack) (value.Type, bool) {
 func (a Aton) Evaluate(s stack.Stack) (value.Type, bool) {
 	n := node.Aton(a)
 	sv, ok := Evaluate(s, n.Value).(value.String)
-  if !ok {
-    return value.TypeError, false
-  }
+	if !ok {
+		return value.TypeError, false
+	}
 
 	if v, err := strconv.Atoi(string(sv)); err == nil {
 		return value.Int(v), false
@@ -314,6 +317,15 @@ func (a Aton) Evaluate(s stack.Stack) (value.Type, bool) {
 	}
 
 	return value.ConversionError, false
+}
+
+func (e Error) Evaluate(s stack.Stack) (value.Type, bool) {
+	n := node.Error(e)
+	v := Evaluate(s, n.Value)
+	if s, ok := v.(value.String); ok {
+		return value.Error(string(s)), false
+	}
+	return value.TypeError, false
 }
 
 func (b Block) Evaluate(s stack.Stack) (value.Type, bool) {

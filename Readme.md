@@ -75,6 +75,7 @@ Built in functions are loaded in the top level frame on the interpreter start up
 | read     | 0     | string                     | Reads a string from the stdin                              |
 | write    | 1     | no result error            | Writes the given value to the output                       |
 | aton     | 1     | int/float/conversion error | Converts a string to an int or a float                     |
+| error    | 1     | error                      | Converts a string to an error                              |
 | repl     | 0     | no result error            | starts an interactive calc repl at the context of the call |
 
 ## Type coercions

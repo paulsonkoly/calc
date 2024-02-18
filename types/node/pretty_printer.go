@@ -114,3 +114,8 @@ func (l List) PrettyPrint(d int) {
 	}
 	fmt.Println(indent(d, ")"))
 }
+
+func (e Error) PrettyPrint(d int) {
+	fmt.Print(indent(d, "error "))
+	e.Value.PrettyPrint(0)
+}
