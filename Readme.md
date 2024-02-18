@@ -70,11 +70,12 @@ If a single file name is provided on the command line the input is redirected fr
 
 Built in functions are loaded in the top level frame on the interpreter start up. They provide functionality that cannot be implemented in calc itself. In any other aspect they are just regular function values.
 
-| function | arity | description                                                         |
-|----------|-------|---------------------------------------------------------------------|
-| read     | 0     | Prompts the user for input expecting an int, float or boolean value |
-| write    | 1     | Writes the given value to the output                                |
-| repl     | 0     | starts an interactive calc repl at the context of the call          |
+| function | arity | returns                    | description                                                |
+|----------|-------|----------------------------|------------------------------------------------------------|
+| read     | 0     | string                     | Reads a string from the stdin                              |
+| write    | 1     | no result error            | Writes the given value to the output                       |
+| aton     | 1     | int/float/conversion error | Converts a string to an int or a float                     |
+| repl     | 0     | no result error            | starts an interactive calc repl at the context of the call |
 
 ## Type coercions
 
@@ -93,7 +94,7 @@ There are 6 precedence groups (from lowest to highest):
 
 ### Index operator
 
-The index operator has 2 forms: "apple" @ 1 results in p; "apple" @ 1:3 results in "pp". Indexing outside, or using a lower value for the upper index than the lower index results in index error. To avoid language ambiguity the operands have to be atoms see [language BNF](#BNF).
+The index operator has 2 forms: "apple" @ 1 results in "p"; "apple" @ 1:3 results in "pp". Indexing outside, or using a lower value for the upper index than the lower index results in index error. To avoid language ambiguity the operands have to be atoms see [language BNF](#BNF).
 
 ### Errors
 

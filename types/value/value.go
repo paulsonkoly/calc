@@ -33,6 +33,7 @@ var InvalidOpError = Error("invalid operator")
 var NoResultError = Error("no result")
 var ArgumentError = Error("argument error")
 var IndexError = Error("index error")
+var ConversionError = Error("conversion error")
 
 func (i Int) Arith(op string, other Type) Type {
 	switch o := other.(type) {

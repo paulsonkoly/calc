@@ -83,14 +83,16 @@ func (r Return) PrettyPrint(d int) {
 	r.Target.PrettyPrint(0)
 }
 
-func (r Read) PrettyPrint(d int) {
-	fmt.Print(indent(d, "read "))
-	r.Target.PrettyPrint(0)
-}
+func (r Read) PrettyPrint(d int) { fmt.Print(indent(d, "read")) }
 
 func (w Write) PrettyPrint(d int) {
 	fmt.Print(indent(d, "write "))
 	w.Value.PrettyPrint(0)
+}
+
+func (a Aton) PrettyPrint(d int) {
+	fmt.Print(indent(d, "aton "))
+	a.Value.PrettyPrint(0)
 }
 
 func (r Repl) PrettyPrint(d int) { fmt.Print(indent(d, "repl")) }

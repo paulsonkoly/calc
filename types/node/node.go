@@ -93,13 +93,14 @@ type List struct {
 }
 
 // builtins
-type Read struct {
-	Target Name // Target is the variable name the read will be assigned to
-}
+type Read struct{}
 
 type Write struct {
 	Value Type // Value is the written value
 }
+
+// Aton converts a string to a number type
+type Aton struct{ Value Type }
 
 type Repl struct{}
 
@@ -119,6 +120,7 @@ func (w While) Token() string       { return "" }
 func (r Return) Token() string      { return "" }
 func (r Read) Token() string        { return "" }
 func (w Write) Token() string       { return "" }
+func (a Aton) Token() string        { return "" }
 func (n Name) Token() string        { return string(n) }
 func (b Block) Token() string       { return "" }
 func (l List) Token() string        { return "" }

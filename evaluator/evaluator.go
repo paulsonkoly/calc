@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/paulsonkoly/calc/parser"
 	"github.com/paulsonkoly/calc/stack"
 	"github.com/paulsonkoly/calc/types/node"
 	"github.com/paulsonkoly/calc/types/value"
@@ -40,6 +39,7 @@ type While node.While
 type Return node.Return
 type Read node.Read
 type Write node.Write
+type Aton node.Aton
 type Repl node.Repl
 type Block node.Block
 
@@ -77,6 +77,8 @@ func wrap(n node.Type) Evaluator {
 		return Read(n)
 	case node.Write:
 		return Write(n)
+  case node.Aton:
+    return Aton(n)
 	case node.Repl:
 		return Repl(n)
 	case node.Block:
@@ -273,19 +275,12 @@ func (r Return) Evaluate(s stack.Stack) (value.Type, bool) {
 }
 
 func (r Read) Evaluate(s stack.Stack) (value.Type, bool) {
-	n := node.Read(r)
 	b := bufio.NewReader(os.Stdin)
 	line, err := b.ReadString('\n')
 	if err != nil {
 		return value.Error(fmt.Sprintf("read error %s", err)), false
 	}
-	t, err := parser.ParseImmediate(line)
-	if err != nil {
-		return value.Error(fmt.Sprintf("read error %s", err)), false
-	}
-	empty := stack.NewStack()
-	s.Set(n.Target.Token(), Evaluate(empty, t))
-	return Evaluate(s, n.Target), true
+	return value.String(line), false
 }
 
 func (w Write) Evaluate(s stack.Stack) (value.Type, bool) {
@@ -301,6 +296,24 @@ func (r Repl) Evaluate(s stack.Stack) (value.Type, bool) {
 	Loop(rl, s, true)
 
 	return value.NoResultError, false
+}
+
+func (a Aton) Evaluate(s stack.Stack) (value.Type, bool) {
+	n := node.Aton(a)
+	sv, ok := Evaluate(s, n.Value).(value.String)
+  if !ok {
+    return value.TypeError, false
+  }
+
+	if v, err := strconv.Atoi(string(sv)); err == nil {
+		return value.Int(v), false
+	}
+
+	if v, err := strconv.ParseFloat(string(sv), 64); err == nil {
+		return value.Float(v), false
+	}
+
+	return value.ConversionError, false
 }
 
 func (b Block) Evaluate(s stack.Stack) (value.Type, bool) {

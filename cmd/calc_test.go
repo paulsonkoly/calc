@@ -152,6 +152,9 @@ var testData = [...]TestDatum{
 		}`, nil, value.Int(3),
 	},
 	{"keyword violation", "true = false", errors.New("Parser: "), nil},
+	{"builtin/aton int", "aton(\"12\")", nil, value.Int(12)},
+	{"builtin/aton float", "aton(\"1.2\")", nil, value.Float(1.2)},
+	{"builtin/aton error", "aton(\"abc\")", nil, value.ConversionError},
 }
 
 func TestCalc(t *testing.T) {
