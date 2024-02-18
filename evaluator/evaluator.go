@@ -290,7 +290,7 @@ func (w Write) Evaluate(s stack.Stack) (value.Type, bool) {
 	n := node.Write(w)
 	v := Evaluate(s, n.Value)
 	fmt.Println(v)
-	return v, false
+	return value.NoResultError, false
 }
 
 func (r Repl) Evaluate(s stack.Stack) (value.Type, bool) {
