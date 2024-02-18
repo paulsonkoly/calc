@@ -105,9 +105,14 @@ Built in functions are loaded in the top level frame on the interpreter start up
 
 ## Type coercions
 
-There are 6 value types: integers, floats, booleans, functions, strings and errors.
+There are 7 value types: integers, floats, booleans, functions, strings, arrays and errors.
 
 Arithmetic operations and relational operations work on numbers, an expression containing only integers results in integer (or error), an expression containing a float results in a float. Relational operations work both on numbers, booleans and strings, logic operations work only on booleans.
+
+Arrays are dynamic container of any type.
+
+    funs = [ ["+", (a, b) -> a+b ], ["-", (a, b) -> a - b ] ]
+    >  [["+", function], ["-", function]]
 
 There are 6 precedence groups (from lowest to highest): 
 
