@@ -9,6 +9,12 @@ import (
 
 var Keywords = [...]string{"if", "else", "while", "return", "true", "false"}
 
+type Type struct {}
+
+func (t Type)Parse(input string) ([]node.Type, error) {
+  return Parse(input)
+}
+
 func Parse(input string) ([]node.Type, error) {
 	l := lexer.NewTLexer(input)
 	rn := make([]node.Type, 0)

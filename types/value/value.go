@@ -3,8 +3,6 @@ package value
 import (
 	"fmt"
 	"slices"
-
-	"github.com/paulsonkoly/calc/types/node"
 )
 
 // Type represents the evaluation result value
@@ -26,7 +24,7 @@ type Array []Type
 type Error string
 type Bool bool
 type Function struct {
-	Node  *node.Function
+	Node  any // Function AST
 	Frame *Frame
 }
 

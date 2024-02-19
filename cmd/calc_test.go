@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/paulsonkoly/calc/evaluator"
+	"github.com/paulsonkoly/calc/builtin"
 	"github.com/paulsonkoly/calc/parser"
 	"github.com/paulsonkoly/calc/stack"
 	"github.com/paulsonkoly/calc/types/node"
@@ -187,14 +187,15 @@ var testData = [...]TestDatum{
 
 func TestCalc(t *testing.T) {
 	for _, test := range testData {
-		s := stack.NewStack()
+    b := builtin.Type{}
+		s := stack.NewStack(b)
 		ast, err := parser.Parse(test.input)
 		t.Run(test.name, func(t *testing.T) {
 			if test.parseError == nil {
 				assert.NoError(t, err)
 				var v value.Type
 				for _, stmnt := range ast {
-					v = evaluator.Evaluate(s, stmnt)
+					v = node.Evaluate(s, stmnt)
 				}
 				if f, ok := test.value.(value.Function); ok {
 					assert.IsType(t, f, v)

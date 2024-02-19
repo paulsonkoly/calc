@@ -6,26 +6,29 @@ import (
 
 	"os"
 
-	"github.com/paulsonkoly/calc/evaluator"
+	"github.com/paulsonkoly/calc/builtin"
 	"github.com/paulsonkoly/calc/parser"
 	"github.com/paulsonkoly/calc/stack"
+	"github.com/paulsonkoly/calc/types/node"
 )
 
 func main() {
-	s := stack.NewStack()
+  b := builtin.Type{}
+	s := stack.NewStack(b)
+  p := parser.Type{}
 
 	switch len(os.Args) {
 
 	case 1: // REPL mode
-		rl := evaluator.NewRLReader()
+		rl := node.NewRLReader()
 		defer rl.Close()
-		evaluator.Loop(rl, s, true)
+		node.Loop(rl, p, s, true)
 
 	case 2: // file mode
 		fileName := os.Args[1]
-		fr := evaluator.NewFReader(fileName)
+		fr := node.NewFReader(fileName)
 		defer fr.Close()
-		evaluator.Loop(fr, s, false)
+		node.Loop(fr, p, s, false)
 
 	case 3: // command line mode
 		var eval string
@@ -36,10 +39,11 @@ func main() {
 }
 
 func cmdLine(line string) {
-	s := stack.NewStack()
+  b := builtin.Type{}
+	s := stack.NewStack(b)
 	t, err := parser.Parse(line)
 	if len(t) > 0 {
-		fmt.Println(evaluator.Evaluate(s, t[0]))
+		fmt.Println(node.Evaluate(s, t[0]))
 	}
 	if err != nil {
 		fmt.Println(err)

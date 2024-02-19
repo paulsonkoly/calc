@@ -1,4 +1,4 @@
-package evaluator
+package node
 
 import (
 	"bufio"
@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/chzyer/readline"
-	"github.com/paulsonkoly/calc/parser"
 	"github.com/paulsonkoly/calc/stack"
 )
 
@@ -51,7 +50,7 @@ func (f fReader) read() (string, error) { return f.b.ReadString('\n') }
 
 func (f fReader) Close() error { return f.r.Close() }
 
-func Loop(r lineReader, s stack.Stack, doOut bool) {
+func Loop(r lineReader, p ParserT, s stack.Stack, doOut bool) {
 	blocksOpen := 0
 	quotesOpen := 0
 	input := ""
@@ -72,7 +71,7 @@ func Loop(r lineReader, s stack.Stack, doOut bool) {
 		input = join(input, line)
 
 		if blocksOpen == 0 && quotesOpen%2 == 0 {
-			t, err := parser.Parse(input)
+			t, err := p.Parse(input)
 			if err != nil {
 				fmt.Println(err)
 				input = ""

@@ -4,6 +4,7 @@ package node
 // Type is AST node type
 type Type interface {
 	PrettyPrinter
+  Evaluator
 	Token() string
 }
 
@@ -103,8 +104,14 @@ type Write struct{ Value Type }
 // Aton converts a string to a number type
 type Aton struct{ Value Type }
 
+type ParserT interface {
+  Parse(input string) ([]Type, error)
+}
+
 // Repl starts a calc repl session
-type Repl struct{}
+type Repl struct {
+  Parser ParserT
+}
 
 // Error converts a string to an error
 type Error struct{ Value Type }

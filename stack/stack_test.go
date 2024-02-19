@@ -8,8 +8,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type builtinStub struct{}
+
+func (b builtinStub) All() map[string]value.Type {
+	return map[string]value.Type{}
+}
+
 func TestStack(t *testing.T) {
-	s := stack.NewStack()
+	b := builtinStub{}
+	s := stack.NewStack(b)
 
 	v, ok := s.LookUp("something")
 	assert.Equal(t, value.Error("something not defined"), v)

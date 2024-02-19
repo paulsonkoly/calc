@@ -12,7 +12,6 @@ package stack
 import (
 	"fmt"
 
-	"github.com/paulsonkoly/calc/builtin"
 	"github.com/paulsonkoly/calc/types/value"
 )
 
@@ -21,10 +20,14 @@ type svalue = value.Type
 
 type Stack []sframe
 
+type Builtin interface {
+  All() map[string]svalue
+}
+
 // NewStack creates a new stack
-func NewStack() Stack {
+func NewStack(b Builtin) Stack {
 	topF := make(sframe)
-	for name, f := range builtin.All {
+	for name, f := range b.All() {
 		topF[name] = f
 	}
 	return []sframe{topF}
