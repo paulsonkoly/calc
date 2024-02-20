@@ -187,7 +187,7 @@ var testData = [...]TestDatum{
 
 func TestCalc(t *testing.T) {
 	for _, test := range testData {
-    b := builtin.Type{}
+		b := builtin.Type{}
 		s := stack.NewStack(b)
 		ast, err := parser.Parse(test.input)
 		t.Run(test.name, func(t *testing.T) {

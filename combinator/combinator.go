@@ -1,7 +1,10 @@
 // package combinator parser combinator library
 package combinator
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+)
 
 // seems one can write haskell in every language
 
@@ -49,37 +52,126 @@ type RollbackLexer interface {
 // sub expressions
 type Parser func(input RollbackLexer) ([]Node, error)
 
-// Or is a choice between two parsers
-//
-// parses with a and if that fails does what b would do
-func Or(a, b Parser) Parser {
+// Ok is a parser that doesn't do anything just returns a successful parse
+// result
+func Ok() Parser {
+	return func(input RollbackLexer) ([]Node, error) {
+		return []Node{}, nil
+	}
+}
+
+// Assert asserts the given parser p would succeed without consuming input
+// It returns empty parse result
+func Assert(p Parser) Parser {
 	return func(input RollbackLexer) ([]Node, error) {
 		input.Snapshot()
-		aRes, aErr := a(input)
-		if aErr == nil {
-			input.Commit()
-			return aRes, nil
+		defer input.Rollback()
+
+		_, pErr := p(input)
+
+		return []Node{}, pErr
+	}
+}
+
+// Not asserts that the given parser p will fail.
+func Not(p Parser) Parser {
+	return func(input RollbackLexer) ([]Node, error) {
+		_, pErr := p(input)
+		if pErr == nil {
+			return nil, errors.New("got no error")
 		}
-		input.Rollback()
-		bRes, bErr := b(input)
-		return bRes, bErr
+		return []Node{}, nil
+	}
+}
+
+// Conditional is a pair of parsers. Once Gate succeeds we don't roll back but
+// we are commited to parse with OnSuccess.
+//
+// Conditional is meant to solve the following problem.
+//
+// OneOf is much simpler and simpler to use than Choose. However in the following
+// language there is a problem.
+//
+//     S -> Ax
+//     A -> OneOf(B, C)
+//     B -> qbcd
+//     C -> q
+//
+// qbczx is the input text, here using rule B was intended, giving the error
+// that z doesn't match expected d. However in OneOf C matches, so in rule A
+// there is no error. Rule S fails q (from rule C) is not followed by x,
+// rolling back bcz part of the input. The reported error gets far from the
+// actual error character.
+//
+// Do this instead:
+//
+//    S -> Ax
+//    A -> Choose( Cond{G: qb, S: cd }, Cond{ G: Ok(), S : q } )
+//
+// Assuming choice rules can have identifying prefixes.
+type Conditional struct {
+	Gate      Parser // Gate gates Choose and Any from using Success if Predicate fails
+	OnSuccess Parser // OnSuccess is the parser that runs after gate succeeds
+}
+
+// Choose is a choice between many parsers
+//
+// It uses Conditionals, asserting that the Gate succeeds and if so it commits
+// to parsing with OnSuccess part of choice. It rolls back a failing Predicate
+// automatically. A succeeding predicate will be prepended to the result of
+// success.
+func Choose(choices ...Conditional) Parser {
+	return func(input RollbackLexer) ([]Node, error) {
+		for _, c := range choices {
+			input.Snapshot()
+			pRes, pErr := c.Gate(input)
+			if pErr == nil {
+				input.Commit()
+				sRes, sErr := c.OnSuccess(input)
+				if sRes != nil {
+					return append(pRes, sRes...), sErr
+				}
+				return nil, sErr
+			}
+			input.Rollback()
+		}
+		// Modify your grammar using Choose, so the last choice always passes
+		//
+		// we can't really create more meaningful error here, than the error from
+		// the last choice, one can use Ok for Predicate in the last case
+		panic("no predicates succeeded in choice")
 	}
 }
 
 // OneOf is a choice between many parsers
 //
-// Appends the given parsers together with Or. In effect parses with the first
-// succeeding parser and returns what that would return. Fails if all parsers
-// fail.
+// It tries each parser in turn, rolling back the input after each failed
+// attempt It is meant to be used with terminal rules only, for complex
+// language rules prefer Choose because it gives much closer syntax errors to
+// the actual error location
 func OneOf(args ...Parser) Parser {
 	if len(args) < 1 {
 		panic("Parser: OneOf needs at least one parser")
 	}
-	r := args[0]
-	for _, p := range args[1:] {
-		r = Or(r, p)
+	return func(input RollbackLexer) ([]Node, error) {
+		input.Snapshot()
+		pRes, pErr := args[0](input)
+		if pErr == nil {
+			input.Commit()
+			return pRes, nil
+		}
+		input.Rollback()
+		for _, p := range args[1:] {
+			input.Snapshot()
+			pRes, pErr = p(input)
+			if pErr == nil {
+				input.Commit()
+				return pRes, nil
+			}
+			input.Rollback()
+		}
+		return nil, pErr
 	}
-	return r
 }
 
 // And is sequencing two parsers
@@ -113,34 +205,36 @@ func Seq(args ...Parser) Parser {
 	return r
 }
 
-// Some runs the given parser a as many times as it would succeed
+// Any parses with 0 or more execution of a
 //
-// Some fails if a doesn't succeed at least once and succeeds otherwise. It
-// returns the concatenated result of all successful runs.
-func Some(a Parser) Parser {
-	return And(a, Any(a))
-}
-
-// Any runs the given parser a as many times as it would succeed
+// It tries parsing with predicate and if that succeeds it commits to go one
+// more step with success. The predicate failing is rolled back automatically.
+// The succeeding predicate result is concatenated with the result
 //
-// Any never fails, and it returns the concatenated result of all successful
-// runs which can be potentially empty.
-func Any(a Parser) Parser {
+// If the rule doesn't have a meaningful prefix to condition on, one can place
+// the rule in the gate, and just use Ok() for OnSuccess. This gives a
+// behaviour where failures are rolled back.
+func Any(a Conditional) Parser {
 	return func(input RollbackLexer) ([]Node, error) {
-		r := make([]Node, 0)
+		r, err := make([]Node, 0), error(nil)
 
 		for {
 			input.Snapshot()
-			aRes, aErr := a(input)
-			if aErr == nil {
+			pRes, pErr := a.Gate(input)
+			if pErr == nil {
 				input.Commit()
-				r = append(r, aRes...)
+				aRes, aErr := a.OnSuccess(input)
+				r = append(append(r, pRes...), aRes...)
+				err = aErr
+        if err != nil {
+          break
+        }
 			} else {
 				input.Rollback()
 				break
 			}
 		}
-		return r, nil
+		return r, err
 	}
 }
 
@@ -174,18 +268,6 @@ func SeparatedBy(a, b Parser) Parser {
 			r = append(r, aRes...)
 		}
 	}
-}
-
-// JoinedWith parses with a sequence of a, separated by b.
-//
-// It fails if a doesn't succeed at least once. If there is only one a it
-// doesn't assert a subsequent b. Otherwise the sequence has to end with b. The
-// parse results of b are thrown away, it returns the sequenced results of a.
-func JoinedWith(a, b Parser) Parser {
-	return Or(
-		Some(Fmap(func(ab []Node) []Node { return ab[0:1] }, And(a, b))),
-		a,
-	)
 }
 
 // SurroundedBy parses with a sequence of a, b, c but returns the parse result

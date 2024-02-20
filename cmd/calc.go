@@ -13,9 +13,9 @@ import (
 )
 
 func main() {
-  b := builtin.Type{}
+	b := builtin.Type{}
 	s := stack.NewStack(b)
-  p := parser.Type{}
+	p := parser.Type{}
 
 	switch len(os.Args) {
 
@@ -39,7 +39,7 @@ func main() {
 }
 
 func cmdLine(line string) {
-  b := builtin.Type{}
+	b := builtin.Type{}
 	s := stack.NewStack(b)
 	t, err := parser.Parse(line)
 	if len(t) > 0 {

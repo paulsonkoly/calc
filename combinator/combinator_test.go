@@ -57,15 +57,15 @@ var testData = []testDatum{
 		err:       "",
 	},
 	{
-		name:      "Or",
-		parser:    combinator.Or(accept("a"), accept("b")),
+		name:      "OneOf",
+		parser:    combinator.OneOf(accept("a"), accept("b")),
 		lexerOut:  []testToken{"b"},
 		parserOut: []testNode{{token: testToken("b")}},
 		err:       "",
 	},
 	{
-		name:      "Or failed",
-		parser:    combinator.Or(accept("a"), accept("b")),
+		name:      "OneOf failed",
+		parser:    combinator.OneOf(accept("a"), accept("b")),
 		lexerOut:  []testToken{"c"},
 		parserOut: nil,
 		err:       "Parser: ? expected, got c",
@@ -74,7 +74,7 @@ var testData = []testDatum{
 		name: "Backtrack aab -> a(aa|ab)",
 		parser: combinator.And(
 			accept("a"),
-			combinator.Or(combinator.And(accept("a"), accept("a")), combinator.And(accept("a"), accept("b"))),
+			combinator.OneOf(combinator.And(accept("a"), accept("a")), combinator.And(accept("a"), accept("b"))),
 		),
 		lexerOut:  []testToken{"a", "a", "b"},
 		parserOut: []testNode{{token: testToken("a")}, {token: testToken("a")}, {token: testToken("b")}},
@@ -88,22 +88,22 @@ var testData = []testDatum{
 		err:       "",
 	},
 	{
-		name:      "Some",
-		parser:    combinator.Some(accept("a")),
-		lexerOut:  []testToken{"a", "a", "a", "b"},
-		parserOut: []testNode{{token: testToken("a")}, {token: testToken("a")}, {token: testToken("a")}},
+		name:      "Choose",
+		parser:    combinator.Choose(combinator.Conditional{Gate: accept("a"), OnSuccess: accept("b")}),
+		lexerOut:  []testToken{"a", "b"},
+		parserOut: []testNode{{token: testToken("a")}, {token: testToken("b")}},
 		err:       "",
 	},
 	{
 		name:      "Any (none)",
-		parser:    combinator.Any(accept("a")),
+		parser:    combinator.Any(combinator.Conditional{Gate: accept("a"), OnSuccess: combinator.Ok()}),
 		lexerOut:  []testToken{"b", "b", "b", "b"},
 		parserOut: []testNode{},
 		err:       "",
 	},
 	{
 		name:      "Any (some)",
-		parser:    combinator.Any(accept("a")),
+		parser:    combinator.Any(combinator.Conditional{Gate: accept("a"), OnSuccess: combinator.Ok()}),
 		lexerOut:  []testToken{"a", "a", "b", "b"},
 		parserOut: []testNode{{token: testToken("a")}, {token: testToken("a")}},
 		err:       "",
@@ -134,20 +134,6 @@ var testData = []testDatum{
 		parser:    combinator.And(combinator.SeparatedBy(accept("a"), accept("b")), combinator.And(accept("b"), accept("c"))),
 		lexerOut:  []testToken{"a", "b", "c"},
 		parserOut: []testNode{{token: testToken("a")}, {token: testToken("b")}, {token: testToken("c")}},
-		err:       "",
-	},
-	{
-		name:      "Joined with (single token)",
-		parser:    combinator.JoinedWith(accept("a"), accept("b")),
-		lexerOut:  []testToken{"a"},
-		parserOut: []testNode{{token: testToken("a")}},
-		err:       "",
-	},
-	{
-		name:      "Joined with",
-		parser:    combinator.JoinedWith(accept("a"), accept("b")),
-		lexerOut:  []testToken{"a", "b", "a", "b", "a", "b"},
-		parserOut: []testNode{{token: testToken("a")}, {token: testToken("a")}, {token: testToken("a")}},
 		err:       "",
 	},
 	{
@@ -197,22 +183,24 @@ func (l *lexerStub) Rollback() {
 
 func TestCombinator(t *testing.T) {
 	for _, tt := range testData {
-		l := lexerStub{tokens: tt.lexerOut, readP: -1, pointers: make([]int, 0)}
-		p := tt.parser
+		t.Run(tt.name, func(t *testing.T) {
+			l := lexerStub{tokens: tt.lexerOut, readP: -1, pointers: make([]int, 0)}
+			p := tt.parser
 
-		n, err := p(combinator.RollbackLexer(&l))
-		if tt.err != "" {
-			if assert.Error(t, err, "%s", tt.name) {
-				assert.Equal(t, tt.err, err.Error(), "%s", tt.name)
-			}
-		} else {
-			assert.NoError(t, err, "%s", tt.name)
+			n, err := p(combinator.RollbackLexer(&l))
+			if tt.err != "" {
+				if assert.Error(t, err) {
+					assert.Equal(t, tt.err, err.Error())
+				}
+			} else {
+				assert.NoError(t, err)
 
-			convert := []testNode{}
-			for _, a := range n {
-				convert = append(convert, a.(testNode))
+				convert := []testNode{}
+				for _, a := range n {
+					convert = append(convert, a.(testNode))
+				}
+				assert.Equal(t, tt.parserOut, convert)
 			}
-			assert.Equal(t, tt.parserOut, convert, "%s", tt.name)
-		}
+		})
 	}
 }

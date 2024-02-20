@@ -53,7 +53,8 @@ func (l *Lexer) Next() bool {
 
 		if str.err != nil {
 			l.Err = str.err
-			return false
+			// return false
+      return true
 		}
 
 		st = str.next
