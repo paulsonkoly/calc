@@ -60,40 +60,40 @@ func (a List) Evaluate(s stack.Stack) (value.Type, bool) {
 func (c Call) Evaluate(s stack.Stack) (value.Type, bool) {
 	fName := c.Name
 	fl, ok := s.LookUp(fName)
-  if ! ok {
-    return fl, false
-  }
+	if !ok {
+		return fl, false
+	}
 
-  f, ok := fl.(value.Function)
-  if !ok {
-    return value.TypeError, false
-  }
+	f, ok := fl.(value.Function)
+	if !ok {
+		return value.TypeError, false
+	}
 
-  fNode := f.Node.(*Function) // let panic if fails
-  args := c.Arguments.Elems
-  params := fNode.Parameters.Elems
+	fNode := f.Node.(*Function) // let panic if fails
+	args := c.Arguments.Elems
+	params := fNode.Parameters.Elems
 
-  if len(args) != len(params) {
-    return value.ArgumentError, false
-  }
+	if len(args) != len(params) {
+		return value.ArgumentError, false
+	}
 
-  // push 2 frames, one is the closure environment, the other is the frame for arguments
-  // the arguments have to be evaluated before we push anything on the stack because what we push
-  // ie the closure frame might contain variables that affect the argument evaluation
-  frm := make(value.Frame)
-  for i := 0; i < len(args); i++ {
-    frm[params[i].Token()] = Evaluate(s, args[i])
-  }
-  if f.Frame != nil {
-    s.Push(f.Frame)
-  }
-  s.Push(&frm)
-  r := Evaluate(s, fNode.Body)
-  if f.Frame != nil {
-    s.Pop()
-  }
-  s.Pop()
-  return r, false
+	// push 2 frames, one is the closure environment, the other is the frame for arguments
+	// the arguments have to be evaluated before we push anything on the stack because what we push
+	// ie the closure frame might contain variables that affect the argument evaluation
+	frm := make(value.Frame)
+	for i := 0; i < len(args); i++ {
+		frm[params[i].Token()] = Evaluate(s, args[i])
+	}
+	if f.Frame != nil {
+		s.Push(f.Frame)
+	}
+	s.Push(&frm)
+	r := Evaluate(s, fNode.Body)
+	if f.Frame != nil {
+		s.Pop()
+	}
+	s.Pop()
+	return r, false
 }
 
 func (u UnOp) Evaluate(s stack.Stack) (value.Type, bool) {
@@ -267,6 +267,11 @@ func (a Aton) Evaluate(s stack.Stack) (value.Type, bool) {
 	}
 
 	return value.ConversionError, false
+}
+
+func (t Toa) Evaluate(s stack.Stack) (value.Type, bool) {
+	v := Evaluate(s, t.Value)
+	return value.String(fmt.Sprint(v)), false
 }
 
 func (e Error) Evaluate(s stack.Stack) (value.Type, bool) {

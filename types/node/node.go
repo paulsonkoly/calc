@@ -4,7 +4,7 @@ package node
 // Type is AST node type
 type Type interface {
 	PrettyPrinter
-  Evaluator
+	Evaluator
 	Token() string
 }
 
@@ -104,13 +104,16 @@ type Write struct{ Value Type }
 // Aton converts a string to a number type
 type Aton struct{ Value Type }
 
+// Toa converts a valye to a string
+type Toa struct{ Value Type }
+
 type ParserT interface {
-  Parse(input string) ([]Type, error)
+	Parse(input string) ([]Type, error)
 }
 
 // Repl starts a calc repl session
 type Repl struct {
-  Parser ParserT
+	Parser ParserT
 }
 
 // Error converts a string to an error
@@ -133,6 +136,7 @@ func (r Return) Token() string      { return "" }
 func (r Read) Token() string        { return "" }
 func (w Write) Token() string       { return "" }
 func (a Aton) Token() string        { return "" }
+func (t Toa) Token() string         { return "" }
 func (n Name) Token() string        { return string(n) }
 func (b Block) Token() string       { return "" }
 func (l List) Token() string        { return "" }

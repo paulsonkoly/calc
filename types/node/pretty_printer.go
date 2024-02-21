@@ -95,6 +95,11 @@ func (a Aton) PrettyPrint(d int) {
 	a.Value.PrettyPrint(0)
 }
 
+func (t Toa) PrettyPrint(d int) {
+	fmt.Print(indent(d, "toa "))
+	t.Value.PrettyPrint(0)
+}
+
 func (r Repl) PrettyPrint(d int) { fmt.Print(indent(d, "repl")) }
 
 func (n Name) PrettyPrint(d int) { fmt.Print(indent(d, string(n))) }
