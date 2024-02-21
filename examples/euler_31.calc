@@ -1,0 +1,16 @@
+ways = (target, coins) -> {
+  if target == 0  return 1 
+  if (target < 0) | (#coins == 0) return 0 
+
+  largest = coins @ (#coins - 1) 
+  nolargest = coins @ 0 : (#coins - 1) 
+  r = 0
+  while target >= 0 {
+    r = r + ways(target, nolargest)
+    target = target - largest 
+  }
+  r
+}
+
+write(ways(200, [1, 2, 5, 10, 20, 50, 100, 200]))
+

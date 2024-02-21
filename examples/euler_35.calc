@@ -1,0 +1,53 @@
+binsearch = (a, b, cond) -> {
+  if a >= b-1 {
+    if cond(b) return b else return error("not found")
+  }
+  mid = (a + b) / 2
+  if cond(mid) binsearch(a, mid, cond) else binsearch(mid, b, cond)
+}
+
+sqrt = (a) -> binsearch(1, a / 2, (n) -> (n+1)*(n+1) > a)
+
+all = (ary, f) -> {
+  i = 0
+  while i < #ary {
+    if f(ary@i) == false return false
+    i = i + 1
+  }
+  true
+}
+
+isprime = (n) -> {
+  if n < 2 return false
+  sqrt = sqrt(n)
+  i = 2
+  while i <= sqrt {
+    if n / i * i == n {
+      return false
+    }
+    i = i + 1
+  }
+  true
+}
+
+rotations = (n) -> {
+  s = toa(n)
+  i = 0
+  r = []
+  while i < #s {
+    r = r + [aton(s@i: #s  + s@0:i)]
+    i = i +1
+  }
+  r
+}
+
+i = 0
+c = 0
+while i < 1000000 {
+  if all(rotations(i), isprime) {
+    c = c + 1
+  }
+  i = i+1
+}
+write(c)
+
