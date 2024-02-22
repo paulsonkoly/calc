@@ -1,34 +1,32 @@
 package builtin
 
 import (
+	"github.com/paulsonkoly/calc/memory"
 	"github.com/paulsonkoly/calc/parser"
 	"github.com/paulsonkoly/calc/types/node"
-	"github.com/paulsonkoly/calc/types/value"
 )
 
-type Type struct {}
+func Load(m *memory.Type) {
+	for name, fun := range all {
+		fNode := fun.STRewrite(node.SymTbl{})
+		fVal, _ := fNode.Evaluate(m)
+		m.SetGlobal(name, fVal)
+  }
+}
 
-func (_ Type)All() map[string]value.Type { return all }
-
-var all = map[string]value.Type{"read": Read, "write": Write, "aton": Aton, "repl": Repl, "error": Error, "toa": Toa}
+var all = map[string]node.Function{"read": readF, "write": writeF, "aton": atonF, "repl": replF, "error": errorF, "toa": toaF}
 
 var readF = node.Function{Parameters: node.List{Elems: []node.Type{}}, Body: node.Read{}}
-var Read = value.Function{Node: &readF, Frame: nil}
 
 var writeF = node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Write{Value: v}}
-var Write = value.Function{Node: &writeF, Frame: nil}
 
 var atonF = node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Aton{Value: v}}
-var Aton = value.Function{Node: &atonF, Frame: nil}
 
 var toaF = node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Toa{Value: v}}
-var Toa = value.Function{Node: &toaF, Frame: nil}
 
 var parseInstance = parser.Type{}
-var replF = node.Function{Parameters: node.List{Elems: []node.Type{}}, Body: node.Repl{ Parser: parseInstance}}
-var Repl = value.Function{Node: &replF, Frame: nil}
+var replF = node.Function{Parameters: node.List{Elems: []node.Type{}}, Body: node.Repl{Parser: parseInstance}}
 
 var errorF = node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Error{Value: v}}
-var Error = value.Function{Node: &errorF, Frame: nil}
 
 var v = node.Name("v")

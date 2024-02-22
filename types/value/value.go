@@ -24,8 +24,8 @@ type Array []Type
 type Error string
 type Bool bool
 type Function struct {
-	Node  any // Function AST
-	Frame *Frame
+	Node  any // Node is function AST
+	Frame any // Frame is closure frame pointer
 }
 
 // errors
@@ -83,14 +83,14 @@ func (i Int) Index(_ ...Type) Type        { return TypeError }
 func (i Int) Len() Type                   { return TypeError }
 
 func (i Int) Eq(other Type) Type {
-  switch other := other.(type) {
-  case Int:
+	switch other := other.(type) {
+	case Int:
 		return Bool(i == other)
-  case Float:
+	case Float:
 		return Bool(i == Int(other))
-  default:
-	return TypeError
-  }
+	default:
+		return TypeError
+	}
 }
 
 func (f Float) Arith(op string, other Type) Type {
@@ -137,14 +137,14 @@ func (f Float) Index(_ ...Type) Type { return TypeError }
 func (f Float) Len() Type { return TypeError }
 
 func (f Float) Eq(other Type) Type {
-  switch other := other.(type) {
-  case Int:
+	switch other := other.(type) {
+	case Int:
 		return Bool(f == Float(other))
-  case Float:
+	case Float:
 		return Bool(f == other)
-  default:
-	return TypeError
-  }
+	default:
+		return TypeError
+	}
 }
 
 func (s String) Arith(op string, other Type) Type {

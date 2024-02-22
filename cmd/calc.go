@@ -7,28 +7,29 @@ import (
 	"os"
 
 	"github.com/paulsonkoly/calc/builtin"
+	"github.com/paulsonkoly/calc/memory"
 	"github.com/paulsonkoly/calc/parser"
-	"github.com/paulsonkoly/calc/stack"
 	"github.com/paulsonkoly/calc/types/node"
 )
 
 func main() {
-	b := builtin.Type{}
-	s := stack.NewStack(b)
+	m := memory.NewMemory()
 	p := parser.Type{}
+
+  builtin.Load(m)
 
 	switch len(os.Args) {
 
 	case 1: // REPL mode
 		rl := node.NewRLReader()
 		defer rl.Close()
-		node.Loop(rl, p, s, true)
+		node.Loop(rl, p, m, true)
 
 	case 2: // file mode
 		fileName := os.Args[1]
 		fr := node.NewFReader(fileName)
 		defer fr.Close()
-		node.Loop(fr, p, s, false)
+		node.Loop(fr, p, m, false)
 
 	case 3: // command line mode
 		var eval string
@@ -39,11 +40,12 @@ func main() {
 }
 
 func cmdLine(line string) {
-	b := builtin.Type{}
-	s := stack.NewStack(b)
+	m := memory.NewMemory()
+  builtin.Load(m)
+
 	t, err := parser.Parse(line)
 	if len(t) > 0 {
-		fmt.Println(node.Evaluate(s, t[0]))
+		fmt.Println(node.Evaluate(m, t[0]))
 	}
 	if err != nil {
 		fmt.Println(err)

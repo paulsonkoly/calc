@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/paulsonkoly/calc/builtin"
+	"github.com/paulsonkoly/calc/memory"
 	"github.com/paulsonkoly/calc/parser"
-	"github.com/paulsonkoly/calc/stack"
 	"github.com/paulsonkoly/calc/types/node"
 	"github.com/paulsonkoly/calc/types/value"
 	"github.com/stretchr/testify/assert"
@@ -91,37 +91,37 @@ var testData = [...]TestDatum{
 
 	{"loop/single line",
 		`{
-	a = 1
-	while a < 10 a = a + 1
-	a
-}`, nil, value.Int(10)},
+		a = 1
+		while a < 10 a = a + 1
+		a
+	}`, nil, value.Int(10)},
 	{"loop/block",
 		`{
-	a = 1
-	while a < 10 {
-		a = a + 1
-	}
-	a
-}`, nil, value.Int(10)},
+		a = 1
+		while a < 10 {
+			a = a + 1
+		}
+		a
+	}`, nil, value.Int(10)},
 	{"loop/false initial condition",
 		`{
-	while false {
-		a = a + 1
-	}
-}`, nil, value.NoResultError},
+		while false {
+			a = a + 1
+		}
+	}`, nil, value.NoResultError},
 	{"loop/incorrect condition",
 		`{
-	while 13 {
-		a = a + 1
-	}
-}`, nil, value.TypeError},
+		while 13 {
+			a = a + 1
+		}
+	}`, nil, value.TypeError},
 
 	{"function definition", "(n) -> 1", nil, value.Function{Node: &node.Function{}}},
 	{"function/no argument", "() -> 1", nil, value.Function{Node: &node.Function{}}},
 	{"function/block",
 		`(n) -> {
-		n + 1
-  }`, nil, value.Function{Node: &node.Function{}}},
+			n + 1
+	  }`, nil, value.Function{Node: &node.Function{}}},
 
 	{"call",
 		`{
@@ -138,19 +138,19 @@ var testData = [...]TestDatum{
 	{"function/return",
 		`{
 			a = (n) -> {
-        return 1
-        2
-      }
+	       return 1
+	       2
+	     }
 			a(2)
 		}`, nil, value.Int(1),
 	},
 	{"function/closure",
 		`{
 			f = (a) -> {
-        (b) -> a + b
-      }
+	       (b) -> a + b
+	     }
 			x = f(1)
-      x(2)
+	     x(2)
 		}`, nil, value.Int(3),
 	},
 	{"keyword violation", "true = false", errors.New("Parser: "), nil},
@@ -162,24 +162,24 @@ var testData = [...]TestDatum{
 	{"builtin/error type error", "error(1)", nil, value.TypeError},
 	{"qsort",
 		`{
-        filter = (pred, ary) -> {
-          i = 0
-          r = []
-          while i < #ary {
-            if pred(ary@i) r = r + [ary@i] 
-            i = i + 1
-          }
-          r
-        }
-        qsort = (ary) -> {
-          if #ary <= 1 ary else {
-            pivot = ary@0
-            tail = ary @ 1 : #ary
-            qsort(filter((n) -> n <= pivot, tail)) + [pivot] + qsort(filter((n) -> n > pivot, tail))
-          } 
-        }
-        qsort([5, 2, 4, 3, 1, 8])
-     }`,
+	       filter = (pred, ary) -> {
+	         i = 0
+	         r = []
+	         while i < #ary {
+	           if pred(ary@i) r = r + [ary@i]
+	           i = i + 1
+	         }
+	         r
+	       }
+	       qsort = (ary) -> {
+	         if #ary <= 1 ary else {
+	           pivot = ary@0
+	           tail = ary @ 1 : #ary
+	           qsort(filter((n) -> n <= pivot, tail)) + [pivot] + qsort(filter((n) -> n > pivot, tail))
+	         }
+	       }
+	       qsort([5, 2, 4, 3, 1, 8])
+	    }`,
 		nil,
 		value.Array([]value.Type{value.Int(1), value.Int(2), value.Int(3), value.Int(4), value.Int(5), value.Int(8)}),
 	},
@@ -187,15 +187,16 @@ var testData = [...]TestDatum{
 
 func TestCalc(t *testing.T) {
 	for _, test := range testData {
-		b := builtin.Type{}
-		s := stack.NewStack(b)
-		ast, err := parser.Parse(test.input)
 		t.Run(test.name, func(t *testing.T) {
+			m := memory.NewMemory()
+      builtin.Load(m)
+			ast, err := parser.Parse(test.input)
 			if test.parseError == nil {
 				assert.NoError(t, err)
 				var v value.Type
 				for _, stmnt := range ast {
-					v = node.Evaluate(s, stmnt)
+					stmnt = stmnt.STRewrite(node.SymTbl{})
+					v = node.Evaluate(m, stmnt)
 				}
 				if f, ok := test.value.(value.Function); ok {
 					assert.IsType(t, f, v)

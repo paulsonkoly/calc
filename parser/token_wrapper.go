@@ -31,7 +31,14 @@ func (_ tokenWrapper) Wrap(t combinator.Token) combinator.Node {
 		return node.BinOp{Op: realT.Value}
 
 	case token.Name:
-		return node.Name(realT.Value)
+		switch realT.Value {
+		case "true":
+			return node.Bool(true)
+		case "false":
+			return node.Bool(false)
+		default:
+			return node.Name(realT.Value)
+		}
 
 	case token.NotSticky, token.EOF, token.EOL:
 		return node.Invalid{}

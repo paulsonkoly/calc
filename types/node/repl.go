@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/chzyer/readline"
-	"github.com/paulsonkoly/calc/stack"
+	"github.com/paulsonkoly/calc/memory"
 )
 
 type lineReader interface {
@@ -50,7 +50,7 @@ func (f fReader) read() (string, error) { return f.b.ReadString('\n') }
 
 func (f fReader) Close() error { return f.r.Close() }
 
-func Loop(r lineReader, p ParserT, s stack.Stack, doOut bool) {
+func Loop(r lineReader, p ParserT, m *memory.Type, doOut bool) {
 	blocksOpen := 0
 	quotesOpen := 0
 	input := ""
@@ -80,9 +80,14 @@ func Loop(r lineReader, p ParserT, s stack.Stack, doOut bool) {
 			if len(t) < 1 {
 				continue
 			}
-			v := Evaluate(s, t[0])
+
+			t[0] = t[0].STRewrite(SymTbl{})
+			// t[0].PrettyPrint(0)
+			v := Evaluate(m, t[0])
+
 			for _, e := range t[1:] {
-				v = Evaluate(s, e)
+        e := e.STRewrite(SymTbl{})
+				v = Evaluate(m, e)
 			}
 
 			if doOut {

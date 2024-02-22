@@ -165,7 +165,15 @@ String literals can be written using double quotes ("). Within a string a double
 
 ## Variable lookup, shadowing, closures
 
-Function calls create new stack frames, function returns pop stack frames. Variables on read are looked up starting at the current frame, traversing each frame upwards in the stack until the variable is found. Variable writes always set the variable in the current frame.
+There are 3 types of variables, depending on the lexical scope, but their syntax is identical.
+
+A variable at the global lexical scope is a global variable and visible in every scope where it's not shadowed, but is only writable from the global lexical scope.
+
+A variable defined withing a function or a parameter to a function is local variable in the function.
+
+A variable that's local variable in some function f that defines function g, becomes a closure variable within the call of g.
+
+Variable reads look up variables in the order of local, closure, global. Variable writes write variables as local, shadowing previously visible variables by the same name.
 
     a = 13
     >  13
@@ -181,16 +189,9 @@ Function calls create new stack frames, function returns pop stack frames. Varia
     a
     >  13
 
-We set a to 13 at the top frame. We set f to a function value. We call f passing argument 1. This does the following steps:
+`a` is a global variable shadowed in the function `f`.
 
-   1. create a new frame with the arguments populated, setting n to 1
-   2. push the frame
-   3. evaluate the function body, which sets a in the current frame to 14 (reading 13 from the frame above).
-   4. pop the last frame from the stack
-
-Now a is 13 as the variable was shadowed in the function call.
-
-When a function is not a top level function but defined within a function, it becomes a closure. This is done by the call and the return pushing and popping 2 frames respectively. The first frame pushed is the frame the function was defined in, the second frame contains the arguments.
+When a function is not a top level function but defined within a function, it becomes a closure. This is done by it holding a reference to the stack frame that belonged to the function call that defined it.
 
     f = (n) -> {
       a = 1
@@ -205,6 +206,26 @@ When a function is not a top level function but defined within a function, it be
     >  6
 
 In this example the function returned from f holds reference to the frame that was pushed on the call of f. This frame contains both a=1 and n=2. The anonymous function is assigned to foo later, and at the call of foo, we push this frame, and a second frame containing b=3.
+
+Closures frames are saved and attached to the function value at the point of time when a function is created. Different calls to a function can have different values of the same variable:
+
+    weird = (n) -> {
+      i = n
+      if n/2*2 == n {
+         () -> i* 10
+      } else {
+         () -> i * 100
+      }
+    }
+    >  function
+    f = weird(2)
+    >  function
+    g = weird(3)
+    >  function
+    f()
+    >  20
+    g()
+    >  300
 
 Note however that only the last frame of the function definition is retained, thus the following results in error:
 
@@ -233,15 +254,6 @@ One can make this example work by making an explicit copy of x:
       }
     }
     >  function
-
-    first = f(1)
-    >  function
-
-    second = first(2)
-    >  function
-
-    second(3)
-    >  6
 
 ## Language
 

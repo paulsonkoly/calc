@@ -147,7 +147,7 @@ func expression(input c.RollbackLexer) ([]c.Node, error) {
 }
 
 func assignment(input c.RollbackLexer) ([]c.Node, error) {
-	return c.Fmap(mkLeftChain, c.Seq(varName, acceptToken("="), expression))(input)
+	return c.Fmap(mkAssign, c.Seq(varName, acceptToken("="), expression))(input)
 }
 
 func statement(input c.RollbackLexer) ([]c.Node, error) {

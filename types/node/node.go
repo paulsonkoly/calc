@@ -1,10 +1,13 @@
 // node is an abstract syntax tree (AST) node
 package node
 
+import "fmt"
+
 // Type is AST node type
 type Type interface {
 	PrettyPrinter
 	Evaluator
+	STRewriter
 	Token() string
 }
 
@@ -13,14 +16,15 @@ type Invalid struct{}
 
 // Call is function call
 type Call struct {
-	Name      string // Name of the function called
-	Arguments List   // Arguments passed to the function
+	Name      Type // Variable referencing function
+	Arguments List // Arguments passed to the function
 }
 
 // Function is a function definition
 type Function struct {
 	Parameters List // Parameters of the function
 	Body       Type // Body of the function
+	LocalCnt   int  // count of local variables
 }
 
 // Int is integer literal
@@ -31,6 +35,9 @@ type Float string
 
 // String is string literal
 type String string
+
+// Bool is boolean literal
+type Bool bool
 
 // BinOp is a binary operator of any kind, anything from "=", etc.
 type BinOp struct {
@@ -80,8 +87,19 @@ type Return struct {
 	Target Type // Target is the returned value
 }
 
-// Variable name (also "true", "false" etc.)
+// Variable name
 type Name string
+
+// Local variable reference
+type Local int
+
+// Closure variable reference
+type Closure int
+
+type Assign struct {
+	VarRef Type // VarRef is variable reference
+	Value  Type // Value is assigned value
+}
 
 // Block is a code block / sequence that was in '{', '}'
 type Block struct {
@@ -125,7 +143,9 @@ func (f Function) Token() string    { return "" }
 func (i Int) Token() string         { return string(i) }
 func (f Float) Token() string       { return string(f) }
 func (s String) Token() string      { return string(s) }
+func (b Bool) Token() string        { return fmt.Sprint(b) }
 func (b BinOp) Token() string       { return b.Op }
+func (a Assign) Token() string      { return "=" }
 func (u UnOp) Token() string        { return u.Op }
 func (u IndexAt) Token() string     { return "" }
 func (u IndexFromTo) Token() string { return "" }
@@ -138,6 +158,8 @@ func (w Write) Token() string       { return "" }
 func (a Aton) Token() string        { return "" }
 func (t Toa) Token() string         { return "" }
 func (n Name) Token() string        { return string(n) }
+func (l Local) Token() string       { return "" } // TODO these would be useful for debugging AST
+func (c Closure) Token() string     { return "" }
 func (b Block) Token() string       { return "" }
 func (l List) Token() string        { return "" }
 func (r Repl) Token() string        { return "" }

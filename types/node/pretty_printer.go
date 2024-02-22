@@ -33,10 +33,18 @@ func (f Float) PrettyPrint(d int) { fmt.Println(indent(d, string(f))) }
 
 func (s String) PrettyPrint(d int) { fmt.Println(indent(d, string(s))) }
 
+func (b Bool) PrettyPrint(d int) { fmt.Println(indent(d, fmt.Sprint(b))) }
+
 func (b BinOp) PrettyPrint(d int) {
 	fmt.Println(indent(d, b.Op))
 	b.Left.PrettyPrint(d + 1)
 	b.Right.PrettyPrint(d + 1)
+}
+
+func (a Assign) PrettyPrint(d int) {
+	fmt.Println(indent(d, "="))
+	a.VarRef.PrettyPrint(d + 1)
+	a.Value.PrettyPrint(d + 1)
 }
 
 func (u UnOp) PrettyPrint(d int) {
@@ -102,7 +110,9 @@ func (t Toa) PrettyPrint(d int) {
 
 func (r Repl) PrettyPrint(d int) { fmt.Print(indent(d, "repl")) }
 
-func (n Name) PrettyPrint(d int) { fmt.Print(indent(d, string(n))) }
+func (n Name) PrettyPrint(d int)    { fmt.Print(indent(d, string(n))) }
+func (l Local) PrettyPrint(d int)   { fmt.Print(indent(d, fmt.Sprintf("lvar[%d]", l))) }
+func (n Closure) PrettyPrint(d int) { fmt.Print(indent(d, fmt.Sprintf("cvar[%d]", n))) }
 
 func (b Block) PrettyPrint(d int) {
 	fmt.Println(indent(d, "{"))

@@ -92,10 +92,10 @@ func Not(p Parser) Parser {
 // OneOf is much simpler and simpler to use than Choose. However in the following
 // language there is a problem.
 //
-//     S -> Ax
-//     A -> OneOf(B, C)
-//     B -> qbcd
-//     C -> q
+//	S -> Ax
+//	A -> OneOf(B, C)
+//	B -> qbcd
+//	C -> q
 //
 // qbczx is the input text, here using rule B was intended, giving the error
 // that z doesn't match expected d. However in OneOf C matches, so in rule A
@@ -105,8 +105,8 @@ func Not(p Parser) Parser {
 //
 // Do this instead:
 //
-//    S -> Ax
-//    A -> Choose( Cond{G: qb, S: cd }, Cond{ G: Ok(), S : q } )
+//	S -> Ax
+//	A -> Choose( Cond{G: qb, S: cd }, Cond{ G: Ok(), S : q } )
 //
 // Assuming choice rules can have identifying prefixes.
 type Conditional struct {
@@ -226,9 +226,9 @@ func Any(a Conditional) Parser {
 				aRes, aErr := a.OnSuccess(input)
 				r = append(append(r, pRes...), aRes...)
 				err = aErr
-        if err != nil {
-          break
-        }
+				if err != nil {
+					break
+				}
 			} else {
 				input.Rollback()
 				break

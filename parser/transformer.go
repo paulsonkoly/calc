@@ -54,6 +54,15 @@ func mkLeftChain(nodes []c.Node) []c.Node {
 	return []c.Node{r}
 }
 
+// mkAssign creates an assigment to a variable
+func mkAssign(nodes []c.Node) []c.Node {
+	if len(nodes) != 3 {
+		log.Panicf("incorrect number of sub nodes for assignment (%d)", len(nodes))
+	}
+	assign := node.Assign{VarRef: nodes[0].(node.Type), Value: nodes[2].(node.Type)}
+	return []c.Node{assign}
+}
+
 // mkIndex rewrites a sequence describing an array indexing into an Index node
 func mkIndex(nodes []c.Node) []c.Node {
 	switch len(nodes) {
@@ -80,6 +89,9 @@ func mkList(nodes []c.Node) []c.Node {
 
 // mkBlock wraps a sequence of nodes in a single block node
 func mkBlock(nodes []c.Node) []c.Node {
+	if len(nodes) <= 1 {
+		return nodes
+	}
 	r := node.Block{Body: make([]node.Type, 0)}
 	for _, n := range nodes {
 		r.Body = append(r.Body, n.(node.Type))
@@ -89,7 +101,7 @@ func mkBlock(nodes []c.Node) []c.Node {
 
 // mkFCall creates a function call node
 func mkFCall(nodes []c.Node) []c.Node {
-	r := node.Call{Name: nodes[0].(node.Type).Token(), Arguments: nodes[1].(node.List)}
+	r := node.Call{Name: nodes[0].(node.Type), Arguments: nodes[1].(node.List)}
 	return []c.Node{r}
 }
 
