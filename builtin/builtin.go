@@ -11,7 +11,7 @@ func Load(m *memory.Type) {
 		fNode := fun.STRewrite(node.SymTbl{})
 		fVal, _ := fNode.Evaluate(m)
 		m.SetGlobal(name, fVal)
-  }
+	}
 }
 
 var all = map[string]node.Function{"read": readF, "write": writeF, "aton": atonF, "repl": replF, "error": errorF, "toa": toaF}

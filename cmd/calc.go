@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"runtime/pprof"
 
 	"os"
 
@@ -13,35 +14,55 @@ import (
 )
 
 func main() {
+	var eval string
+	var cpuprof string
+	var ast bool
+	flag.StringVar(&eval, "eval", "", "string to evaluate")
+	flag.StringVar(&cpuprof, "cpuprof", "", "filename for go pprof")
+	flag.BoolVar(&ast, "ast", false, "repl outputs AST instead of evaluating")
+
+	flag.Parse()
+
 	m := memory.NewMemory()
 	p := parser.Type{}
 
-  builtin.Load(m)
+	builtin.Load(m)
 
-	switch len(os.Args) {
+	if cpuprof != "" {
+		f, err := os.Create(cpuprof)
+		if err != nil {
+			panic(err)
+		}
+		if err = pprof.StartCPUProfile(f); err != nil {
+			panic(err)
+		}
 
-	case 1: // REPL mode
-		rl := node.NewRLReader()
-		defer rl.Close()
-		node.Loop(rl, p, m, true)
+		defer pprof.StopCPUProfile()
+	}
 
-	case 2: // file mode
-		fileName := os.Args[1]
+	if eval != "" { // cmd line mode
+		cmdLine(eval)
+		return
+	}
+
+	if flag.NArg() >= 1 { // file mode
+		fileName := flag.Arg(0)
 		fr := node.NewFReader(fileName)
 		defer fr.Close()
-		node.Loop(fr, p, m, false)
-
-	case 3: // command line mode
-		var eval string
-		flag.StringVar(&eval, "eval", "", "string to evaluate")
-		flag.Parse()
-		cmdLine(eval)
+		node.Loop(fr, p, m, false, ast)
+		return
 	}
+
+	// REPL mode
+	fmt.Println("calc repl")
+	rl := node.NewRLReader()
+	defer rl.Close()
+	node.Loop(rl, p, m, true, ast)
 }
 
 func cmdLine(line string) {
 	m := memory.NewMemory()
-  builtin.Load(m)
+	builtin.Load(m)
 
 	t, err := parser.Parse(line)
 	if len(t) > 0 {

@@ -50,7 +50,7 @@ func (f fReader) read() (string, error) { return f.b.ReadString('\n') }
 
 func (f fReader) Close() error { return f.r.Close() }
 
-func Loop(r lineReader, p ParserT, m *memory.Type, doOut bool) {
+func Loop(r lineReader, p ParserT, m *memory.Type, doOut bool, ast bool) {
 	blocksOpen := 0
 	quotesOpen := 0
 	input := ""
@@ -81,17 +81,24 @@ func Loop(r lineReader, p ParserT, m *memory.Type, doOut bool) {
 				continue
 			}
 
-			t[0] = t[0].STRewrite(SymTbl{})
-			// t[0].PrettyPrint(0)
-			v := Evaluate(m, t[0])
+			if ast {
+				for _, e := range t {
+					e := e.STRewrite(SymTbl{})
+					Graphviz(e)
+				}
+			} else {
+				t[0] = t[0].STRewrite(SymTbl{})
+				// t[0].PrettyPrint(0)
+				v := Evaluate(m, t[0])
 
-			for _, e := range t[1:] {
-        e := e.STRewrite(SymTbl{})
-				v = Evaluate(m, e)
-			}
+				for _, e := range t[1:] {
+					e := e.STRewrite(SymTbl{})
+					v = Evaluate(m, e)
+				}
 
-			if doOut {
-				fmt.Println("> ", v)
+				if doOut {
+					fmt.Println("> ", v)
+				}
 			}
 			input = ""
 		}

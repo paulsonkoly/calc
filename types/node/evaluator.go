@@ -247,7 +247,7 @@ func (w Write) Evaluate(m *memory.Type) (value.Type, bool) {
 func (r Repl) Evaluate(m *memory.Type) (value.Type, bool) {
 	rl := NewRLReader()
 	defer rl.Close()
-	Loop(rl, r.Parser, m, true)
+	Loop(rl, r.Parser, m, true, false)
 
 	return value.NoResultError, false
 }

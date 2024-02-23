@@ -189,7 +189,7 @@ func TestCalc(t *testing.T) {
 	for _, test := range testData {
 		t.Run(test.name, func(t *testing.T) {
 			m := memory.NewMemory()
-      builtin.Load(m)
+			builtin.Load(m)
 			ast, err := parser.Parse(test.input)
 			if test.parseError == nil {
 				assert.NoError(t, err)

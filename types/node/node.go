@@ -5,9 +5,9 @@ import "fmt"
 
 // Type is AST node type
 type Type interface {
-	PrettyPrinter
 	Evaluator
 	STRewriter
+	graphvizzer
 	Token() string
 }
 
