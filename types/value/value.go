@@ -1,9 +1,6 @@
 package value
 
-import (
-	"fmt"
-	"slices"
-)
+import "fmt"
 
 // Type represents the evaluation result value
 //
@@ -13,7 +10,7 @@ type Type interface {
 	Relational(op string, other Type) Type
 	Logic(op string, other Type) Type
 	Index(index ...Type) Type
-	Eq(other Type) Type
+	Eq(op string, other Type) Type
 	Len() Type
 }
 
@@ -44,10 +41,10 @@ func (i Int) Arith(op string, other Type) Type {
 		if op == "/" && int(o) == 0 {
 			return ZeroDivError
 		}
-		return Int(builtinArith[int](op, int(i), int(o)))
+		return builtinArith(op, i, o)
 
 	case Float:
-		return Float(builtinArith[float64](op, float64(i), float64(o)))
+		return builtinArith(op, Float(i), o)
 
 	case Bool, Function, String, Array:
 		return TypeError
@@ -63,10 +60,10 @@ func (i Int) Relational(op string, other Type) Type {
 	switch o := other.(type) {
 
 	case Int:
-		return Bool(builtinRelational[int](op, int(i), int(o)))
+		return builtinRelational(op, i, o)
 
 	case Float:
-		return Bool(builtinRelational[float64](op, float64(i), float64(o)))
+		return builtinRelational(op, Float(i), o)
 
 	case Bool, Function, String, Array:
 		return TypeError
@@ -82,12 +79,12 @@ func (i Int) Logic(_ string, _ Type) Type { return TypeError }
 func (i Int) Index(_ ...Type) Type        { return TypeError }
 func (i Int) Len() Type                   { return TypeError }
 
-func (i Int) Eq(other Type) Type {
+func (i Int) Eq(op string, other Type) Type {
 	switch other := other.(type) {
 	case Int:
-		return Bool(i == other)
+		return builtinEq(op, i, other)
 	case Float:
-		return Bool(i == Int(other))
+		return builtinEq(op, Float(i), other)
 	default:
 		return TypeError
 	}
@@ -97,10 +94,10 @@ func (f Float) Arith(op string, other Type) Type {
 	switch o := other.(type) {
 
 	case Int:
-		return Float(builtinArith[float64](op, float64(f), float64(o)))
+		return builtinArith(op, f, Float(o))
 
 	case Float:
-		return Float(builtinArith[float64](op, float64(f), float64(o)))
+		return builtinArith(op, f, o)
 
 	case Bool, Function, String, Array:
 		return TypeError
@@ -115,10 +112,10 @@ func (f Float) Relational(op string, other Type) Type {
 	switch o := other.(type) {
 
 	case Int:
-		return Bool(builtinRelational[float64](op, float64(f), float64(o)))
+		return builtinRelational(op, f, Float(o))
 
 	case Float:
-		return Bool(builtinRelational[float64](op, float64(f), float64(o)))
+		return builtinRelational(op, f, o)
 
 	case Bool, Function, String, Array:
 		return TypeError
@@ -136,12 +133,12 @@ func (f Float) Index(_ ...Type) Type { return TypeError }
 
 func (f Float) Len() Type { return TypeError }
 
-func (f Float) Eq(other Type) Type {
+func (f Float) Eq(op string, other Type) Type {
 	switch other := other.(type) {
 	case Int:
-		return Bool(f == Float(other))
+		return builtinEq(op, f, Float(other))
 	case Float:
-		return Bool(f == other)
+		return builtinEq(op, f, other)
 	default:
 		return TypeError
 	}
@@ -167,16 +164,8 @@ func (s String) Arith(op string, other Type) Type {
 func (s String) Relational(op string, other Type) Type {
 	switch other := other.(type) {
 	case String:
-		switch op {
-		case "==":
-			return Bool(s == other)
+		return InvalidOpError
 
-		case "!=":
-			return Bool(s != other)
-
-		default:
-			return InvalidOpError
-		}
 	case Error:
 		return other
 
@@ -224,9 +213,9 @@ func (s String) Index(index ...Type) Type {
 	}
 }
 
-func (s String) Eq(other Type) Type {
+func (s String) Eq(op string, other Type) Type {
 	if other, ok := other.(String); ok {
-		return Bool(s == other)
+		return builtinEq(op, s, other)
 	}
 	return TypeError
 }
@@ -255,16 +244,8 @@ func (a Array) Arith(op string, other Type) Type {
 func (a Array) Relational(op string, other Type) Type {
 	switch other := other.(type) {
 	case Array:
-		switch op {
-		case "==":
-			return Bool(slices.Equal(a, other))
+		return InvalidOpError
 
-		case "!=":
-			return Bool(!slices.Equal(a, other))
-
-		default:
-			return InvalidOpError
-		}
 	case Error:
 		return other
 
@@ -312,26 +293,34 @@ func (a Array) Index(index ...Type) Type {
 	}
 }
 
-func (a Array) Eq(other Type) Type {
-	if other, ok := other.(Array); ok {
-		if len(a) != len(other) {
+func (a Array) Eq(op string, other Type) Type {
+	aother, ok := other.(Array)
+	if !ok {
+		return TypeError
+	}
+
+	found := true
+
+	if op == "==" {
+		found = false
+		if len(a) != len(aother) {
 			return Bool(false)
 		}
-		for i, v := range a {
-			r := v.Eq(other[i])
-			switch r {
-			case Bool(false):
-				return r
-			case Bool(true):
-				continue
-
-			default:
-				return r
-			}
-		}
-		return Bool(true)
 	}
-	return TypeError
+
+	for i, v := range a {
+		r := v.Eq("==", aother[i])
+		switch r {
+		case Bool(false):
+			return Bool(found)
+		case Bool(true):
+			continue
+
+		default:
+			return r
+		}
+	}
+	return Bool(!found)
 }
 
 func (a Array) String() string {
@@ -355,14 +344,7 @@ func (b Bool) Relational(op string, other Type) Type {
 		return TypeError
 
 	case Bool:
-		switch op {
-		case "==":
-			return Bool(b == o)
-		case "!=":
-			return Bool(b != o)
-		default:
-			return InvalidOpError
-		}
+		return InvalidOpError
 
 	case Error:
 		return o
@@ -397,9 +379,9 @@ func (b Bool) Logic(op string, other Type) Type {
 func (b Bool) Index(_ ...Type) Type { return TypeError }
 func (b Bool) Len() Type            { return TypeError }
 
-func (b Bool) Eq(other Type) Type {
+func (b Bool) Eq(op string, other Type) Type {
 	if other, ok := other.(Bool); ok {
-		return Bool(b == other)
+		return builtinEq(op, b, other)
 	}
 	return TypeError
 }
@@ -409,17 +391,17 @@ func (e Error) Relational(_ string, _ Type) Type { return e }
 func (e Error) Logic(_ string, _ Type) Type      { return e }
 func (e Error) Len() Type                        { return TypeError }
 func (e Error) Index(_ ...Type) Type             { return e }
-func (e Error) Eq(_ Type) Type                   { return e }
+func (e Error) Eq(_ string, _ Type) Type         { return e }
 
 func (f Function) Arith(_ string, _ Type) Type      { return TypeError }
 func (f Function) Relational(_ string, _ Type) Type { return TypeError }
 func (f Function) Logic(_ string, _ Type) Type      { return TypeError }
 func (f Function) Len() Type                        { return TypeError }
 func (f Function) Index(_ ...Type) Type             { return TypeError }
-func (f Function) Eq(_ Type) Type                   { return TypeError }
+func (f Function) Eq(_ string, _ Type) Type         { return TypeError }
 func (f Function) String() string                   { return "function" }
 
-func builtinArith[t int | float64](op string, a, b t) t {
+func builtinArith[t ~int | ~float64](op string, a, b t) t {
 	switch op {
 	case "+":
 		return a + b
@@ -434,7 +416,7 @@ func builtinArith[t int | float64](op string, a, b t) t {
 	panic("unknown operator")
 }
 
-func builtinRelational[t int | float64](op string, a, b t) bool {
+func builtinRelational[t ~int | ~float64](op string, a, b t) Bool {
 	switch op {
 	case "<":
 		return a < b
@@ -444,6 +426,16 @@ func builtinRelational[t int | float64](op string, a, b t) bool {
 		return a <= b
 	case ">=":
 		return a >= b
+	}
+	panic("unknown operator")
+}
+
+func builtinEq[t ~int | ~float64 | ~bool | ~string](op string, a, b t) Bool {
+	switch op {
+	case "==":
+		return a == b
+	case "!=":
+		return a != b
 	}
 	panic("unknown operator")
 }

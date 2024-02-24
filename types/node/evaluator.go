@@ -121,15 +121,8 @@ func (b BinOp) Evaluate(m *memory.Type) (value.Type, bool) {
 	case "&", "|":
 		return Evaluate(m, b.Left).Logic(b.Token(), Evaluate(m, b.Right)), false
 
-	case "==":
-		return Evaluate(m, b.Left).Eq(Evaluate(m, b.Right)), false
-
-	case "!=":
-		eq := Evaluate(m, b.Left).Eq(Evaluate(m, b.Right))
-		if eq, ok := eq.(value.Bool); ok {
-			return value.Bool(!eq), false
-		}
-		return eq, false
+	case "==", "!=":
+		return Evaluate(m, b.Left).Eq(b.Token(), Evaluate(m, b.Right)), false
 
 	case "<", "<=", ">", ">=":
 		return Evaluate(m, b.Left).Relational(b.Token(), Evaluate(m, b.Right)), false
