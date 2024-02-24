@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"log"
 
 	"os"
 	"strings"
@@ -39,7 +40,7 @@ type fReader struct {
 func NewFReader(fn string) fReader {
 	r, err := os.Open(fn)
 	if err != nil {
-		panic(err)
+    log.Fatal(err)
 	}
 
 	b := bufio.NewReader(r)
