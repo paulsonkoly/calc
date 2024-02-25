@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"strings"
 
 	"github.com/paulsonkoly/calc/memory"
 	"github.com/paulsonkoly/calc/types/value"
@@ -22,31 +21,10 @@ func Evaluate(m *memory.Type, e Evaluator) value.Type {
 	return r
 }
 
-func (i Int) Evaluate(m *memory.Type) (value.Type, bool) {
-	x, err := strconv.Atoi(i.Token())
-	if err != nil {
-		panic(err)
-	}
-	return value.Int(x), false
-}
-
-func (f Float) Evaluate(m *memory.Type) (value.Type, bool) {
-	x, err := strconv.ParseFloat(f.Token(), 64)
-	if err != nil {
-		panic(err)
-	}
-	return value.Float(x), false
-}
-
-func (b Bool) Evaluate(_ *memory.Type) (value.Type, bool) { return value.Bool(b), false }
-
-func (s String) Evaluate(_ *memory.Type) (value.Type, bool) {
-	tok := s.Token()
-	// remove the first and last quotes, and replace escaped quotes with quotes
-	tok = strings.ReplaceAll(tok, "\\\"", "\"")
-	tok = tok[1 : len(tok)-1]
-	return value.String(tok), false
-}
+func (i Int) Evaluate(_ *memory.Type) (value.Type, bool)    { return value.Int(i), false }
+func (f Float) Evaluate(_ *memory.Type) (value.Type, bool)  { return value.Float(f), false }
+func (b Bool) Evaluate(_ *memory.Type) (value.Type, bool)   { return value.Bool(b), false }
+func (s String) Evaluate(_ *memory.Type) (value.Type, bool) { return value.String(s), false }
 
 func (a List) Evaluate(m *memory.Type) (value.Type, bool) {
 	elems := a.Elems
@@ -95,7 +73,7 @@ func (c Call) Evaluate(m *memory.Type) (value.Type, bool) {
 }
 
 func (u UnOp) Evaluate(m *memory.Type) (value.Type, bool) {
-	switch u.Token() {
+	switch u.Op {
 
 	case "-":
 		r := Evaluate(m, u.Target)
@@ -107,28 +85,28 @@ func (u UnOp) Evaluate(m *memory.Type) (value.Type, bool) {
 		return r.Len(), false
 
 	default:
-		log.Panicf("unexpected unary op: %s\n", u.Token())
+		log.Panicf("unexpected unary op: %s\n", u.Op)
 	}
 	panic("unreachable code")
 }
 
 func (b BinOp) Evaluate(m *memory.Type) (value.Type, bool) {
-	switch b.Token() {
+	switch b.Op {
 
 	case "+", "-", "*", "/":
-		return Evaluate(m, b.Left).Arith(b.Token(), Evaluate(m, b.Right)), false
+		return Evaluate(m, b.Left).Arith(b.Op, Evaluate(m, b.Right)), false
 
 	case "&", "|":
-		return Evaluate(m, b.Left).Logic(b.Token(), Evaluate(m, b.Right)), false
+		return Evaluate(m, b.Left).Logic(b.Op, Evaluate(m, b.Right)), false
 
 	case "==", "!=":
-		return Evaluate(m, b.Left).Eq(b.Token(), Evaluate(m, b.Right)), false
+		return Evaluate(m, b.Left).Eq(b.Op, Evaluate(m, b.Right)), false
 
 	case "<", "<=", ">", ">=":
-		return Evaluate(m, b.Left).Relational(b.Token(), Evaluate(m, b.Right)), false
+		return Evaluate(m, b.Left).Relational(b.Op, Evaluate(m, b.Right)), false
 
 	default:
-		log.Panicf("unexpected single character in evaluator: %s", b.Token())
+		log.Panicf("unexpected single character in evaluator: %s", b.Op)
 	}
 	panic("unreachable code")
 }

@@ -1,14 +1,12 @@
 // node is an abstract syntax tree (AST) node
 package node
 
-import "fmt"
 
 // Type is AST node type
 type Type interface {
 	Evaluator
 	STRewriter
 	graphvizzer
-	Token() string
 }
 
 // Invalid is an invalid AST node
@@ -28,10 +26,10 @@ type Function struct {
 }
 
 // Int is integer literal
-type Int string
+type Int int
 
 // Float is float literal
-type Float string
+type Float float64
 
 // String is string literal
 type String string
@@ -137,30 +135,3 @@ type Repl struct {
 // Error converts a string to an error
 type Error struct{ Value Type }
 
-func (i Invalid) Token() string     { return "" }
-func (c Call) Token() string        { return "" }
-func (f Function) Token() string    { return "" }
-func (i Int) Token() string         { return string(i) }
-func (f Float) Token() string       { return string(f) }
-func (s String) Token() string      { return string(s) }
-func (b Bool) Token() string        { return fmt.Sprint(b) }
-func (b BinOp) Token() string       { return b.Op }
-func (a Assign) Token() string      { return "=" }
-func (u UnOp) Token() string        { return u.Op }
-func (u IndexAt) Token() string     { return "" }
-func (u IndexFromTo) Token() string { return "" }
-func (i If) Token() string          { return "" }
-func (i IfElse) Token() string      { return "" }
-func (w While) Token() string       { return "" }
-func (r Return) Token() string      { return "" }
-func (r Read) Token() string        { return "" }
-func (w Write) Token() string       { return "" }
-func (a Aton) Token() string        { return "" }
-func (t Toa) Token() string         { return "" }
-func (n Name) Token() string        { return string(n) }
-func (l Local) Token() string       { return "" } // TODO these would be useful for debugging AST
-func (c Closure) Token() string     { return "" }
-func (b Block) Token() string       { return "" }
-func (l List) Token() string        { return "" }
-func (r Repl) Token() string        { return "" }
-func (e Error) Token() string       { return "" }

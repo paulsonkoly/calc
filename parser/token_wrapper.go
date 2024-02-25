@@ -2,6 +2,8 @@ package parser
 
 import (
 	"log"
+	"strconv"
+	"strings"
 
 	"github.com/paulsonkoly/calc/combinator"
 	"github.com/paulsonkoly/calc/types/node"
@@ -19,13 +21,26 @@ func (_ tokenWrapper) Wrap(t combinator.Token) combinator.Node {
 
 	switch realT.Type {
 	case token.IntLit:
-		return node.Int(realT.Value)
+		x, err := strconv.Atoi(realT.Value)
+		if err != nil {
+			panic(err)
+		}
+		return node.Int(x)
 
 	case token.FloatLit:
-		return node.Float(realT.Value)
+		x, err := strconv.ParseFloat(realT.Value, 64)
+		if err != nil {
+			panic(err)
+		}
+		return node.Float(x)
 
 	case token.StringLit:
-		return node.String(realT.Value)
+		s := realT.Value
+
+		// remove the first and last quotes, and replace escaped quotes with quotes
+		s = strings.ReplaceAll(s, "\\\"", "\"")
+		s = s[1 : len(s)-1]
+		return node.String(s)
 
 	case token.Sticky:
 		return node.BinOp{Op: realT.Value}

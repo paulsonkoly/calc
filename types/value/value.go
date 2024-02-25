@@ -398,6 +398,7 @@ func (e Error) Logic(_ string, _ Type) Type      { return e }
 func (e Error) Len() Type                        { return TypeError }
 func (e Error) Index(_ ...Type) Type             { return e }
 func (e Error) Eq(_ string, _ Type) Type         { return e }
+func (e Error) String() string                   { return *e.Message }
 
 func (f Function) Arith(_ string, _ Type) Type      { return TypeError }
 func (f Function) Relational(_ string, _ Type) Type { return TypeError }

@@ -78,7 +78,7 @@ func (f Function) Label() string    { return fmt.Sprintf("%T", f) }
 func (i Int) Label() string         { return fmt.Sprintf("int:%v", i) }
 func (f Float) Label() string       { return fmt.Sprintf("float:%v", f) }
 func (s String) Label() string      { return strings.Trim(string(s), "\"") }
-func (b Bool) Label() string        { return b.Token() }
+func (b Bool) Label() string        { return fmt.Sprint(b) }
 func (l List) Label() string        { return "[]" }
 func (b BinOp) Label() string       { return b.Op }
 func (a Assign) Label() string      { return fmt.Sprintf("%T", a) }
