@@ -20,6 +20,8 @@ type TestDatum struct {
 	value      value.Type
 }
 
+var messages = []string{"a not defined", "hi"}
+
 var testData = [...]TestDatum{
 	{"simple literal/integer", "1", nil, value.Int(1)},
 	{"simple literal/float", "3.14", nil, value.Float(3.14)},
@@ -44,7 +46,7 @@ var testData = [...]TestDatum{
 	{"arithmetics/left assoc", "1-2+1", nil, value.Int(0)},
 	{"arithmetics/parenthesis", "1-(2+1)", nil, value.Int(-2)},
 
-	{"variable/not defined", "a", nil, value.Error("a not defined")},
+	{"variable/not defined", "a", nil, value.Error{Message: &messages[0]}},
 	{"variable/lookup", "{\na=3\na+1\n}", nil, value.Int(4)},
 
 	{"relop/int==int true", "1==1", nil, value.Bool(true)},
@@ -158,7 +160,7 @@ var testData = [...]TestDatum{
 	{"builtin/aton float", "aton(\"1.2\")", nil, value.Float(1.2)},
 	{"builtin/aton error", "aton(\"abc\")", nil, value.ConversionError},
 
-	{"builtin/error", "error(\"hi\")", nil, value.Error("hi")},
+	{"builtin/error", "error(\"hi\")", nil, value.Error{Message: &messages[1]}},
 	{"builtin/error type error", "error(1)", nil, value.TypeError},
 	{"qsort",
 		`{

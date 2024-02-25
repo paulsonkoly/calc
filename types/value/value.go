@@ -18,7 +18,7 @@ type Int int
 type Float float64
 type String string
 type Array []Type
-type Error string
+type Error struct{ Message *string }
 type Bool bool
 type Function struct {
 	Node  any // Node is function AST
@@ -26,13 +26,23 @@ type Function struct {
 }
 
 // errors
-var ZeroDivError = Error("division by zero")
-var TypeError = Error("type error")
-var InvalidOpError = Error("invalid operator")
-var NoResultError = Error("no result")
-var ArgumentError = Error("argument error")
-var IndexError = Error("index error")
-var ConversionError = Error("conversion error")
+var (
+	zeroDivStr    = "division by zero"
+	typeStr       = "type error"
+	invalidOpStr  = "invalid operator"
+	noResultStr   = "no result"
+	argumentStr   = "argument error"
+	indexStr      = "index error"
+	conversionStr = "conversion error"
+
+	ZeroDivError    = Error{Message: &zeroDivStr}
+	TypeError       = Error{Message: &typeStr}
+	InvalidOpError  = Error{Message: &invalidOpStr}
+	NoResultError   = Error{Message: &noResultStr}
+	ArgumentError   = Error{Message: &argumentStr}
+	IndexError      = Error{Message: &indexStr}
+	ConversionError = Error{Message: &conversionStr}
+)
 
 func (i Int) Arith(op string, other Type) Type {
 	switch o := other.(type) {
@@ -179,17 +189,17 @@ func (s String) Logic(_ string, _ Type) Type { return TypeError }
 func (s String) Len() Type { return Int(len(s)) }
 
 func (s String) Index(index ...Type) Type {
-	iix := []int{}
+	iix := [2]int{}
 
-	for _, t := range index {
+	for i, t := range index {
 		if conv, ok := t.(Int); ok {
-			iix = append(iix, int(conv))
+			iix[i] = int(conv)
 			continue
 		}
 		return TypeError
 	}
 
-	switch len(iix) {
+	switch len(index) {
 	case 2:
 		if iix[0] < 0 || iix[0] >= len(s) {
 			return IndexError
@@ -207,10 +217,8 @@ func (s String) Index(index ...Type) Type {
 		}
 
 		return String(string(s)[iix[0]])
-
-	default:
-		panic("evaluator called index incorrectly")
 	}
+	panic("unreachable code")
 }
 
 func (s String) Eq(op string, other Type) Type {
@@ -259,17 +267,17 @@ func (a Array) Logic(_ string, _ Type) Type { return TypeError }
 func (a Array) Len() Type { return Int(len(a)) }
 
 func (a Array) Index(index ...Type) Type {
-	iix := []int{}
+	iix := [2]int{}
 
-	for _, t := range index {
+	for i, t := range index {
 		if conv, ok := t.(Int); ok {
-			iix = append(iix, int(conv))
+			iix[i] = int(conv)
 			continue
 		}
 		return TypeError
 	}
 
-	switch len(iix) {
+	switch len(index) {
 	case 2:
 		if iix[0] < 0 || iix[0] >= len(a) {
 			return IndexError
@@ -287,10 +295,8 @@ func (a Array) Index(index ...Type) Type {
 		}
 
 		return a[iix[0]]
-
-	default:
-		panic("evaluator called index incorrectly")
 	}
+	panic("unreachable code")
 }
 
 func (a Array) Eq(op string, other Type) Type {

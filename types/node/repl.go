@@ -40,7 +40,7 @@ type fReader struct {
 func NewFReader(fn string) fReader {
 	r, err := os.Open(fn)
 	if err != nil {
-    log.Fatal(err)
+		log.Fatal(err)
 	}
 
 	b := bufio.NewReader(r)

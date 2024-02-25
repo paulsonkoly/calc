@@ -226,7 +226,8 @@ func (r Read) Evaluate(m *memory.Type) (value.Type, bool) {
 	b := bufio.NewReader(os.Stdin)
 	line, err := b.ReadString('\n')
 	if err != nil {
-		return value.Error(fmt.Sprintf("read error %s", err)), false
+		msg := fmt.Sprintf("read error %s", err)
+		return value.Error{Message: &msg}, false
 	}
 	return value.String(line), false
 }
@@ -270,7 +271,8 @@ func (t Toa) Evaluate(m *memory.Type) (value.Type, bool) {
 func (e Error) Evaluate(m *memory.Type) (value.Type, bool) {
 	v := Evaluate(m, e.Value)
 	if s, ok := v.(value.String); ok {
-		return value.Error(string(s)), false
+		msg := string(s)
+		return value.Error{Message: &msg}, false
 	}
 	return value.TypeError, false
 }

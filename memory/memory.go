@@ -54,7 +54,8 @@ func (m *Type) LookUpClosure(symIdx int) value.Type { return m.stack[len(m.stack
 func (m *Type) LookUpGlobal(name string) value.Type {
 	v, ok := m.global[name]
 	if !ok {
-		return value.Error(fmt.Sprintf("%s not defined", name))
+		s := fmt.Sprintf("%s not defined", name)
+		return value.Error{Message: &s}
 	}
 	return v
 }
