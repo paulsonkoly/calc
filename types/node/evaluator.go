@@ -184,9 +184,12 @@ func (w While) Evaluate(m *memory.Type) (value.Type, bool) {
 	r := value.Type(value.NoResultError)
 	returning := false
 	for {
+    if returning {
+      return r, returning
+    }
 		cond := Evaluate(m, w.Condition)
 		if ccond, ok := cond.(value.Bool); ok {
-			if !bool(ccond) || returning {
+			if !bool(ccond) {
 				return r, returning
 			}
 			r, returning = w.Body.Evaluate(m)
