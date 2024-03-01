@@ -87,11 +87,11 @@ func (v Type) ToFunction() (FunctionData, bool) {
 // ToInt converts a value to int
 //
 // returns ok false if not an int
-func (v Type) ToInt() int {
+func (v Type) ToInt() (int, bool) {
 	if v.typ != intT {
-		panic("not an int")
+		return 0, false
 	}
-	return *(*int)(unsafe.Pointer(&v.morph))
+	return *(*int)(unsafe.Pointer(&v.morph)), true
 }
 
 
@@ -143,7 +143,7 @@ func (d Type) String() string {
 		}
 		return "[" + r + "]"
 	}
-	panic("???")
+	panic("type not handled in String")
 }
 
 // Predefined errors
