@@ -55,7 +55,7 @@ func (m *Type) LookUpGlobal(name string) value.Type {
 	v, ok := m.global[name]
 	if !ok {
 		s := fmt.Sprintf("%s not defined", name)
-		return value.Error{Message: &s}
+		return value.NewError(&s)
 	}
 	return v
 }

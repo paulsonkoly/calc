@@ -21,26 +21,26 @@ func Evaluate(m *memory.Type, e Evaluator) value.Type {
 	return r
 }
 
-func (i Int) Evaluate(_ *memory.Type) (value.Type, bool)    { return value.Int(i), false }
-func (f Float) Evaluate(_ *memory.Type) (value.Type, bool)  { return value.Float(f), false }
-func (b Bool) Evaluate(_ *memory.Type) (value.Type, bool)   { return value.Bool(b), false }
-func (s String) Evaluate(_ *memory.Type) (value.Type, bool) { return value.String(s), false }
+func (i Int) Evaluate(_ *memory.Type) (value.Type, bool)    { return value.NewInt(int(i)), false }
+func (f Float) Evaluate(_ *memory.Type) (value.Type, bool)  { return value.NewFloat(float64(f)), false }
+func (b Bool) Evaluate(_ *memory.Type) (value.Type, bool)   { return value.NewBool(bool(b)), false }
+func (s String) Evaluate(_ *memory.Type) (value.Type, bool) { return value.NewString(string(s)), false }
 
 func (a List) Evaluate(m *memory.Type) (value.Type, bool) {
 	elems := a.Elems
-	evalElems := make(value.Array, 0)
+	evalElems := make([]value.Type, len(elems))
 
-	for _, e := range elems {
-		evalElems = append(evalElems, Evaluate(m, e))
+	for i, e := range elems {
+		evalElems[i] = Evaluate(m, e)
 	}
 
-	return evalElems, false
+	return value.NewArray(evalElems), false
 }
 
 func (c Call) Evaluate(m *memory.Type) (value.Type, bool) {
 	f := Evaluate(m, c.Name)
 
-	fVal, ok := f.(value.Function)
+  fVal, ok := f.ToFunction()
 	if !ok {
 		return value.TypeError, false
 	}
@@ -77,7 +77,7 @@ func (u UnOp) Evaluate(m *memory.Type) (value.Type, bool) {
 
 	case "-":
 		r := Evaluate(m, u.Target)
-		r = r.Arith("*", value.Int(-1))
+		r = r.Arith("*", value.NewInt(-1))
 		return r, false
 
 	case "#":
@@ -139,7 +139,7 @@ func (i IndexFromTo) Evaluate(m *memory.Type) (value.Type, bool) {
 }
 
 func (f Function) Evaluate(m *memory.Type) (value.Type, bool) {
-	return value.Function{Node: &f, Frame: m.Top()}, false
+	return value.NewFunction(&f, m.Top()), false
 }
 
 func (n Name) Evaluate(m *memory.Type) (value.Type, bool) {
@@ -156,7 +156,7 @@ func (c Closure) Evaluate(m *memory.Type) (value.Type, bool) {
 
 func (i If) Evaluate(m *memory.Type) (value.Type, bool) {
 	c := Evaluate(m, i.Condition)
-	if cc, ok := c.(value.Bool); ok {
+  if cc, ok := c.ToBool(); ok {
 		if cc {
 			return i.TrueCase.Evaluate(m)
 		} else {
@@ -169,7 +169,7 @@ func (i If) Evaluate(m *memory.Type) (value.Type, bool) {
 
 func (i IfElse) Evaluate(m *memory.Type) (value.Type, bool) {
 	c := Evaluate(m, i.Condition)
-	if cc, ok := c.(value.Bool); ok {
+  if cc, ok := c.ToBool(); ok {
 		if cc {
 			return i.TrueCase.Evaluate(m)
 		} else {
@@ -188,7 +188,7 @@ func (w While) Evaluate(m *memory.Type) (value.Type, bool) {
       return r, returning
     }
 		cond := Evaluate(m, w.Condition)
-		if ccond, ok := cond.(value.Bool); ok {
+    if ccond, ok := cond.ToBool(); ok {
 			if !bool(ccond) {
 				return r, returning
 			}
@@ -208,9 +208,9 @@ func (r Read) Evaluate(m *memory.Type) (value.Type, bool) {
 	line, err := b.ReadString('\n')
 	if err != nil {
 		msg := fmt.Sprintf("read error %s", err)
-		return value.Error{Message: &msg}, false
+		return value.NewError(&msg), false
 	}
-	return value.String(line), false
+	return value.NewString(line), false
 }
 
 func (w Write) Evaluate(m *memory.Type) (value.Type, bool) {
@@ -228,17 +228,17 @@ func (r Repl) Evaluate(m *memory.Type) (value.Type, bool) {
 }
 
 func (a Aton) Evaluate(m *memory.Type) (value.Type, bool) {
-	sv, ok := Evaluate(m, a.Value).(value.String)
+	sv, ok := Evaluate(m, a.Value).ToString()
 	if !ok {
 		return value.TypeError, false
 	}
 
 	if v, err := strconv.Atoi(string(sv)); err == nil {
-		return value.Int(v), false
+		return value.NewInt(v), false
 	}
 
 	if v, err := strconv.ParseFloat(string(sv), 64); err == nil {
-		return value.Float(v), false
+		return value.NewFloat(v), false
 	}
 
 	return value.ConversionError, false
@@ -246,14 +246,14 @@ func (a Aton) Evaluate(m *memory.Type) (value.Type, bool) {
 
 func (t Toa) Evaluate(m *memory.Type) (value.Type, bool) {
 	v := Evaluate(m, t.Value)
-	return value.String(fmt.Sprint(v)), false
+	return value.NewString(fmt.Sprint(v)), false
 }
 
 func (e Error) Evaluate(m *memory.Type) (value.Type, bool) {
 	v := Evaluate(m, e.Value)
-	if s, ok := v.(value.String); ok {
+	if s, ok := v.ToString(); ok {
 		msg := string(s)
-		return value.Error{Message: &msg}, false
+		return value.NewError(&msg), false
 	}
 	return value.TypeError, false
 }
