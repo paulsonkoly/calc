@@ -153,8 +153,6 @@ func (t Toa) STRewrite(symTbl SymTbl) Type {
 	return Toa{Value: t.Value.STRewrite(symTbl)}
 }
 
-func (r Repl) STRewrite(symTbl SymTbl) Type { return r }
-
 func (e Error) STRewrite(symTbl SymTbl) Type {
 	return Error{Value: e.Value.STRewrite(symTbl)}
 }

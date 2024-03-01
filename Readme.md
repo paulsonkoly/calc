@@ -70,9 +70,6 @@ The language is meant to be a calculator REPL, and as such takes care of input/o
 
 If there is no input file given and no command line argument to evaluate then the input is assumed to come from a terminal and we assume REPL mode. In this mode readline library is used to ease line editing. The token { defines a multi-line block, until the corresponding } is found. The REPL doesn't evaluate until multi line blocks are closed, and it automatically outputs the result after each evaluation.
 
-The built in function repl can be used to debug calc programs. It starts an interactive repl with the frames loaded from its caller. Variables can be printed or any code evaluated. When the debug repl exits, the script evaluation resumes at the point where it was interrupted. Any variables that were written in the repl will be lost however.
-The repl() call will return "no result" error in the context of it's caller.
-
 ### Command line argument
 
 A single line statement can be passed as a command line argument:
@@ -95,14 +92,13 @@ If a single file name is provided on the command line the input is redirected fr
 
 Built in functions are loaded in the top level frame on the interpreter start up. They provide functionality that cannot be implemented in calc itself. In any other aspect they are just regular function values.
 
-| function | arity | returns                    | description                                                |
-|----------|-------|----------------------------|------------------------------------------------------------|
-| read     | 0     | string                     | Reads a string from the stdin                              |
-| write    | 1     | no result error            | Writes the given value to the output                       |
-| aton     | 1     | int/float/conversion error | Converts a string to an int or a float                     |
-| toa      | 1     | string                     | Converts a value to a string                               |
-| error    | 1     | error                      | Converts a string to an error                              |
-| repl     | 0     | no result error            | starts an interactive calc repl at the context of the call |
+| function | arity | returns                    | description                            |
+|----------|-------|----------------------------|----------------------------------------|
+| read     | 0     | string                     | Reads a string from the stdin          |
+| write    | 1     | no result error            | Writes the given value to the output   |
+| aton     | 1     | int/float/conversion error | Converts a string to an int or a float |
+| toa      | 1     | string                     | Converts a value to a string           |
+| error    | 1     | error                      | Converts a string to an error          |
 
 ## Type coercions
 

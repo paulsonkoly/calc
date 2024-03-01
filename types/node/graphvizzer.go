@@ -69,7 +69,6 @@ func (n Name) Option() opt        { return variableOpts }
 func (l Local) Option() opt       { return variableOpts }
 func (c Closure) Option() opt     { return variableOpts }
 func (b Block) Option() opt       { return defaultOpts }
-func (r Repl) Option() opt        { return defaultOpts }
 func (e Error) Option() opt       { return defaultOpts }
 
 func (i Invalid) Label() string     { return fmt.Sprintf("%T", i) }
@@ -97,7 +96,6 @@ func (n Name) Label() string        { return string(n) }
 func (l Local) Label() string       { return fmt.Sprintf("lvar:%d", int(l)) }
 func (c Closure) Label() string     { return fmt.Sprintf("cvar:%d", int(c)) }
 func (b Block) Label() string       { return fmt.Sprintf("%T", b) }
-func (r Repl) Label() string        { return fmt.Sprintf("%T", r) }
 func (e Error) Label() string       { return fmt.Sprintf("%T", e) }
 
 func children(t graphvizzer) map[string]graphvizzer {

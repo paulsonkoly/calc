@@ -219,14 +219,6 @@ func (w Write) Evaluate(m *memory.Type) (value.Type, bool) {
 	return value.NoResultError, false
 }
 
-func (r Repl) Evaluate(m *memory.Type) (value.Type, bool) {
-	rl := NewRLReader()
-	defer rl.Close()
-	Loop(rl, r.Parser, m, true, false)
-
-	return value.NoResultError, false
-}
-
 func (a Aton) Evaluate(m *memory.Type) (value.Type, bool) {
 	sv, ok := Evaluate(m, a.Value).ToString()
 	if !ok {

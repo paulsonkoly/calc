@@ -127,11 +127,6 @@ type ParserT interface {
 	Parse(input string) ([]Type, error)
 }
 
-// Repl starts a calc repl session
-type Repl struct {
-	Parser ParserT
-}
-
 // Error converts a string to an error
 type Error struct{ Value Type }
 
