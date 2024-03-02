@@ -41,14 +41,14 @@ func (t Type) s() string  { return *(*string)(t.ptr) }
 func (t Type) a() []Type  { return *(*[]Type)(t.ptr) }
 
 // NewInt allocates a new int value
-func NewInt(i int) Type { return Type { typ: intT, morph: *(*uint64)(unsafe.Pointer(&i))} }
+func NewInt(i int) Type { return Type{typ: intT, morph: *(*uint64)(unsafe.Pointer(&i))} }
 
 // NewFloat allocates a new float value
-func NewFloat(f float64) Type { return Type { typ: floatT, morph : *(*uint64)(unsafe.Pointer(&f)) } }
+func NewFloat(f float64) Type { return Type{typ: floatT, morph: *(*uint64)(unsafe.Pointer(&f))} }
 
 // NewBool allocates a new bool value
 func NewBool(b bool) Type {
-  t :=Type{typ:boolT}
+	t := Type{typ: boolT}
 
 	if b {
 		t.morph = 1
@@ -59,7 +59,7 @@ func NewBool(b bool) Type {
 }
 
 // NewArray allocates a new array value
-func NewArray(a []Type) Type  { return Type{typ: arrayT, ptr: unsafe.Pointer(&a)} }
+func NewArray(a []Type) Type { return Type{typ: arrayT, ptr: unsafe.Pointer(&a)} }
 
 // NewString allocates a new string value
 func NewString(s string) Type { return Type{typ: stringT, ptr: unsafe.Pointer(&s)} }
@@ -93,7 +93,6 @@ func (v Type) ToInt() (int, bool) {
 	}
 	return *(*int)(unsafe.Pointer(&v.morph)), true
 }
-
 
 // ToBool converts a value to bool
 //
@@ -276,7 +275,6 @@ func (a Type) Relational(op string, b Type) Type {
 	}
 }
 
-
 // Logic is value logic ops &, |
 func (a Type) Logic(op string, b Type) Type {
 
@@ -310,7 +308,6 @@ func (a Type) Logic(op string, b Type) Type {
 		}
 	}
 }
-
 
 // Index is value indexing, @, and @:
 func (a Type) Index(b ...Type) Type {

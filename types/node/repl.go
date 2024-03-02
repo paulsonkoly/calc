@@ -51,7 +51,11 @@ func (f fReader) read() (string, error) { return f.b.ReadString('\n') }
 
 func (f fReader) Close() error { return f.r.Close() }
 
-func Loop(r lineReader, p ParserT, m *memory.Type, doOut bool, ast bool) {
+type Parser interface {
+	Parse(string) ([]Type, error)
+}
+
+func Loop(r lineReader, p Parser, m *memory.Type, doOut bool, ast bool) {
 	blocksOpen := 0
 	quotesOpen := 0
 	input := ""

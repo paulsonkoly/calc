@@ -1,7 +1,6 @@
 // node is an abstract syntax tree (AST) node
 package node
 
-
 // Type is AST node type
 type Type interface {
 	Evaluator
@@ -123,10 +122,8 @@ type Aton struct{ Value Type }
 // Toa converts a valye to a string
 type Toa struct{ Value Type }
 
-type ParserT interface {
-	Parse(input string) ([]Type, error)
-}
+// Exit exits the interpreter with an os exit code
+type Exit struct{ Value Type }
 
 // Error converts a string to an error
 type Error struct{ Value Type }
-

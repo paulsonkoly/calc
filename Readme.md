@@ -99,6 +99,7 @@ Built in functions are loaded in the top level frame on the interpreter start up
 | aton     | 1     | int/float/conversion error | Converts a string to an int or a float |
 | toa      | 1     | string                     | Converts a value to a string           |
 | error    | 1     | error                      | Converts a string to an error          |
+| exit     | 1     | doesn't return/type error  | Exits the interpreter with exit code   |
 
 ## Type coercions
 

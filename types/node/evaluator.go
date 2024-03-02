@@ -40,7 +40,7 @@ func (a List) Evaluate(m *memory.Type) (value.Type, bool) {
 func (c Call) Evaluate(m *memory.Type) (value.Type, bool) {
 	f := Evaluate(m, c.Name)
 
-  fVal, ok := f.ToFunction()
+	fVal, ok := f.ToFunction()
 	if !ok {
 		return value.TypeError, false
 	}
@@ -156,7 +156,7 @@ func (c Closure) Evaluate(m *memory.Type) (value.Type, bool) {
 
 func (i If) Evaluate(m *memory.Type) (value.Type, bool) {
 	c := Evaluate(m, i.Condition)
-  if cc, ok := c.ToBool(); ok {
+	if cc, ok := c.ToBool(); ok {
 		if cc {
 			return i.TrueCase.Evaluate(m)
 		} else {
@@ -169,7 +169,7 @@ func (i If) Evaluate(m *memory.Type) (value.Type, bool) {
 
 func (i IfElse) Evaluate(m *memory.Type) (value.Type, bool) {
 	c := Evaluate(m, i.Condition)
-  if cc, ok := c.ToBool(); ok {
+	if cc, ok := c.ToBool(); ok {
 		if cc {
 			return i.TrueCase.Evaluate(m)
 		} else {
@@ -184,11 +184,11 @@ func (w While) Evaluate(m *memory.Type) (value.Type, bool) {
 	r := value.Type(value.NoResultError)
 	returning := false
 	for {
-    if returning {
-      return r, returning
-    }
+		if returning {
+			return r, returning
+		}
 		cond := Evaluate(m, w.Condition)
-    if ccond, ok := cond.ToBool(); ok {
+		if ccond, ok := cond.ToBool(); ok {
 			if !bool(ccond) {
 				return r, returning
 			}
@@ -243,9 +243,16 @@ func (t Toa) Evaluate(m *memory.Type) (value.Type, bool) {
 
 func (e Error) Evaluate(m *memory.Type) (value.Type, bool) {
 	v := Evaluate(m, e.Value)
-	if s, ok := v.ToString(); ok {
-		msg := string(s)
+	if msg, ok := v.ToString(); ok {
 		return value.NewError(&msg), false
+	}
+	return value.TypeError, false
+}
+
+func (e Exit) Evaluate(m *memory.Type) (value.Type, bool) {
+	v := Evaluate(m, e.Value)
+	if i, ok := v.ToInt(); ok {
+		os.Exit(i)
 	}
 	return value.TypeError, false
 }
