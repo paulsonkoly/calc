@@ -219,7 +219,7 @@ Closures frames are saved and attached to the function value at the point of tim
     g()
     >  300
 
-Note however that only the last frame of the function definition is retained, thus the following results in error:
+Note however that only immediately containing lexical scope of the function definition is retained, thus the following results in error:
 
     f = (x) -> {
       (y) -> {
@@ -308,8 +308,8 @@ The following tokens are valid (using usual regular expression notation)
  - float literal `/\d+.\d+/`
  - string literal `/"([^"]|\\")*"/`
  - variable name `/[a-z]+/`
- - non sticky chars `/[(){},\[\]]/`
- - sticky chars `/[+*/=<>!-&|@:]/`
+ - non sticky chars `/[(){},\[\]:]/`
+ - sticky chars `/[+*/=<>!-&|@]/`
  - new line `/\n/`
 
 Tokens are separated with white-spaces. Sticky chars together are returned from the lexer as single lexeme. For example "<=" is a single lexeme.
