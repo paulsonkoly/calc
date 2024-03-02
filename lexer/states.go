@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	stickyChars     = "+*/=<>!-&|@:#"
-	nonStrickyChars = "(){}[],"
+	stickyChars     = "+*/=<>!-&|@#"
+  nonStrickyChars = "(){}[],:"
 )
 
 // stateFuncResult

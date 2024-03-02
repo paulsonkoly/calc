@@ -43,7 +43,7 @@ Qsort
       i = 0
       r = []
       while i < #ary {
-        if pred(ary@i) r = r + [ary@i] 
+        if pred(ary[i]) r = r + [ary[i]] 
         i = i + 1
       }
       r
@@ -52,8 +52,8 @@ Qsort
 
     qsort = (ary) -> {
       if #ary <= 1 ary else {
-        pivot = ary@0
-        tail = ary @ 1 : #ary
+        pivot = ary[0]
+        tail = ary [1:#ary]
         qsort(filter((n) -> n <= pivot, tail)) + [pivot] + qsort(filter((n) -> n > pivot, tail))
       } 
     }
@@ -118,7 +118,6 @@ There are 6 precedence groups (from lowest to highest):
     - logic
     - + or -
     - * or /
-    - index operator
     - unary minus '-', and length '#'
 
 ### Length operator
@@ -126,18 +125,14 @@ There are 6 precedence groups (from lowest to highest):
     #[1,2,3]
     > 3
 
-### Index operator
+### Indexing
 
-The index operator has 2 forms: "apple" @ 1 results in "p"; "apple" @ 1:3 results in "pp". Indexing outside, or using a lower value for the upper index than the lower index results in index error.
+Array and string indexing has 2 forms: "apple"[1] results in "p"; "apple"[1:3] results in "pp". Indexing outside, or using a lower value for the upper index than the lower index results in index error.
 
-The precedence difference between unary operators and indexing is such that one can write expressions in a natural way without additional parenthesis. In the first example here indexing bind stronger, while in the second example the length operator binds stronger. For exact details see [BNF](#BNF). Note though that whitespace between : and # are required.
+In an expression array indexing binds stronger than any operator, thus
 
-    #[[1], [1,2]]@1
-    >  2
-    a = [1,2,3]
-    >  [1, 2, 3]
-    a @ 1 : #a
-    >  [2, 3]
+    #[[1,1,1]][0]
+    >  3
 
 ### Errors
 
@@ -339,8 +334,7 @@ In the following BNF non-terminals are lower case, terminals are upper case or q
     addsub: addsub /[+-]/ divmul | divmul
     divmul: divmul /[*/]/ unary | unary
     unary: /[-#]/ index | index
-    unaryAtom : /[-#]/ atom | atom
-    index: atom '@' unaryAtom ':' unaryAtom | atom '@' unaryAtom | atom
+    index: atom[expression:expression] | atom[expression] | atom
     atom: function | call | INTL | FLOATL | BOOLL | STRINGL | VARIABLE  | '(' expression ')'
 
     function: "()" "->" block | '(' parameters ')' "->" block

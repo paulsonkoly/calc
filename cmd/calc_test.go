@@ -34,10 +34,10 @@ var testData = [...]TestDatum{
 	{"simple arithmetic/coercion", "1+2.0", nil, value.NewFloat(3)},
 	{"simple arithmetic/coercion", "1.0+2", nil, value.NewFloat(3)},
 
-	{"string indexing/simple", "\"apple\" @ 1", nil, value.NewString("p")},
-	{"string indexing/complex empty", "\"apple\" @ 1 : 1", nil, value.NewString("")},
-	{"string indexing/complex", "\"apple\" @ 1 : 3", nil, value.NewString("pp")},
-	{"string indexing/outside", "\"apple\" @ (-1)", nil, value.IndexError},
+	{"string indexing/simple", "\"apple\"[1]", nil, value.NewString("p")},
+	{"string indexing/complex empty", "\"apple\" [ 1 : 1]", nil, value.NewString("")},
+	{"string indexing/complex", "\"apple\"[ 1 : 3]", nil, value.NewString("pp")},
+	{"string indexing/outside", "\"apple\"[-1]", nil, value.IndexError},
 
 	{"string concatenation", "\"abc\" + \"def\"", nil, value.NewString("abcdef")},
 	{"string equality/false", "\"abc\" == \"ab\"", nil, value.NewBool(false)},
@@ -168,15 +168,15 @@ var testData = [...]TestDatum{
 	         i = 0
 	         r = []
 	         while i < #ary {
-	           if pred(ary@i) r = r + [ary@i]
+	           if pred(ary[i]) r = r + [ary[i]]
 	           i = i + 1
 	         }
 	         r
 	       }
 	       qsort = (ary) -> {
 	         if #ary <= 1 ary else {
-	           pivot = ary@0
-	           tail = ary @ 1 : #ary
+	           pivot = ary[0]
+	           tail = ary [1:#ary]
 	           qsort(filter((n) -> n <= pivot, tail)) + [pivot] + qsort(filter((n) -> n > pivot, tail))
 	         }
 	       }

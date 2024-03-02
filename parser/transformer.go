@@ -67,11 +67,14 @@ func mkAssign(nodes []c.Node) []c.Node {
 func mkIndex(nodes []c.Node) []c.Node {
 	switch len(nodes) {
 
-	case 5: // ary@from:to
-		return []c.Node{node.IndexFromTo{Ary: nodes[0].(node.Type), From: nodes[2].(node.Type), To: nodes[4].(node.Type)}}
+	case 3: // ary[from:to]
+		return []c.Node{node.IndexFromTo{Ary: nodes[0].(node.Type), From: nodes[1].(node.Type), To: nodes[2].(node.Type)}}
 
-	case 3: // ary@at
-		return []c.Node{node.IndexAt{Ary: nodes[0].(node.Type), At: nodes[2].(node.Type)}}
+	case 2: // ary[at]
+		return []c.Node{node.IndexAt{Ary: nodes[0].(node.Type), At: nodes[1].(node.Type)}}
+
+  case 1:
+    return nodes
 
 	default:
 		log.Panicf("incorrect number of sub nodes for indexing (%d)", len(nodes))

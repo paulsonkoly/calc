@@ -11,7 +11,7 @@ sqrt = (a) -> binsearch(1, a / 2, (n) -> (n+1)*(n+1) > a)
 all = (ary, f) -> {
   i = 0
   while i < #ary {
-    if f(ary@i) == false return false
+    if f(ary[i]) == false return false
     i = i + 1
   }
   true
@@ -35,7 +35,7 @@ rotations = (n) -> {
   i = 0
   r = []
   while i < #s {
-    r = r + [aton(s@i: #s  + s@0:i)]
+    r = r + [aton(s[i: #s] + s[0:i])]
     i = i +1
   }
   r

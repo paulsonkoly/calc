@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"slices"
+
 	c "github.com/paulsonkoly/calc/combinator"
 	"github.com/paulsonkoly/calc/lexer"
 	"github.com/paulsonkoly/calc/types/node"
@@ -45,15 +47,7 @@ func varName(input c.RollbackLexer) ([]c.Node, error) {
 	return c.Accept(
 		func(tok c.Token) bool {
 			ctok := tok.(token.Type)
-			if ctok.Type != token.Name {
-				return false
-			}
-			for _, kw := range Keywords {
-				if kw == ctok.Value {
-					return false
-				}
-			}
-			return true
+			return ctok.Type == token.Name && !slices.Contains(Keywords[:], ctok.Value)
 		},
 		"variable name",
 		tokenWrapper{},
@@ -91,23 +85,30 @@ func atom(input c.RollbackLexer) ([]c.Node, error) {
 }
 
 func index(input c.RollbackLexer) ([]c.Node, error) {
-	return c.OneOf(
-		c.Fmap(mkIndex,
-			c.OneOf(
-				c.Seq(atom, acceptToken("@"), unaryAtom, acceptToken(":"), unaryAtom),
-				c.Seq(atom, acceptToken("@"), unaryAtom),
+	indexInner := c.SurroundedBy(
+		acceptToken("["),
+		c.And(
+			expression,
+			c.Choose(
+				c.Conditional{
+					Gate:      c.Fmap(func(_ []c.Node) []c.Node { return []c.Node{} }, acceptToken(":")),
+					OnSuccess: expression,
+				},
+				c.Conditional{Gate: c.Ok(), OnSuccess: c.Ok()},
 			),
-		), atom)(input)
+		),
+		acceptToken("]"),
+	)
+	indexCond := c.Choose(
+		c.Conditional{Gate: c.Assert(acceptToken("[")), OnSuccess: indexInner},
+		c.Conditional{Gate: c.Ok(), OnSuccess: c.Ok()},
+	)
+	return c.Fmap(mkIndex, c.And(atom, indexCond))(input)
 }
 
 func unary(input c.RollbackLexer) ([]c.Node, error) {
 	op := c.OneOf(acceptToken("-"), acceptToken("#"))
 	return c.OneOf(c.Fmap(mkUnaryOp, (c.And(op, index))), index)(input)
-}
-
-func unaryAtom(input c.RollbackLexer) ([]c.Node, error) {
-	op := c.OneOf(acceptToken("-"), acceptToken("#"))
-	return c.OneOf(c.Fmap(mkUnaryOp, (c.And(op, atom))), atom)(input)
 }
 
 func divmul(input c.RollbackLexer) ([]c.Node, error) {
