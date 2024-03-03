@@ -334,7 +334,7 @@ In the following BNF non-terminals are lower case, terminals are upper case or q
     addsub: addsub /[+-]/ divmul | divmul
     divmul: divmul /[*/]/ unary | unary
     unary: /[-#]/ index | index
-    index: atom[expression:expression] | atom[expression] | atom
+    index: atom "[" expression ":" expression "]" | atom "[" expression "]" | atom
     atom: function | call | INTL | FLOATL | BOOLL | STRINGL | VARIABLE  | '(' expression ')'
 
     function: "()" "->" block | '(' parameters ')' "->" block
