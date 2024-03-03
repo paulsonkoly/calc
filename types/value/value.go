@@ -222,7 +222,6 @@ func (a Type) Arith(op string, b Type) Type {
 		return NewArray(append(aVal, bVal...))
 
 	default:
-		a.typ = errorT
 		if a.typ == b.typ {
 			return InvalidOpError
 		} else {

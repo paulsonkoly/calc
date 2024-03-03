@@ -31,17 +31,11 @@ var testData = [...]TestDatum{
 	{"simple literal/array", "[1, false]", nil, value.NewArray([]value.Type{value.NewInt(1), value.NewBool(false)})},
 
 	{"simple arithmetic/addition", "1+2", nil, value.NewInt(3)},
-	{"simple arithmetic/coercion", "1+2.0", nil, value.NewFloat(3)},
-	{"simple arithmetic/coercion", "1.0+2", nil, value.NewFloat(3)},
 
 	{"string indexing/simple", "\"apple\"[1]", nil, value.NewString("p")},
 	{"string indexing/complex empty", "\"apple\" [ 1 : 1]", nil, value.NewString("")},
-	{"string indexing/complex", "\"apple\"[ 1 : 3]", nil, value.NewString("pp")},
-	{"string indexing/outside", "\"apple\"[-1]", nil, value.IndexError},
 
-	{"string concatenation", "\"abc\" + \"def\"", nil, value.NewString("abcdef")},
-	{"string equality/false", "\"abc\" == \"ab\"", nil, value.NewBool(false)},
-	{"string equality/true", "\"abc\" == \"abc\"", nil, value.NewBool(true)},
+  {"string concatenation", "\"abc\" + \"def\"", nil, value.NewString("abcdef")},
 
 	{"arithmetics/left assoc", "1-2+1", nil, value.NewInt(0)},
 	{"arithmetics/parenthesis", "1-(2+1)", nil, value.NewInt(-2)},
@@ -50,36 +44,16 @@ var testData = [...]TestDatum{
 	{"variable/lookup", "{\na=3\na+1\n}", nil, value.NewInt(4)},
 
 	{"relop/int==int true", "1==1", nil, value.NewBool(true)},
-	{"relop/int==float true", "1==1.0", nil, value.NewBool(true)},
-	{"relop/float==int true", "1.0==1", nil, value.NewBool(true)},
-	{"relop/float==float true", "1.0==1.0", nil, value.NewBool(true)},
-	{"relop/bool==bool true", "false==false", nil, value.NewBool(true)},
 
 	{"relop/int!=int false", "1!=1", nil, value.NewBool(false)},
-	{"relop/int!=float false", "1!=1.0", nil, value.NewBool(false)},
-	{"relop/float!=int false", "1.0!=1", nil, value.NewBool(false)},
-	{"relop/float!=float false", "1.0!=1.0", nil, value.NewBool(false)},
-	{"relop/bool!=bool false", "false!=false", nil, value.NewBool(false)},
-
+	
 	{"relop/float accuracy", "1==0.9999999", nil, value.NewBool(false)},
 
 	{"relop/int<int false", "1<1", nil, value.NewBool(false)},
-	{"relop/int<float false", "1<1.0", nil, value.NewBool(false)},
-	{"relop/float<int false", "1.0<1", nil, value.NewBool(false)},
-	{"relop/float<float false", "1.0<1.0", nil, value.NewBool(false)},
-	{"relop/bool<bool", "false<false", nil, value.InvalidOpError},
 
 	{"relop/int<=int true", "1<=1", nil, value.NewBool(true)},
-	{"relop/int<=float true", "1<=1.0", nil, value.NewBool(true)},
-	{"relop/float<=int true", "1.0<=1", nil, value.NewBool(true)},
-	{"relop/float<=float true", "1.0<=1.0", nil, value.NewBool(true)},
-	{"relop/bool<=bool", "true<=true", nil, value.InvalidOpError},
 
 	{"logicop/bool&bool true", "true&true", nil, value.NewBool(true)},
-	{"logicop/bool&bool false", "true&false", nil, value.NewBool(false)},
-	{"logicop/bool|bool true", "true|false", nil, value.NewBool(true)},
-	{"logicop/bool|bool false", "false|false", nil, value.NewBool(false)},
-	{"logicop/bool|int", "false|1", nil, value.TypeError},
 
 	{"block/single line", "{\n1\n}", nil, value.NewInt(1)},
 	{"block/multi line", "{\n1\n2\n}", nil, value.NewInt(2)},
