@@ -36,7 +36,7 @@ rotations = (n) -> {
   r = []
   while i < #s {
     r = r + [aton(s[i: #s] + s[0:i])]
-    i = i +1
+    i = i + 1
   }
   r
 }

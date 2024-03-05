@@ -1,3 +1,4 @@
+// value defines the type that represents the evaluation result.
 package value
 
 import (
@@ -28,9 +29,10 @@ type Type struct {
 	ptr   unsafe.Pointer
 }
 
+// A structure that represents a function value
 type FunctionData struct {
-	Node  any
-	Frame any
+	Node  any // Pointer to the code of the function - the AST node that holds the function
+	Frame any // Pointer to the closure stack frame
 }
 
 // unsafe (no type check) accessors
@@ -174,7 +176,7 @@ func (a Type) Arith(op string, b Type) Type {
 		bVal := b.i()
 
 		if op == "/" && bVal == 0 {
-			return NewError(&zeroDivErrorStr)
+			return ZeroDivError
 		}
 
 		return NewInt(builtinArith(op, aVal, bVal))
@@ -403,7 +405,7 @@ func (a Type) Len() Type {
 		return a
 
 	default:
-		return NewError(&typeErrorStr)
+		return TypeError
 	}
 }
 
@@ -513,6 +515,7 @@ func (a *Type) WeakEq(b Type) bool {
 	}
 }
 
+// Equality check, ==, !=
 func (a Type) Eq(op string, b Type) Type {
 	r := a.WeakEq(b)
 	if op == "!=" {
