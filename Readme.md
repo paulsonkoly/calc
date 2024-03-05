@@ -62,6 +62,10 @@ Qsort
     qsort([5, 2, 4, 3, 1, 8])
     > [1, 2, 3, 4, 5, 8]
 
+## Editor support
+
+There is syntax highlighting based on tree-sitter, and a small nvim plugin that enables neovim to download the treesitter parser and adds file type detection (ssuming .calc extension). Add [paulsonkoly/calc.nvim](https://github.com/paulsonkoly/calc.nvim) to your neovim package manager and require("calc") to add language support.
+
 ## Running calc
 
 The language is meant to be a calculator REPL, and as such takes care of input/output automatically, but given it can also read source from a file it also supports some basic input output primitives. The calc program can run in 3 modes: reading a single line expression from its command line argument, running code from a REPL or reading code from a file.
@@ -305,7 +309,7 @@ Returns from the current function call or block. Returns are valid outside of a 
 The following tokens are valid (using usual regular expression notation)
 
  - integer literal `/\d+/`
- - float literal `/\d+.\d+/`
+ - float literal `/\d+(\.\d+)?/`
  - string literal `/"([^"]|\\")*"/`
  - variable name `/[a-z]+/`
  - non sticky chars `/[(){},\[\]:]/`
