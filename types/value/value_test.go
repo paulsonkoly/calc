@@ -59,6 +59,13 @@ var testData = []TestDatum{
 	{"Arithmetics int + function", value.NewInt(1), value.NewFunction(nil, nil), func(a, b value.Type) value.Type { return a.Arith("+", b) }, value.TypeError},
 	{"Arithmetics function + int", value.NewFunction(nil, nil), value.NewInt(1), func(a, b value.Type) value.Type { return a.Arith("+", b) }, value.TypeError},
 
+	{"Modulo int % int", value.NewInt(5), value.NewInt(3), func(a, b value.Type) value.Type { return a.Mod(b) }, value.NewInt(2)},
+	{"Modulo int % float", value.NewInt(5), value.NewFloat(3), func(a, b value.Type) value.Type { return a.Mod(b) }, value.TypeError},
+	{"Modulo float % int", value.NewFloat(5), value.NewInt(3), func(a, b value.Type) value.Type { return a.Mod(b) }, value.TypeError},
+	{"Modulo float % float", value.NewFloat(5), value.NewFloat(3), func(a, b value.Type) value.Type { return a.Mod(b) }, value.InvalidOpError},
+	{"Module int % error", value.NewInt(5), value.IndexError, func(a, b value.Type) value.Type { return a.Mod(b) }, value.IndexError},
+	{"Module error % int", value.NewFloat(5), value.IndexError, func(a, b value.Type) value.Type { return a.Mod(b) }, value.IndexError},
+
 	{"Logic bool & bool", value.NewBool(true), value.NewBool(false), func(a, b value.Type) value.Type { return a.Logic("&", b) }, value.NewBool(false)},
 	{"Logic bool | bool", value.NewBool(true), value.NewBool(false), func(a, b value.Type) value.Type { return a.Logic("|", b) }, value.NewBool(true)},
 
@@ -81,6 +88,15 @@ var testData = []TestDatum{
 	{"Logic error & int", value.ZeroDivError, value.NewInt(1), func(a, b value.Type) value.Type { return a.Logic("&", b) }, value.ZeroDivError},
 	{"Logic int & error", value.NewInt(1), value.ZeroDivError, func(a, b value.Type) value.Type { return a.Logic("&", b) }, value.ZeroDivError},
 	{"Logic error & error", value.ZeroDivError, value.IndexError, func(a, b value.Type) value.Type { return a.Logic("&", b) }, value.ZeroDivError},
+
+	{"Not !true", value.NewBool(true), value.NewBool(false), func(a, b value.Type) value.Type { return a.Not() }, value.NewBool(false)},
+	{"Not !false", value.NewBool(false), value.NewBool(false), func(a, b value.Type) value.Type { return a.Not() }, value.NewBool(true)},
+	{"Not !int", value.NewInt(1), value.NewBool(false), func(a, b value.Type) value.Type { return a.Not() }, value.TypeError},
+	{"Not !float", value.NewFloat(1), value.NewBool(false), func(a, b value.Type) value.Type { return a.Not() }, value.TypeError},
+	{"Not !string", value.NewString("1"), value.NewBool(false), func(a, b value.Type) value.Type { return a.Not() }, value.TypeError},
+	{"Not !array", value.NewArray([]value.Type{value.NewInt(1)}), value.NewBool(false), func(a, b value.Type) value.Type { return a.Not() }, value.TypeError},
+	{"Not !function", value.NewFunction(nil, nil), value.NewBool(false), func(a, b value.Type) value.Type { return a.Not() }, value.TypeError},
+	{"Not !error", value.ZeroDivError, value.NewBool(false), func(a, b value.Type) value.Type { return a.Not() }, value.ZeroDivError},
 
 	{"Relational int < int", value.NewInt(1), value.NewInt(2), func(a, b value.Type) value.Type { return a.Relational("<", b) }, value.NewBool(true)},
 	{"Relational int <= int", value.NewInt(1), value.NewInt(2), func(a, b value.Type) value.Type { return a.Relational("<=", b) }, value.NewBool(true)},

@@ -1,6 +1,4 @@
-div = (n, m) -> n - n / m * m
-
-leap = (year) -> ((div(year, 4) == 0) & (div(year, 100) != 0)) | div(year, 400) == 0
+leap = (year) -> ((year % 4 == 0) & (year % 100 != 0)) | (year % 400 == 0)
 
 mdayary = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
 
@@ -13,7 +11,7 @@ while y < 2001 {
   m = 0
   while m < 12 {
     dcount = dcount + days(y, m) 
-    if (y != 1900) & (div(dcount, 7) == 6) sundays = sundays + 1
+    if (y != 1900) & (dcount % 7 == 6) sundays = sundays + 1
     m = m + 1
   }
   y = y + 1

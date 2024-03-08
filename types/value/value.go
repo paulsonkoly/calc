@@ -232,9 +232,35 @@ func (a Type) Arith(op string, b Type) Type {
 	}
 }
 
+func (a Type) Mod(b Type) Type {
+	switch (a.typ)<<4 | b.typ {
+
+	case (intT << 4) | intT:
+		aVal := a.i()
+		bVal := b.i()
+
+		return NewInt(aVal % bVal)
+
+	case (intT << 4) | errorT, (floatT << 4) | errorT, (stringT << 4) | errorT,
+		(arrayT << 4) | errorT, (boolT << 4) | errorT, (functionT << 4) | errorT:
+		return b
+
+	case (errorT << 4) | intT, (errorT << 4) | floatT, (errorT << 4) | stringT,
+		(errorT << 4) | arrayT, (errorT << 4) | errorT, (errorT << 4) | boolT,
+		(errorT << 4) | functionT:
+		return a
+
+	default:
+		if a.typ == b.typ {
+			return InvalidOpError
+		} else {
+			return TypeError
+		}
+	}
+}
+
 // Relational is value relational <, >, <= ...
 func (a Type) Relational(op string, b Type) Type {
-
 	switch (a.typ)<<4 | b.typ {
 
 	case (intT << 4) | intT:
@@ -307,6 +333,18 @@ func (a Type) Logic(op string, b Type) Type {
 		} else {
 			return TypeError
 		}
+	}
+}
+
+// Not is boolean not operator.
+func (a Type) Not() Type {
+	switch a.typ {
+	case boolT:
+		return NewBool(a.morph != 1)
+	case errorT:
+		return a
+	default:
+		return TypeError
 	}
 }
 

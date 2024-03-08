@@ -4,16 +4,11 @@ A simple calculator language / REPL.
 
 The language can be used in a REPL or instructions can be read from a file. The REPL outputs its answer after '>' character.
 
-    divides = (a, b) -> {
-      b/a*a == b
-    }
-    > function
-  
     isprime = (n) -> {
       if n < 2 return false
       i = 2
       while i <= n / 2 {
-        if divides(i, n) return false
+        if n % i == 0 return false
         i = i + 1	
       }
       true
@@ -118,11 +113,11 @@ Arrays are dynamic container of any type.
 
 There are 6 precedence groups (from lowest to highest): 
 
-    - relational
-    - logic
+    - <, >, <=, >=, ==, !=
+    - &, |
     - + or -
-    - * or /
-    - unary minus '-', and length '#'
+    - *, / and %
+    - unary -, # and !
 
 ### Length operator
 
@@ -313,7 +308,7 @@ The following tokens are valid (using usual regular expression notation)
  - string literal `/"([^"]|\\")*"/`
  - variable name `/[a-z]+/`
  - non sticky chars `/[(){},\[\]:]/`
- - sticky chars `/[+*/=<>!-&|@]/`
+ - sticky chars `/[+*/=<>!%-&|@]/`
  - new line `/\n/`
 
 Tokens are separated with white-spaces. Sticky chars together are returned from the lexer as single lexeme. For example "<=" is a single lexeme.
@@ -336,8 +331,8 @@ In the following BNF non-terminals are lower case, terminals are upper case or q
     relational: logic /<|>|<=|>=|==|!=/ logic | logic
     logic: logic /[|&]/ addsub | addsub
     addsub: addsub /[+-]/ divmul | divmul
-    divmul: divmul /[*/]/ unary | unary
-    unary: /[-#]/ index | index
+    divmul: divmul /[*/%]/ unary | unary
+    unary: /[-#!]/ index | index
     index: atom "[" expression ":" expression "]" | atom "[" expression "]" | atom
     atom: function | call | INTL | FLOATL | BOOLL | STRINGL | VARIABLE  | '(' expression ')'
 

@@ -84,6 +84,11 @@ func (u UnOp) Evaluate(m *memory.Type) (value.Type, bool) {
 		r := Evaluate(m, u.Target)
 		return r.Len(), false
 
+  case "!":
+		r := Evaluate(m, u.Target)
+		r = r.Not()
+		return r, false
+
 	default:
 		log.Panicf("unexpected unary op: %s\n", u.Op)
 	}
@@ -95,6 +100,9 @@ func (b BinOp) Evaluate(m *memory.Type) (value.Type, bool) {
 
 	case "+", "-", "*", "/":
 		return Evaluate(m, b.Left).Arith(b.Op, Evaluate(m, b.Right)), false
+
+  case "%":
+		return Evaluate(m, b.Left).Mod(Evaluate(m, b.Right)), false
 
 	case "&", "|":
 		return Evaluate(m, b.Left).Logic(b.Op, Evaluate(m, b.Right)), false

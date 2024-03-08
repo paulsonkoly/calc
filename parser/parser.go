@@ -107,12 +107,12 @@ func index(input c.RollbackLexer) ([]c.Node, error) {
 }
 
 func unary(input c.RollbackLexer) ([]c.Node, error) {
-	op := c.OneOf(acceptToken("-"), acceptToken("#"))
+	op := c.OneOf(acceptToken("-"), acceptToken("#"), acceptToken("!"))
 	return c.OneOf(c.Fmap(mkUnaryOp, (c.And(op, index))), index)(input)
 }
 
 func divmul(input c.RollbackLexer) ([]c.Node, error) {
-	op := c.OneOf(acceptToken("*"), acceptToken("/"))
+	op := c.OneOf(acceptToken("*"), acceptToken("/"), acceptToken("%"))
 	chain := c.Any(c.Conditional{Gate: op, OnSuccess: unary})
 	return c.Fmap(mkLeftChain, c.And(unary, chain))(input)
 }

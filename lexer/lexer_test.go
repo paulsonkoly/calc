@@ -27,6 +27,7 @@ var testData = []testDatum{
 	{"single lexeme", "*", []token.Type{{Value: "*", Type: token.Sticky}, eof}},
 	{"single lexeme", "/", []token.Type{{Value: "/", Type: token.Sticky}, eof}},
 	{"single lexeme", "#", []token.Type{{Value: "#", Type: token.Sticky}, eof}},
+	{"single lexeme", "%", []token.Type{{Value: "%", Type: token.Sticky}, eof}},
 	{"single lexeme", "(", []token.Type{{Value: "(", Type: token.NotSticky}, eof}},
 	{"single lexeme", ")", []token.Type{{Value: ")", Type: token.NotSticky}, eof}},
 	{"single lexeme", "{", []token.Type{{Value: "{", Type: token.NotSticky}, eof}},

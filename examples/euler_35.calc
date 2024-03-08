@@ -11,7 +11,7 @@ sqrt = (a) -> binsearch(1, a / 2, (n) -> (n+1)*(n+1) > a)
 all = (ary, f) -> {
   i = 0
   while i < #ary {
-    if f(ary[i]) == false return false
+    if !f(ary[i]) return false
     i = i + 1
   }
   true
@@ -22,7 +22,7 @@ isprime = (n) -> {
   sqrt = sqrt(n)
   i = 2
   while i <= sqrt {
-    if n / i * i == n {
+    if n % i == 0 {
       return false
     }
     i = i + 1
