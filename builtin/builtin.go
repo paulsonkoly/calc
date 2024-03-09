@@ -8,7 +8,8 @@ import (
 func Load(m *memory.Type) {
 	for name, fun := range all {
 		fNode := fun.STRewrite(node.SymTbl{})
-		fVal, _ := fNode.Evaluate(m)
+    // TODO, should we just use value instead of node?
+		fVal, _ := fNode.Evaluate(m, nil, nil)
 		m.SetGlobal(name, fVal)
 	}
 }
@@ -35,3 +36,4 @@ var errorF = node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: n
 var exitF = node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Exit{Value: v}}
 
 var v = node.Name("v")
+

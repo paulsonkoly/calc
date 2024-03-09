@@ -79,9 +79,21 @@ type While struct {
 	Body      Type // Body is the loop body
 }
 
+// For is a loop for iterators ans generators
+type For struct {
+	VarRef   Type // VarRef is variable reference
+	Iterator Type // Value is assigned value
+	Body     Type // Body is the loop body
+}
+
 // Return is a return statement
 type Return struct {
 	Target Type // Target is the returned value
+}
+
+// Yield statement
+type Yield struct {
+	Target Type // Target is the yielded value
 }
 
 // Variable name

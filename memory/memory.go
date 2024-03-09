@@ -14,6 +14,8 @@ package memory
 
 import (
 	"fmt"
+	"slices"
+
 	"github.com/paulsonkoly/calc/types/value"
 )
 
@@ -36,6 +38,17 @@ type Type struct {
 
 // NewType creates a new memory, with an empty global frame and an empty stack
 func NewMemory() *Type { return &Type{global: gframe{}, stack: []Frame{}} }
+
+// Clone creates a copy of memory, that shares global, and has the last 2 frames copied.
+func (m *Type) Clone() *Type {
+	newMem := NewMemory()
+	newMem.global = m.global
+
+	for i := len(m.stack) - 2; 0 <= i && i < len(m.stack); i++ {
+		newMem.stack = append(newMem.stack, slices.Clone(m.stack[i]))
+	}
+	return newMem
+}
 
 // SetGlobal sets a global variable
 func (m *Type) SetGlobal(name string, v value.Type) { m.global[name] = v }

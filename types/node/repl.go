@@ -94,11 +94,11 @@ func Loop(r lineReader, p Parser, m *memory.Type, doOut bool, ast bool) {
 			} else {
 				t[0] = t[0].STRewrite(SymTbl{})
 				// t[0].PrettyPrint(0)
-				v := Evaluate(m, t[0])
+				v := Evaluate(m, t[0], nil, nil)
 
 				for _, e := range t[1:] {
 					e := e.STRewrite(SymTbl{})
-					v = Evaluate(m, e)
+					v = Evaluate(m, e, nil, nil)
 				}
 
 				if doOut {

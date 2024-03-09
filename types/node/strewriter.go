@@ -73,8 +73,32 @@ func (w While) STRewrite(symTbl SymTbl) Type {
 	return While{Condition: w.Condition.STRewrite(symTbl), Body: w.Body.STRewrite(symTbl)}
 }
 
+func (f For) STRewrite(symTbl SymTbl) Type {
+  iterator := f.Iterator.STRewrite(symTbl)
+  
+	varRef := f.VarRef.(Name)
+	name := string(varRef)
+
+	if len(symTbl) < 1 {
+	return For{VarRef: varRef, Iterator: iterator, Body: f.Body.STRewrite(symTbl)}
+	}
+
+	ix, ok := symTbl[len(symTbl)-1][name]
+	if !ok {
+		l := len(symTbl[len(symTbl)-1])
+		symTbl[len(symTbl)-1][name] = l
+		ix = l
+	}
+
+	return For{VarRef: Local(ix), Iterator: iterator, Body: f.Body.STRewrite(symTbl)}
+}
+
 func (r Return) STRewrite(symTbl SymTbl) Type {
 	return Return{Target: r.Target.STRewrite(symTbl)}
+}
+
+func (y Yield) STRewrite(symTbl SymTbl) Type {
+	return Yield{Target: y.Target.STRewrite(symTbl)}
 }
 
 func (n Name) STRewrite(symTbl SymTbl) Type {

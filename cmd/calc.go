@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	// "runtime"
 	"runtime/pprof"
 
 	"os"
@@ -17,8 +18,10 @@ func main() {
 	var eval string
 	var cpuprof string
 	var ast bool
+	var trace string
 	flag.StringVar(&eval, "eval", "", "string to evaluate")
 	flag.StringVar(&cpuprof, "cpuprof", "", "filename for go pprof")
+	flag.StringVar(&trace, "trace", "", "filename for go trace")
 	flag.BoolVar(&ast, "ast", false, "repl outputs AST instead of evaluating")
 
 	flag.Parse()
@@ -66,7 +69,7 @@ func cmdLine(line string) {
 
 	t, err := parser.Parse(line)
 	if len(t) > 0 {
-		fmt.Println(node.Evaluate(m, t[0]))
+		fmt.Println(node.Evaluate(m, t[0], nil, nil))
 	}
 	if err != nil {
 		fmt.Println(err)

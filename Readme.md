@@ -6,10 +6,8 @@ The language can be used in a REPL or instructions can be read from a file. The 
 
     isprime = (n) -> {
       if n < 2 return false
-      i = 2
-      while i <= n / 2 {
+      for i <- fromto(2, n/2+1) {
         if n % i == 0 return false
-        i = i + 1	
       }
       true
     }
@@ -32,30 +30,27 @@ Functional programming / Currying
     plusthree(5)
     >  8
 
-Qsort
+Iterators/generators
 
-    filter = (pred, ary) -> {
-      i = 0
-      r = []
-      while i < #ary {
-        if pred(ary[i]) r = r + [ary[i]] 
-        i = i + 1
-      }
-      r
+    evens = () -> {
+        i = 0
+        while true {
+            yield i
+            i = i + 2
+        }
     }
     > function
 
-    qsort = (ary) -> {
-      if #ary <= 1 ary else {
-        pivot = ary[0]
-        tail = ary [1:#ary]
-        qsort(filter((n) -> n <= pivot, tail)) + [pivot] + qsort(filter((n) -> n > pivot, tail))
-      } 
+    for i <- evens() {
+        if i == 4 {
+            write(i)
+            return "done"
+        }
     }
-    > function
-
-    qsort([5, 2, 4, 3, 1, 8])
-    > [1, 2, 3, 4, 5, 8]
+    0
+    2
+    4
+    > "done"
 
 ## Editor support
 
@@ -89,16 +84,19 @@ If a single file name is provided on the command line the input is redirected fr
 
 ## Builtin functions
 
-Built in functions are loaded in the top level frame on the interpreter start up. They provide functionality that cannot be implemented in calc itself. In any other aspect they are just regular function values.
+Built in functions are loaded in the top level frame on the interpreter start up. They provide functionality that cannot be implemented in calc itself, or convinience functions. These are just regular function values defined in the global lexical scope.
 
-| function | arity | returns                    | description                            |
-|----------|-------|----------------------------|----------------------------------------|
-| read     | 0     | string                     | Reads a string from the stdin          |
-| write    | 1     | no result error            | Writes the given value to the output   |
-| aton     | 1     | int/float/conversion error | Converts a string to an int or a float |
-| toa      | 1     | string                     | Converts a value to a string           |
-| error    | 1     | error                      | Converts a string to an error          |
-| exit     | 1     | doesn't return/type error  | Exits the interpreter with exit code   |
+| function | arity | returns                    | description                             |
+|----------|-------|----------------------------|-----------------------------------------|
+| read     | 0     | string                     | Reads a string from the stdin           |
+| write    | 1     | no result error            | Writes the given value to the output    |
+| aton     | 1     | int/float/conversion error | Converts a string to an int or a float  |
+| toa      | 1     | string                     | Converts a value to a string            |
+| error    | 1     | error                      | Converts a string to an error           |
+| exit     | 1     | doesn't return/type error  | Exits the interpreter with exit code    |
+| fromto   | 2     | iterator/type error        | fromto(a, b) iterates from a to b-1     |
+| elems    | 1     | iterator/type error        | elems(ary) iterates the array elements  |
+| indices  | 1     | iterator/type error        | indices(ary) iterates the array indices |
 
 ## Type coercions
 
@@ -118,20 +116,6 @@ There are 6 precedence groups (from lowest to highest):
     - + or -
     - *, / and %
     - unary -, # and !
-
-### Length operator
-
-    #[1,2,3]
-    > 3
-
-### Indexing
-
-Array and string indexing has 2 forms: "apple"[1] results in "p"; "apple"[1:3] results in "pp". Indexing outside, or using a lower value for the upper index than the lower index results in index error.
-
-In an expression array indexing binds stronger than any operator, thus
-
-    #[[1,1,1]][0]
-    >  3
 
 ### Errors
 
@@ -153,6 +137,77 @@ Incorrect operations result in error, any further calculation with an error resu
 ### Strings
 
 String literals can be written using double quotes ("). Within a string a double quote has to be escaped: "\\"" is a string with a single element containing a double quote. Line breaks and any other character can be inserted within a string normally. Strings can be concatenated and indexed.
+
+
+## Length operator
+
+    #[1,2,3]
+    > 3
+
+## Index operator
+
+Array and string indexing has 2 forms: "apple"[1] results in "p"; "apple"[1:3] results in "pp". Indexing outside, or using a lower value for the upper index than the lower index results in index error.
+
+In an expression array indexing binds stronger than any operator, thus
+
+    #[[1,1,1]][0]
+    >  3
+
+## Iterators and generators, yield and for
+
+Assuming we have the following definition of `fromto` (available as a builtin function):
+
+    fromto = (n, m) -> {
+        while n < m {
+            yield n
+            n = n + 1
+        }
+    }
+
+One can replace the following while loop
+
+    i = 0
+    while i < 10 {
+       write(i)
+       i = i + 1
+    }
+
+with the more concise
+
+    for i <- fromto(0, 10) write(i)
+
+`elems` and `indices` can also be implemented in similar fashion but also provided as builtin functions. One can write number generators or other iterators using yield.
+
+In technical terms these constructs support delimited continuation.
+
+An iterator or generator is an expression that when evaluated calls the yield keyword with some value. The syntax for a for loop is
+
+    for <variable> <- <iterator> <for_loop_body>
+
+yield is a keyword that is used to give flow control back to the for loop across function calls given the yield was invoked in the iterator part of the for construct. When yield yields a value the for loop resumes and when the loop body finishes the execution continues from the point the yield happened. This is until there are no more items to yield or the for loop body executes a return statement. Yielding in a call stack that doesn't have a containing for loop would have no effect, yield itself evaluates to no result error.
+
+If one wants to observe side effects from the iterator it can lead to confusing results.
+
+    strangeiter = () -> {
+        yield 1
+        write("in iteration")
+        yield 2
+        yield 3
+        yield 4
+        write("end of the iterator")
+    }
+    > function
+
+    for i <- strangeiter() {
+       write(i)
+       if i == 2 {
+           return "done"
+       }
+    }
+    1
+    "in iteration"
+    2
+    > "done"
 
 ## Variable lookup, shadowing, closures
 
@@ -278,7 +333,7 @@ Recursive call to a function using the variable name the function is assigned to
 
 ### Loop and Conditionals
 
-The only loop syntax is the while loop. Conditional code can be written with the if or the if .. else .. structures. As these are statements they end at the first newline, but one can use blocks to write multi line body loops and conditionals. This should explain why the first two examples are valid, but the third one is not.
+while loops are a simple construct of a loop condition and a loop body. for loops have to be used with iterators. Conditional code can be written with the if or the if .. else .. structures. As these are statements they end at the first newline, but one can use blocks to write multi line body loops and conditionals. This should explain why the first two examples are valid, but the third one is not.
 
     if true 1 else 2
     >  1

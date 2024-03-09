@@ -60,7 +60,9 @@ func (u IndexFromTo) Option() opt { return opteratorOpts }
 func (i If) Option() opt          { return defaultOpts }
 func (i IfElse) Option() opt      { return defaultOpts }
 func (w While) Option() opt       { return defaultOpts }
+func (f For) Option() opt         { return defaultOpts }
 func (r Return) Option() opt      { return defaultOpts }
+func (y Yield) Option() opt       { return defaultOpts }
 func (r Read) Option() opt        { return defaultOpts }
 func (w Write) Option() opt       { return defaultOpts }
 func (a Aton) Option() opt        { return defaultOpts }
@@ -88,7 +90,9 @@ func (u IndexFromTo) Label() string { return "@" }
 func (i If) Label() string          { return fmt.Sprintf("%T", i) }
 func (i IfElse) Label() string      { return fmt.Sprintf("%T", i) }
 func (w While) Label() string       { return fmt.Sprintf("%T", w) }
+func (f For) Label() string         { return fmt.Sprintf("%T", f) }
 func (r Return) Label() string      { return fmt.Sprintf("%T", r) }
+func (y Yield) Label() string       { return fmt.Sprintf("%T", y) }
 func (r Read) Label() string        { return fmt.Sprintf("%T", r) }
 func (w Write) Label() string       { return fmt.Sprintf("%T", w) }
 func (a Aton) Label() string        { return fmt.Sprintf("%T", a) }
