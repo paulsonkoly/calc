@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"slices"
 	"strconv"
 
 	"github.com/paulsonkoly/calc/memory"
@@ -56,9 +57,9 @@ func (c Call) Evaluate(m *memory.Type) (value.Type, bool) {
 	// push 2 frames, one is the closure environment, the other is the frame for arguments
 	// the arguments have to be evaluated before we push anything on the stack because what we push
 	// ie the closure frame might contain variables that affect the argument evaluation
-	frm := memory.NewFrame(fNode.LocalCnt)
+  frm := make([]value.Type, fNode.LocalCnt)
 	for i, a := range args {
-		frm.Set(i, Evaluate(m, a))
+    frm[i] = Evaluate(m, a)
 	}
 	if fVal.Frame != nil {
 		m.PushFrame(fVal.Frame.(memory.Frame))
@@ -84,7 +85,7 @@ func (u UnOp) Evaluate(m *memory.Type) (value.Type, bool) {
 		r := Evaluate(m, u.Target)
 		return r.Len(), false
 
-  case "!":
+	case "!":
 		r := Evaluate(m, u.Target)
 		r = r.Not()
 		return r, false
@@ -101,7 +102,7 @@ func (b BinOp) Evaluate(m *memory.Type) (value.Type, bool) {
 	case "+", "-", "*", "/":
 		return Evaluate(m, b.Left).Arith(b.Op, Evaluate(m, b.Right)), false
 
-  case "%":
+	case "%":
 		return Evaluate(m, b.Left).Mod(Evaluate(m, b.Right)), false
 
 	case "&", "|":
@@ -147,7 +148,7 @@ func (i IndexFromTo) Evaluate(m *memory.Type) (value.Type, bool) {
 }
 
 func (f Function) Evaluate(m *memory.Type) (value.Type, bool) {
-	return value.NewFunction(&f, m.Top()), false
+	return value.NewFunction(&f, slices.Clone(m.Top())), false
 }
 
 func (n Name) Evaluate(m *memory.Type) (value.Type, bool) {

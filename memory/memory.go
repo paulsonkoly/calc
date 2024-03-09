@@ -8,47 +8,65 @@
 // global variables, so the symbol table phase can't work out a symbol tbl
 // index for these variables.
 //
-// Other frames are slices, whose size don't change. These are indexed by the
-// symbol table index, and they belong to a lexical scope.
+// Other frames are slices on the stack. These are indexed by the fp (frame
+// pointer) offseted by symbol table index. Local variables of the frame are
+// between fp and le (frame pointer and local end).
 package memory
 
 import (
 	"fmt"
+	"slices"
+
 	"github.com/paulsonkoly/calc/types/value"
+)
+
+const minStackSize = 128
+
+const (
+	localFE   = -1
+	localFP   = -2
+	closureFE = -3
+	closureFP = -4
 )
 
 type Frame []value.Type
 type gframe map[string]value.Type
 
-// NewFrame creates a new frame, either Closure or Local
-func NewFrame(size int) Frame {
-	return make(Frame, size)
-}
-
-// Set sets a variable value
-func (f Frame) Set(symIdx int, v value.Type) { f[symIdx] = v }
-
 // Memory holds all variables
 type Type struct {
+	sp     int
+	fp     []int
 	global gframe
-	stack  []Frame
+	stack  []value.Type
 }
 
 // NewType creates a new memory, with an empty global frame and an empty stack
-func NewMemory() *Type { return &Type{global: gframe{}, stack: []Frame{}} }
+func NewMemory() *Type { return &Type{fp: []int{}, global: gframe{}, stack: []value.Type{}} }
 
 // SetGlobal sets a global variable
 func (m *Type) SetGlobal(name string, v value.Type) { m.global[name] = v }
 
 // Set sets a local variable
-func (m *Type) Set(symIdx int, v value.Type) { m.stack[len(m.stack)-1][symIdx] = v }
+func (m *Type) Set(symIdx int, v value.Type) {
+	fp := m.fp[len(m.fp)+localFP]
+	sp := fp + symIdx
+	m.stack[sp] = v
+}
 
 // LookUpLocal looks up a local variable
-func (m *Type) LookUpLocal(symIdx int) value.Type { return m.stack[len(m.stack)-1][symIdx] }
+func (m *Type) LookUpLocal(symIdx int) value.Type {
+	fp := m.fp[len(m.fp)+localFP]
+	sp := fp + symIdx
+	return m.stack[sp]
+}
 
 // LookUpClosure looks up a closure variable. A variable that was local in the
 // containing lexical scope
-func (m *Type) LookUpClosure(symIdx int) value.Type { return m.stack[len(m.stack)-2][symIdx] }
+func (m *Type) LookUpClosure(symIdx int) value.Type {
+	fp := m.fp[len(m.fp)+closureFP]
+	sp := fp + symIdx
+	return m.stack[sp]
+}
 
 // LookUpGlobal looks up a global variable
 func (m *Type) LookUpGlobal(name string) value.Type {
@@ -61,15 +79,34 @@ func (m *Type) LookUpGlobal(name string) value.Type {
 }
 
 // PushFrame pushes a stack frame
-func (m *Type) PushFrame(f Frame) { m.stack = append(m.stack, f) }
+func (m *Type) PushFrame(f Frame) {
+	m.fp = append(m.fp, m.sp, m.sp+len(f))
+	if len(f) > 0 {
+		m.growStack(len(f))
+		m.stack = slices.Replace(m.stack, m.sp, m.sp+len(f), f...)
+		m.sp += len(f)
+	}
+}
 
 // PopFrame pops a stack frame
-func (m *Type) PopFrame() { m.stack = m.stack[0 : len(m.stack)-1] }
+func (m *Type) PopFrame() {
+	fp := m.fp[len(m.fp)+localFP]
+	m.sp = fp
+	m.fp = m.fp[:len(m.fp)-2]
+}
 
 // Top is the last stack frame pushed
 func (m *Type) Top() Frame {
-	if len(m.stack) < 1 {
+	if len(m.fp) < 1 {
 		return nil
 	}
-	return m.stack[len(m.stack)-1]
+	fp := m.fp[len(m.fp)+localFP]
+	le := m.fp[len(m.fp)+localFE]
+	return m.stack[fp:le]
+}
+
+func (m *Type) growStack(size int) {
+	if m.sp+size >= len(m.stack) {
+		m.stack = append(m.stack, make([]value.Type, max(minStackSize, size))...)
+	}
 }
