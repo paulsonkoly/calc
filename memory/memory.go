@@ -88,11 +88,22 @@ func (m *Type) PushFrame(f Frame) {
 	}
 }
 
+func (m *Type) Push(v value.Type) {
+	m.growStack(1)
+	m.stack[m.sp] = v
+	m.sp++
+}
+
 // PopFrame pops a stack frame
 func (m *Type) PopFrame() {
 	fp := m.fp[len(m.fp)+localFP]
 	m.sp = fp
 	m.fp = m.fp[:len(m.fp)-2]
+}
+
+func (m *Type) Pop() value.Type {
+  m.sp--
+	return m.stack[m.sp]
 }
 
 // Top is the last stack frame pushed

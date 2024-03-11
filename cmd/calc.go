@@ -17,9 +17,11 @@ func main() {
 	var eval string
 	var cpuprof string
 	var ast bool
+  var bytecode bool
 	flag.StringVar(&eval, "eval", "", "string to evaluate")
 	flag.StringVar(&cpuprof, "cpuprof", "", "filename for go pprof")
 	flag.BoolVar(&ast, "ast", false, "repl outputs AST instead of evaluating")
+	flag.BoolVar(&bytecode, "bytecode", false, "repl outputs bytecode instead of evaluating")
 
 	flag.Parse()
 
@@ -49,7 +51,7 @@ func main() {
 		fileName := flag.Arg(0)
 		fr := node.NewFReader(fileName)
 		defer fr.Close()
-		node.Loop(fr, p, m, false, ast)
+		node.Loop(fr, p, m, false, ast, bytecode)
 		return
 	}
 
@@ -57,7 +59,7 @@ func main() {
 	fmt.Println("calc repl")
 	rl := node.NewRLReader()
 	defer rl.Close()
-	node.Loop(rl, p, m, true, ast)
+	node.Loop(rl, p, m, true, ast, bytecode)
 }
 
 func cmdLine(line string) {

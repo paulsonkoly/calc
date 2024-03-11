@@ -11,6 +11,9 @@ import (
 
 	"github.com/chzyer/readline"
 	"github.com/paulsonkoly/calc/memory"
+	"github.com/paulsonkoly/calc/types/bytecode"
+	"github.com/paulsonkoly/calc/types/value"
+	"github.com/paulsonkoly/calc/vm"
 )
 
 type lineReader interface {
@@ -55,10 +58,13 @@ type Parser interface {
 	Parse(string) ([]Type, error)
 }
 
-func Loop(r lineReader, p Parser, m *memory.Type, doOut bool, ast bool) {
+func Loop(r lineReader, p Parser, m *memory.Type, doOut bool, ast bool, bc bool) {
 	blocksOpen := 0
 	quotesOpen := 0
 	input := ""
+
+  cs := make([]bytecode.Type, 0)
+  ds := make([]value.Type, 0)
 
 	for {
 		line, err := r.read()
@@ -86,12 +92,26 @@ func Loop(r lineReader, p Parser, m *memory.Type, doOut bool, ast bool) {
 				continue
 			}
 
-			if ast {
+			switch {
+			case ast:
 				for _, e := range t {
 					e := e.STRewrite(SymTbl{})
 					Graphviz(e)
 				}
-			} else {
+			case bc:
+        ip := len(cs)
+				for _, e := range t {
+					e := e.STRewrite(SymTbl{})
+					ByteCode(e, &cs, &ds)
+				}
+        for i, c := range cs[ip:] {
+					fmt.Printf(" %8d | %v\n", ip + i, c)
+				}
+        vm := vm.NewVM()
+        vm.Run(m, &cs, ds)
+        fmt.Printf(">> %v\n", m.Pop())
+
+			default:
 				t[0] = t[0].STRewrite(SymTbl{})
 				// t[0].PrettyPrint(0)
 				v := Evaluate(m, t[0])

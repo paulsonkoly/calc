@@ -116,6 +116,13 @@ func (v Type) ToString() (string, bool) {
 	return *(*string)(unsafe.Pointer(v.ptr)), true
 }
 
+func (v Type) ToArray() ([]Type, bool) {
+	if v.typ!= arrayT {
+		return nil, false
+	}
+	return *(*[]Type)(unsafe.Pointer(v.ptr)), true
+}
+
 // Value of any type to string
 func (d Type) String() string {
 	switch d.typ {
