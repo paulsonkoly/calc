@@ -14,12 +14,12 @@ func Load(m *memory.Type) {
 }
 
 var all = map[string]node.Function{
-	"read":  readF,
-	"write": writeF,
-	"aton":  atonF,
-	"error": errorF,
-	"toa":   toaF,
-	"exit":  exitF,
+	// "read":  readF,
+	// "write": writeF,
+	// "aton":  atonF,
+	// "error": errorF,
+	// "toa":   toaF,
+	// "exit":  exitF,
 }
 
 var readF = node.Function{Parameters: node.List{Elems: []node.Type{}}, Body: node.Read{}}

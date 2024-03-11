@@ -35,11 +35,11 @@ type OpCode uint64
 const (
 	NOP = OpCode(iota)
 
-	PUSH
-	POP
-	MOV
+	PUSH // PUSH pushes src0
+	POP  // POP pops stack, result goes nowhere
+	MOV  // MOV dst, src0
 
-	ADD
+	ADD // ADD pushes src1+src0
 	SUB
 	MUL
 	DIV
@@ -60,11 +60,13 @@ const (
 	IX2
 
 	LEN
-  ARR
+	ARR
 
 	JMP
 	JMPF
-  FUNC
+	FUNC // FUNC pushes a function value with code address from src0 and parameter count src1
+	CALL // CALL calls src0 with argument cnt src1
+	RET  // RET returns from a function call pushing src0 after rolling back the stack
 
 	READ
 	WRITE
@@ -83,10 +85,10 @@ func NewByteCode(op OpCode, src1 uint64, src1addr int, src0 uint64, src0addr int
 	src0addr &= (1 << ((SRC0_ADDR_HI - SRC0_ADDR_LO) + 1)) - 1
 
 	return Type(uint64(op)<<OPCODE_LO |
-    src1<<SRC1_LO |
-    src0<<SRC0_LO |
-    uint64(src1addr)<<SRC1_ADDR_LO |
-    uint64(src0addr)<<SRC0_ADDR_LO)
+		src1<<SRC1_LO |
+		src0<<SRC0_LO |
+		uint64(src1addr)<<SRC1_ADDR_LO |
+		uint64(src0addr)<<SRC0_ADDR_LO)
 }
 
 func (b Type) String() string {
@@ -140,16 +142,16 @@ func (b Type) Src0() uint64 {
 }
 
 func (b Type) Src0Addr() int {
-  return convImm((b >> SRC0_ADDR_LO) & ((1 << (SRC0_ADDR_HI - SRC0_ADDR_LO + 1)) - 1))
+	return convImm((b >> SRC0_ADDR_LO) & ((1 << (SRC0_ADDR_HI - SRC0_ADDR_LO + 1)) - 1))
 }
 
 func (b Type) Src1Addr() int {
-  return convImm((b >> SRC1_ADDR_LO) & ((1 << (SRC1_ADDR_HI - SRC1_ADDR_LO + 1)) - 1))
+	return convImm((b >> SRC1_ADDR_LO) & ((1 << (SRC1_ADDR_HI - SRC1_ADDR_LO + 1)) - 1))
 }
 
 func convImm(n Type) int {
-  if n & (1 << 23) != 0 { // TODO constants
-    n |= (0xffffffffff000000)
-  }
-  return int(n)
+	if n&(1<<23) != 0 { // TODO constants
+		n |= (0xffffffffff000000)
+	}
+	return int(n)
 }

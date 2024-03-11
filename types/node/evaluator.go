@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"slices"
 	"strconv"
 
 	"github.com/paulsonkoly/calc/memory"
@@ -39,38 +38,7 @@ func (a List) Evaluate(m *memory.Type) (value.Type, bool) {
 }
 
 func (c Call) Evaluate(m *memory.Type) (value.Type, bool) {
-	f := Evaluate(m, c.Name)
-
-	fVal, ok := f.ToFunction()
-	if !ok {
-		return value.TypeError, false
-	}
-
-	fNode := fVal.Node.(*Function) // let panic if fails
-	args := c.Arguments.Elems
-	params := fNode.Parameters.Elems
-
-	if len(args) != len(params) {
-		return value.ArgumentError, false
-	}
-
-	// push 2 frames, one is the closure environment, the other is the frame for arguments
-	// the arguments have to be evaluated before we push anything on the stack because what we push
-	// ie the closure frame might contain variables that affect the argument evaluation
-  frm := make([]value.Type, fNode.LocalCnt)
-	for i, a := range args {
-    frm[i] = Evaluate(m, a)
-	}
-	if fVal.Frame != nil {
-		m.PushFrame(fVal.Frame.(memory.Frame))
-	}
-	m.PushFrame(frm)
-	r := Evaluate(m, fNode.Body)
-	if fVal.Frame != nil {
-		m.PopFrame()
-	}
-	m.PopFrame()
-	return r, false
+	panic("I broke old call")
 }
 
 func (u UnOp) Evaluate(m *memory.Type) (value.Type, bool) {
@@ -148,7 +116,7 @@ func (i IndexFromTo) Evaluate(m *memory.Type) (value.Type, bool) {
 }
 
 func (f Function) Evaluate(m *memory.Type) (value.Type, bool) {
-	return value.NewFunction(&f, slices.Clone(m.Top())), false
+	panic("I broke old function")
 }
 
 func (n Name) Evaluate(m *memory.Type) (value.Type, bool) {

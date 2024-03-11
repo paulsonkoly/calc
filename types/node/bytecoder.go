@@ -51,22 +51,22 @@ func (s String) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) byte
 
 func (l List) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type {
 	// TODO optimise at least the constant parts of array case to the ds
-  v := value.NewArray([]value.Type{})
-  ix := len(*ds)
-  *ds = append(*ds, v)
-  if len(l.Elems) == 0 {
-    return encodeSrc(srcsel, bytecode.ADDR_DS, ix)
-  }
+	v := value.NewArray([]value.Type{})
+	ix := len(*ds)
+	*ds = append(*ds, v)
+	if len(l.Elems) == 0 {
+		return encodeSrc(srcsel, bytecode.ADDR_DS, ix)
+	}
 
-  instr := l.Elems[0].byteCode(0, cs, ds)
-  instr |= bytecode.NewByteCode(bytecode.ARR, bytecode.ADDR_DS, ix, 0, 0)
+	instr := l.Elems[0].byteCode(0, cs, ds)
+	instr |= bytecode.NewByteCode(bytecode.ARR, bytecode.ADDR_DS, ix, 0, 0)
 	*cs = append(*cs, instr)
-  
-  for _, t := range l.Elems[1:] {
+
+	for _, t := range l.Elems[1:] {
 		instr = t.byteCode(0, cs, ds)
 		instr |= bytecode.NewByteCode(bytecode.ARR, bytecode.ADDR_STCK, 0, 0, 0)
 		*cs = append(*cs, instr)
-  }
+	}
 
 	return encodeSrc(srcsel, bytecode.ADDR_STCK, 0)
 }
@@ -92,16 +92,33 @@ func (f Function) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) by
 	jmpAddr := len(*cs) - 1
 
 	instr = f.Body.byteCode(0, cs, ds)
-	if instr.Src0() != bytecode.ADDR_STCK {
-		instr |= bytecode.NewByteCode(bytecode.PUSH, 0, 0, 0, 0)
-		*cs = append(*cs, instr)
-	}
+  instr |= bytecode.NewByteCode(bytecode.RET, 0, 0, 0, 0)
+  *cs = append(*cs, instr)
 
-	instr = bytecode.NewByteCode(bytecode.FUNC, 0, 0, bytecode.ADDR_IMM, jmpAddr+1)
+	instr = bytecode.NewByteCode(bytecode.FUNC, bytecode.ADDR_IMM, len(f.Parameters.Elems), bytecode.ADDR_IMM, jmpAddr+1)
 	*cs = append(*cs, instr)
 
 	// patch the jmp
 	(*cs)[jmpAddr] |= encodeSrc(0, bytecode.ADDR_IMM, len(*cs)-jmpAddr-1)
+
+	return encodeSrc(srcsel, bytecode.ADDR_STCK, 0)
+}
+
+func (c Call) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type {
+	// push the arguments
+	for _, arg := range c.Arguments.Elems {
+		instr := arg.byteCode(0, cs, ds)
+		if instr.Src0() != bytecode.ADDR_STCK {
+			instr |= bytecode.NewByteCode(bytecode.PUSH, 0, 0, 0, 0)
+			*cs = append(*cs, instr)
+		}
+	}
+
+	// get the function
+  instr := c.Name.byteCode(0, cs, ds)
+
+	instr |= bytecode.NewByteCode(bytecode.CALL, bytecode.ADDR_IMM, len(c.Arguments.Elems), 0, 0)
+	*cs = append(*cs, instr)
 
 	return encodeSrc(srcsel, bytecode.ADDR_STCK, 0)
 }
@@ -352,5 +369,3 @@ func (a Aton) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) byteco
 func (t Toa) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type    { return 0 }
 func (e Error) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type  { return 0 }
 func (e Exit) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type   { return 0 }
-
-func (c Call) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type { return 0 }

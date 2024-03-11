@@ -15,18 +15,14 @@ package memory
 
 import (
 	"fmt"
-	"slices"
-
 	"github.com/paulsonkoly/calc/types/value"
 )
 
 const minStackSize = 128
 
 const (
-	localFE   = -1
-	localFP   = -2
-	closureFE = -3
-	closureFP = -4
+	localFE = -1
+	localFP = -2
 )
 
 type Frame []value.Type
@@ -34,14 +30,17 @@ type gframe map[string]value.Type
 
 // Memory holds all variables
 type Type struct {
-	sp     int
-	fp     []int
-	global gframe
-	stack  []value.Type
+	sp      int
+	fp      []int
+	global  gframe
+	closure []Frame
+	stack   []value.Type
 }
 
 // NewType creates a new memory, with an empty global frame and an empty stack
-func NewMemory() *Type { return &Type{fp: []int{}, global: gframe{}, stack: []value.Type{}} }
+func NewMemory() *Type {
+	return &Type{fp: []int{}, global: gframe{}, closure: []Frame{}, stack: []value.Type{}}
+}
 
 // SetGlobal sets a global variable
 func (m *Type) SetGlobal(name string, v value.Type) { m.global[name] = v }
@@ -63,9 +62,7 @@ func (m *Type) LookUpLocal(symIdx int) value.Type {
 // LookUpClosure looks up a closure variable. A variable that was local in the
 // containing lexical scope
 func (m *Type) LookUpClosure(symIdx int) value.Type {
-	fp := m.fp[len(m.fp)+closureFP]
-	sp := fp + symIdx
-	return m.stack[sp]
+	return m.closure[len(m.closure)-1][symIdx]
 }
 
 // LookUpGlobal looks up a global variable
@@ -79,19 +76,18 @@ func (m *Type) LookUpGlobal(name string) value.Type {
 }
 
 // PushFrame pushes a stack frame
-func (m *Type) PushFrame(f Frame) {
-	m.fp = append(m.fp, m.sp, m.sp+len(f))
-	if len(f) > 0 {
-		m.growStack(len(f))
-		m.stack = slices.Replace(m.stack, m.sp, m.sp+len(f), f...)
-		m.sp += len(f)
-	}
+func (m *Type) PushFrame(localSize int) {
+	m.fp = append(m.fp, m.sp-localSize, m.sp)
 }
 
 func (m *Type) Push(v value.Type) {
 	m.growStack(1)
 	m.stack[m.sp] = v
 	m.sp++
+}
+
+func (m *Type)PushClosure(f Frame) {
+  m.closure = append(m.closure, f)
 }
 
 // PopFrame pops a stack frame
@@ -102,8 +98,12 @@ func (m *Type) PopFrame() {
 }
 
 func (m *Type) Pop() value.Type {
-  m.sp--
+	m.sp--
 	return m.stack[m.sp]
+}
+
+func (m *Type)PopClosure() {
+  m.closure = m.closure[:len(m.closure)-1]
 }
 
 // Top is the last stack frame pushed
@@ -114,6 +114,11 @@ func (m *Type) Top() Frame {
 	fp := m.fp[len(m.fp)+localFP]
 	le := m.fp[len(m.fp)+localFE]
 	return m.stack[fp:le]
+}
+
+func (m * Type)IP() value.Type {
+	le := m.fp[len(m.fp)+localFE]
+  return m.stack[le]
 }
 
 func (m *Type) growStack(size int) {

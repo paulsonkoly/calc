@@ -33,17 +33,19 @@ func _() {
 	_ = x[JMP-22]
 	_ = x[JMPF-23]
 	_ = x[FUNC-24]
-	_ = x[READ-25]
-	_ = x[WRITE-26]
-	_ = x[ATON-27]
-	_ = x[TOA-28]
-	_ = x[ERROR-29]
-	_ = x[EXIT-30]
+	_ = x[CALL-25]
+	_ = x[RET-26]
+	_ = x[READ-27]
+	_ = x[WRITE-28]
+	_ = x[ATON-29]
+	_ = x[TOA-30]
+	_ = x[ERROR-31]
+	_ = x[EXIT-32]
 }
 
-const _OpCode_name = "NOPPUSHPOPMOVADDSUBMULDIVMODNOTANDORLTGTLEGEEQNEIX1IX2LENARRJMPJMPFFUNCREADWRITEATONTOAERROREXIT"
+const _OpCode_name = "NOPPUSHPOPMOVADDSUBMULDIVMODNOTANDORLTGTLEGEEQNEIX1IX2LENARRJMPJMPFFUNCCALLRETREADWRITEATONTOAERROREXIT"
 
-var _OpCode_index = [...]uint8{0, 3, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34, 36, 38, 40, 42, 44, 46, 48, 51, 54, 57, 60, 63, 67, 71, 75, 80, 84, 87, 92, 96}
+var _OpCode_index = [...]uint8{0, 3, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34, 36, 38, 40, 42, 44, 46, 48, 51, 54, 57, 60, 63, 67, 71, 75, 78, 82, 87, 91, 94, 99, 103}
 
 func (i OpCode) String() string {
 	if i >= OpCode(len(_OpCode_index)-1) {
