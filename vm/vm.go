@@ -12,24 +12,24 @@ import (
 )
 
 type Type struct {
-	ip int             // instruction pointer
-	m  *memory.Type    // variables
-	cs []bytecode.Type // CS is the code segment
-	ds []value.Type    // DS is the data segment
+	ip int              // instruction pointer
+	m  *memory.Type     // variables
+	CS *[]bytecode.Type // CS is the code segment
+	DS *[]value.Type    // DS is the data segment
 }
 
-func New(m *memory.Type, cs []bytecode.Type, ds []value.Type) *Type {
-	return &Type{m: m, cs: cs, ds: ds}
-}
-
-func (vm *Type) SetSegments(cs []bytecode.Type, ds []value.Type) {
-	vm.cs = cs
-	vm.ds = ds
+func New(m *memory.Type, cs *[]bytecode.Type, ds *[]value.Type) *Type {
+	return &Type{m: m, CS: cs, DS: ds}
 }
 
 func (vm *Type) Run(retResult bool) value.Type {
-	for vm.ip < len(vm.cs) {
-		instr := vm.cs[vm.ip]
+	m := vm.m
+	ds := vm.DS
+  cs := vm.CS
+  ip := vm.ip
+
+	for ip < len(*cs) {
+		instr := (*cs)[ip]
 
 		// TODO allow tracing flag
 		// fmt.Printf("%8d | %v\n", vm.ip, instr)
@@ -38,235 +38,237 @@ func (vm *Type) Run(retResult bool) value.Type {
 
 		switch opCode {
 		case bytecode.ADD, bytecode.SUB, bytecode.MUL, bytecode.DIV:
-			src0 := vm.fetch(instr.Src0(), instr.Src0Addr())
-			src1 := vm.fetch(instr.Src1(), instr.Src1Addr())
+			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
 			op := [...]string{"+", "-", "*", "/"}[opCode-bytecode.ADD]
 
-      val := src1.Arith(op, src0)
+			val := src1.Arith(op, src0)
 
-			vm.m.Push(val)
+			m.Push(val)
 
 		case bytecode.MOD:
-			src0 := vm.fetch(instr.Src0(), instr.Src0Addr())
-			src1 := vm.fetch(instr.Src1(), instr.Src1Addr())
+			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
 
-      val := src1.Mod(src0)
+			val := src1.Mod(src0)
 
-			vm.m.Push(val)
+			m.Push(val)
 
 		case bytecode.AND, bytecode.OR:
-			src0 := vm.fetch(instr.Src0(), instr.Src0Addr())
-			src1 := vm.fetch(instr.Src1(), instr.Src1Addr())
+			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
 			op := [...]string{"&", "|"}[opCode-bytecode.AND]
 
-      val := src1.Logic(op, src0)
+			val := src1.Logic(op, src0)
 
-			vm.m.Push(val)
+			m.Push(val)
 
 		case bytecode.NOT:
-			src0 := vm.fetch(instr.Src0(), instr.Src0Addr())
-      val := src0.Not()
-			vm.m.Push(val)
+			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+			val := src0.Not()
+			m.Push(val)
 
 		case bytecode.LT, bytecode.GT, bytecode.LE, bytecode.GE:
-			src0 := vm.fetch(instr.Src0(), instr.Src0Addr())
-			src1 := vm.fetch(instr.Src1(), instr.Src1Addr())
+			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
 			op := [...]string{"<", ">", "<=", ">="}[opCode-bytecode.LT]
 
-      val := src1.Relational(op, src0)
+			val := src1.Relational(op, src0)
 
-			vm.m.Push(val)
+			m.Push(val)
 
 		case bytecode.EQ, bytecode.NE:
-			src0 := vm.fetch(instr.Src0(), instr.Src0Addr())
-			src1 := vm.fetch(instr.Src1(), instr.Src1Addr())
+			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
 			op := [...]string{"==", "!="}[opCode-bytecode.EQ]
 
-      val := src1.Eq(op, src0)
+			val := src1.Eq(op, src0)
 
-			vm.m.Push(val)
+			m.Push(val)
 
 		case bytecode.LEN:
-			src0 := vm.fetch(instr.Src0(), instr.Src0Addr())
+			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 
-			vm.m.Push(src0.Len())
+			m.Push(src0.Len())
 
 		case bytecode.IX1:
-			src0 := vm.fetch(instr.Src0(), instr.Src0Addr())
-			src1 := vm.fetch(instr.Src1(), instr.Src1Addr())
+			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
 
-      val := src1.Index(src0)
+			val := src1.Index(src0)
 
-			vm.m.Push(val)
+			m.Push(val)
 
 		case bytecode.IX2:
-			ary := vm.m.Pop()
-			src1 := vm.fetch(instr.Src1(), instr.Src1Addr())
-			src0 := vm.fetch(instr.Src0(), instr.Src0Addr())
+			ary := m.Pop()
+			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
+			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 
-      val := ary.Index(src1, src0)
+			val := ary.Index(src1, src0)
 
-			vm.m.Push(val)
+			m.Push(val)
 
 		case bytecode.JMP:
 			src0Imm := instr.Src0Addr()
 
-			vm.ip += src0Imm - 1
+			ip += src0Imm - 1
 
 		case bytecode.JMPF:
-			src0 := vm.fetch(instr.Src0(), instr.Src0Addr())
+			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			src1Imm := instr.Src1Addr()
 			// TODO - how do we do type errors?
 			if b, ok := src0.ToBool(); !b && ok {
-				vm.ip += src1Imm - 1
+				ip += src1Imm - 1
 			}
 
 		case bytecode.PUSH:
-			src0 := vm.fetch(instr.Src0(), instr.Src0Addr())
-			vm.m.Push(src0)
+			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+			m.Push(src0)
 
 		case bytecode.POP:
-			vm.m.Pop()
+			m.Pop()
 
 		case bytecode.MOV:
-      val := vm.fetch(instr.Src0(), instr.Src0Addr())
+			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			src1T := instr.Src1()
 
 			switch src1T {
 			case bytecode.ADDR_LCL:
-				vm.m.Set(instr.Src1Addr(), val)
+				m.Set(instr.Src1Addr(), val)
 			case bytecode.ADDR_GBL:
-				name, ok := vm.ds[instr.Src1Addr()].ToString()
+				name, ok := (*ds)[instr.Src1Addr()].ToString()
 				if !ok {
-					log.Panicf("unknown global\n %8d | %v\n", vm.ip, instr)
+					log.Panicf("unknown global\n %8d | %v\n", ip, instr)
 				}
-				vm.m.SetGlobal(name, val)
+				m.SetGlobal(name, val)
 
 			default:
-				log.Panicf("unexpected dst in MOV\n %8d | %v\n", vm.ip, instr)
+				log.Panicf("unexpected dst in MOV\n %8d | %v\n", ip, instr)
 			}
 
 		case bytecode.ARR:
-      val := vm.fetch(instr.Src0(), instr.Src0Addr())
-			ary := vm.fetch(instr.Src1(), instr.Src1Addr())
+			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+			ary := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
 
 			slc, ok := ary.ToArray()
 			if !ok {
-				log.Panicf("cannot convert value to array\n %8d | %v\n", vm.ip, instr)
+				log.Panicf("cannot convert value to array\n %8d | %v\n", ip, instr)
 			}
 
 			slc = append(slc, val)
 
 			val = value.NewArray(slc)
-			vm.m.Push(val)
+			m.Push(val)
 
 		case bytecode.FUNC:
 			funInfo := instr.Src1Addr()
 			localCnt := funInfo >> 12
 			paramCnt := funInfo & 0xfff
-			f := value.NewFunction(instr.Src0Addr(), slices.Clone(vm.m.Top()), paramCnt, localCnt)
-			vm.m.Push(f)
+			f := value.NewFunction(instr.Src0Addr(), slices.Clone(m.Top()), paramCnt, localCnt)
+			m.Push(f)
 
 		case bytecode.CALL:
-			f := vm.fetch(instr.Src0(), instr.Src0Addr())
+			f := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			args := instr.Src1Addr()
 
 			fVal, ok := f.ToFunction()
 
 			if !ok {
-				vm.m.Push(value.TypeError)
+				m.Push(value.TypeError)
 				break
 			}
 
 			if fVal.ParamCnt != args {
-				vm.m.Push(value.ArgumentError)
+				m.Push(value.ArgumentError)
 				break
 			}
 
-			vm.m.PushFrame(args, fVal.LocalCnt)
-			vm.m.PushClosure(fVal.Frame.(memory.Frame))
-			vm.m.Push(value.NewInt(vm.ip))
+			m.PushFrame(args, fVal.LocalCnt)
+			m.PushClosure(fVal.Frame.(memory.Frame))
+			m.Push(value.NewInt(ip))
 
-			vm.ip = fVal.Node - 1
+			ip = fVal.Node - 1
 
 		case bytecode.RET:
-			ip, ok := vm.m.IP().ToInt()
+			lip, ok := m.IP().ToInt()
 			if !ok {
-				log.Panicf("can't pop instruction pointer\n %8d | %v\n", vm.ip, instr)
+				log.Panicf("can't pop instruction pointer\n %8d | %v\n", lip, instr)
 			}
 
-			val := vm.fetch(instr.Src0(), instr.Src0Addr())
+			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 
-			vm.m.PopFrame()
-			vm.m.PopClosure()
+			m.PopFrame()
+			m.PopClosure()
 
-			vm.m.Push(val)
+			m.Push(val)
 
-			vm.ip = ip
+			ip = lip
 
 		case bytecode.WRITE:
-			val := vm.fetch(instr.Src0(), instr.Src0Addr())
+			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			fmt.Println(val)
-			vm.m.Push(value.NoResultError)
+			m.Push(value.NoResultError)
 
 		case bytecode.ATON:
-			val := vm.fetch(instr.Src0(), instr.Src0Addr())
+			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 
 			sv, ok := val.ToString()
 			if !ok {
-				vm.m.Push(value.TypeError)
+				m.Push(value.TypeError)
 				break
 			}
 
 			if v, err := strconv.Atoi(string(sv)); err == nil {
-				vm.m.Push(value.NewInt(v))
+				m.Push(value.NewInt(v))
 				break
 			}
 
 			if v, err := strconv.ParseFloat(string(sv), 64); err == nil {
-				vm.m.Push(value.NewFloat(v))
+				m.Push(value.NewFloat(v))
 				break
 			}
 
-			vm.m.Push(value.ConversionError)
+			m.Push(value.ConversionError)
 
 		case bytecode.TOA:
-      val := vm.fetch(instr.Src0(), instr.Src0Addr())
+			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			val = value.NewString(fmt.Sprint(val))
-			vm.m.Push(val)
+			m.Push(val)
 
 		default:
-			log.Panicf("unknown opcode: %v\n %8d | %v\n", opCode, vm.ip, instr)
+			log.Panicf("unknown opcode: %v\n %8d | %v\n", opCode, ip, instr)
 		}
 
-		vm.ip++
+		ip++
 	}
 
-  if retResult {
-    return vm.m.Pop()
-  }
+  vm.ip = ip
+
+	if retResult {
+		return m.Pop()
+	}
 
 	return value.Type{}
 }
 
-func (vm Type) fetch(src uint64, addr int) value.Type {
+func (vm Type) fetch(src uint64, addr int, m *memory.Type, ds *[]value.Type) value.Type {
 	switch src {
 	case bytecode.ADDR_STCK:
-		return vm.m.Pop()
+		return m.Pop()
 	case bytecode.ADDR_DS:
-		return vm.ds[addr]
+		return (*ds)[addr]
 	case bytecode.ADDR_CLS:
-		return vm.m.LookUpClosure(addr)
+		return m.LookUpClosure(addr)
 	case bytecode.ADDR_LCL:
-		return vm.m.LookUpLocal(addr)
+		return m.LookUpLocal(addr)
 	case bytecode.ADDR_GBL:
-		name, ok := vm.ds[addr].ToString()
+		name, ok := (*ds)[addr].ToString()
 		if !ok {
-			log.Panicf("unknown global\n %8d | %v\n", vm.ip, vm.cs[vm.ip])
+			log.Panicf("unknown global\n %8d | %v\n", vm.ip, (*vm.CS)[vm.ip])
 		}
-		return vm.m.LookUpGlobal(name)
+		return m.LookUpGlobal(name)
 	default:
-		log.Panicf("unknown source\n %8d | %v\n", vm.ip, vm.cs[vm.ip])
+		log.Panicf("unknown source\n %8d | %v\n", vm.ip, (*vm.CS)[vm.ip])
 	}
 	panic("unreachable code")
 }

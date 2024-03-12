@@ -11,8 +11,6 @@ import (
 
 	"github.com/chzyer/readline"
 	"github.com/paulsonkoly/calc/flags"
-	"github.com/paulsonkoly/calc/types/bytecode"
-	"github.com/paulsonkoly/calc/types/value"
 	"github.com/paulsonkoly/calc/vm"
 )
 
@@ -58,7 +56,7 @@ type Parser interface {
 	Parse(string) ([]Type, error)
 }
 
-func Loop(r lineReader, p Parser, vm *vm.Type, cs *[]bytecode.Type, ds *[]value.Type, doOut bool) {
+func Loop(r lineReader, p Parser, vm *vm.Type, doOut bool) {
 	blocksOpen := 0
 	quotesOpen := 0
 	input := ""
@@ -96,20 +94,19 @@ func Loop(r lineReader, p Parser, vm *vm.Type, cs *[]bytecode.Type, ds *[]value.
 					Graphviz(e)
 				}
 
-				ip := len(*cs)
+				ip := len(*vm.CS)
 				if doOut {
-					ByteCode(e, cs, ds)
+					ByteCode(e, vm.CS, vm.DS)
 				} else {
-					ByteCodeNoStck(e, cs, ds)
+					ByteCodeNoStck(e, vm.CS, vm.DS)
 				}
 
 				if *flags.ByteCodeFlag {
-					for i, c := range (*cs)[ip:] {
+					for i, c := range (*vm.CS)[ip:] {
 						fmt.Printf(" %8d | %v\n", ip+i, c)
 					}
 				}
 
-				vm.SetSegments(*cs, *ds)
 				v := vm.Run(doOut)
 				if doOut {
 					fmt.Printf("> %v\n", v)

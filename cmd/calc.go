@@ -26,7 +26,7 @@ func main() {
 	ds := []value.Type{}
 
 	builtin.Load(&cs, &ds)
-	virtM := vm.New(m, cs, ds)
+	virtM := vm.New(m, &cs, &ds)
 
 	if *flags.CPUProfFlag != "" {
 		f, err := os.Create(*flags.CPUProfFlag)
@@ -51,7 +51,6 @@ func main() {
 			n := t[0]
 			node.ByteCode(n, &cs, &ds)
 		}
-		virtM.SetSegments(cs, ds)
 		v := virtM.Run(true)
 		fmt.Println(v)
 		return
@@ -61,7 +60,7 @@ func main() {
 		fileName := flag.Arg(0)
 		fr := node.NewFReader(fileName)
 		defer fr.Close()
-		node.Loop(fr, p, virtM, &cs, &ds, false)
+		node.Loop(fr, p, virtM, false)
 		return
 	}
 
@@ -69,5 +68,5 @@ func main() {
 	fmt.Println("calc repl")
 	rl := node.NewRLReader()
 	defer rl.Close()
-	node.Loop(rl, p, virtM, &cs, &ds, true)
+	node.Loop(rl, p, virtM, true)
 }
