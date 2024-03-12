@@ -10,25 +10,29 @@ import (
 	"github.com/paulsonkoly/calc/builtin"
 	"github.com/paulsonkoly/calc/memory"
 	"github.com/paulsonkoly/calc/parser"
+	"github.com/paulsonkoly/calc/types/bytecode"
 	"github.com/paulsonkoly/calc/types/node"
+	"github.com/paulsonkoly/calc/types/value"
 )
 
 func main() {
 	var eval string
 	var cpuprof string
 	var ast bool
-  var bytecode bool
+	var bcFlag bool
 	flag.StringVar(&eval, "eval", "", "string to evaluate")
 	flag.StringVar(&cpuprof, "cpuprof", "", "filename for go pprof")
 	flag.BoolVar(&ast, "ast", false, "repl outputs AST instead of evaluating")
-	flag.BoolVar(&bytecode, "bytecode", false, "repl outputs bytecode instead of evaluating")
+	flag.BoolVar(&bcFlag, "bytecode", false, "repl outputs bytecode instead of evaluating")
 
 	flag.Parse()
 
 	m := memory.NewMemory()
 	p := parser.Type{}
+	cs := []bytecode.Type{}
+	ds := []value.Type{}
 
-	builtin.Load(m)
+	builtin.Load(m, &cs, &ds)
 
 	if cpuprof != "" {
 		f, err := os.Create(cpuprof)
@@ -51,7 +55,7 @@ func main() {
 		fileName := flag.Arg(0)
 		fr := node.NewFReader(fileName)
 		defer fr.Close()
-		node.Loop(fr, p, m, false, ast, bytecode)
+		node.Loop(fr, p, m, &cs, &ds, false, ast, bcFlag)
 		return
 	}
 
@@ -59,12 +63,15 @@ func main() {
 	fmt.Println("calc repl")
 	rl := node.NewRLReader()
 	defer rl.Close()
-	node.Loop(rl, p, m, true, ast, bytecode)
+	node.Loop(rl, p, m, &cs, &ds, true, ast, bcFlag)
 }
 
 func cmdLine(line string) {
 	m := memory.NewMemory()
-	builtin.Load(m)
+	cs := []bytecode.Type{}
+	ds := []value.Type{}
+
+	builtin.Load(m, &cs, &ds)
 
 	t, err := parser.Parse(line)
 	if len(t) > 0 {

@@ -17,4 +17,4 @@ while y < 2001 {
   y = y + 1
 }
 
-sundays
+write(sundays)

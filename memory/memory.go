@@ -76,8 +76,9 @@ func (m *Type) LookUpGlobal(name string) value.Type {
 }
 
 // PushFrame pushes a stack frame
-func (m *Type) PushFrame(localSize int) {
-	m.fp = append(m.fp, m.sp-localSize, m.sp)
+func (m *Type) PushFrame(argsCnt, localCnt int) {
+  m.sp += localCnt - argsCnt
+	m.fp = append(m.fp, m.sp-localCnt, m.sp)
 }
 
 func (m *Type) Push(v value.Type) {

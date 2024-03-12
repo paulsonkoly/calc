@@ -58,13 +58,12 @@ type Parser interface {
 	Parse(string) ([]Type, error)
 }
 
-func Loop(r lineReader, p Parser, m *memory.Type, doOut bool, ast bool, bc bool) {
+func Loop(r lineReader, p Parser, m *memory.Type, cs *[]bytecode.Type, ds *[]value.Type, doOut bool, ast bool, bc bool) {
 	blocksOpen := 0
 	quotesOpen := 0
 	input := ""
 
-  cs := make([]bytecode.Type, 0)
-  ds := make([]value.Type, 0)
+  vm := vm.NewVM()
 
 	for {
 		line, err := r.read()
@@ -99,16 +98,15 @@ func Loop(r lineReader, p Parser, m *memory.Type, doOut bool, ast bool, bc bool)
 					Graphviz(e)
 				}
 			case bc:
-        ip := len(cs)
+        // ip := len(*cs)
 				for _, e := range t {
 					e := e.STRewrite(SymTbl{})
-					ByteCode(e, &cs, &ds)
+					ByteCode(e, cs, ds)
 				}
-        for i, c := range cs[ip:] {
-					fmt.Printf(" %8d | %v\n", ip + i, c)
-				}
-        vm := vm.NewVM()
-        vm.Run(m, &cs, ds)
+    //     for i, c := range (*cs)[ip:] {
+				// 	fmt.Printf(" %8d | %v\n", ip + i, c)
+				// }
+        vm.Run(m, cs, *ds)
         fmt.Printf(">> %v\n", m.Pop())
 
 			default:

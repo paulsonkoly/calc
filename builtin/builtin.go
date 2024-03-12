@@ -2,29 +2,30 @@ package builtin
 
 import (
 	"github.com/paulsonkoly/calc/memory"
+	"github.com/paulsonkoly/calc/types/bytecode"
 	"github.com/paulsonkoly/calc/types/node"
+	"github.com/paulsonkoly/calc/types/value"
 )
 
-func Load(m *memory.Type) {
-	for name, fun := range all {
+func Load(m *memory.Type, cs *[]bytecode.Type, ds *[]value.Type) {
+	for _, fun := range all {
 		fNode := fun.STRewrite(node.SymTbl{})
-		fVal, _ := fNode.Evaluate(m)
-		m.SetGlobal(name, fVal)
+		node.ByteCodeNoStck(fNode, cs, ds)
 	}
 }
 
-var all = map[string]node.Function{
+var all = [...]node.Assign{
 	// "read":  readF,
-	// "write": writeF,
+	writeF,
 	// "aton":  atonF,
 	// "error": errorF,
 	// "toa":   toaF,
 	// "exit":  exitF,
 }
 
-var readF = node.Function{Parameters: node.List{Elems: []node.Type{}}, Body: node.Read{}}
+var readF = node.Assign{VarRef: node.Name("read"), Value: node.Function{Parameters: node.List{Elems: []node.Type{}}, Body: node.Read{}}}
 
-var writeF = node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Write{Value: v}}
+var writeF = node.Assign{VarRef: node.Name("write"), Value: node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Write{Value: v}}}
 
 var atonF = node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Aton{Value: v}}
 

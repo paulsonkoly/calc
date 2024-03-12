@@ -34,6 +34,7 @@ type FunctionData struct {
 	Node     int // Pointer to the code of the function - the AST node that holds the function
 	Frame    any // Pointer to the closure stack frame
 	ParamCnt int // ParamCnt is the number of parameters of the function
+  LocalCnt int // LocalCnt is the number of local variables of the function including ParamCnt
 }
 
 // unsafe (no type check) accessors
@@ -71,8 +72,8 @@ func NewString(s string) Type { return Type{typ: stringT, ptr: unsafe.Pointer(&s
 func NewError(m *string) Type { return Type{typ: errorT, ptr: unsafe.Pointer(m)} }
 
 // NewFunction allocates a new function value
-func NewFunction(node int, frame any, paramCnt int) Type {
-	d := FunctionData{Node: node, Frame: frame, ParamCnt: paramCnt}
+func NewFunction(node int, frame any, paramCnt int, localCnt int) Type {
+	d := FunctionData{Node: node, Frame: frame, ParamCnt: paramCnt, LocalCnt: localCnt}
 	return Type{typ: functionT, ptr: unsafe.Pointer(&d)}
 }
 

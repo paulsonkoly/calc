@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"fmt"
 	"log"
 	"slices"
 
@@ -23,19 +24,21 @@ func (vm *Type) Run(m *memory.Type, cs *[]bytecode.Type, ds []value.Type) value.
 	for vm.ip < len(*cs) {
 		instr := (*cs)[vm.ip]
 
+    // fmt.Printf("%8d | %v\n", vm.ip, instr)
+
 		opCode := instr.OpCode()
 
 		switch opCode {
 		case bytecode.ADD, bytecode.SUB, bytecode.MUL, bytecode.DIV:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
-			op := map[bytecode.OpCode]string{bytecode.ADD: "+", bytecode.SUB: "-", bytecode.MUL: "*", bytecode.DIV: "/"}[opCode]
+      op := [...]string{"+", "-", "*", "/"}[opCode - bytecode.ADD]
 
 			val = src1.Arith(op, src0)
 
 			m.Push(val)
 
-    case bytecode.MOD:
+		case bytecode.MOD:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
 
@@ -43,10 +46,10 @@ func (vm *Type) Run(m *memory.Type, cs *[]bytecode.Type, ds []value.Type) value.
 
 			m.Push(val)
 
-    case bytecode.AND, bytecode.OR:
+		case bytecode.AND, bytecode.OR:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
-			op := map[bytecode.OpCode]string{bytecode.AND: "&", bytecode.OR: "|"}[opCode]
+      op := [...]string{"&", "|"}[opCode - bytecode.AND]
 
 			val = src1.Logic(op, src0)
 
@@ -55,7 +58,7 @@ func (vm *Type) Run(m *memory.Type, cs *[]bytecode.Type, ds []value.Type) value.
 		case bytecode.LT, bytecode.GT, bytecode.LE, bytecode.GE:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
-			op := map[bytecode.OpCode]string{bytecode.LT: "<", bytecode.GT: ">", bytecode.LE: "<=", bytecode.GE: ">="}[opCode]
+      op := [...]string{"<", ">", "<=", ">="}[opCode - bytecode.LT]
 
 			val = src1.Relational(op, src0)
 
@@ -64,17 +67,31 @@ func (vm *Type) Run(m *memory.Type, cs *[]bytecode.Type, ds []value.Type) value.
 		case bytecode.EQ, bytecode.NE:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
-			op := map[bytecode.OpCode]string{bytecode.EQ: "==", bytecode.NE: "!="}[opCode]
+      op := [...]string{"==", "!="}[opCode - bytecode.EQ]
 
 			val = src1.Eq(op, src0)
 
 			m.Push(val)
+
+		case bytecode.LEN:
+			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+
+			m.Push(src0.Len())
 
 		case bytecode.IX1:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
 
 			val = src1.Index(src0)
+
+			m.Push(val)
+
+		case bytecode.IX2:
+      ary := m.Pop()
+			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
+			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+
+			val = ary.Index(src1, src0)
 
 			m.Push(val)
 
@@ -108,12 +125,12 @@ func (vm *Type) Run(m *memory.Type, cs *[]bytecode.Type, ds []value.Type) value.
 			case bytecode.ADDR_GBL:
 				name, ok := ds[instr.Src1Addr()].ToString()
 				if !ok {
-					panic("unknown global")
+					log.Panicf("unknown global\n %8d | %v\n", vm.ip, instr)
 				}
 				m.SetGlobal(name, val)
 
 			default:
-				panic("unexpected dst in MOV")
+				log.Panicf("unexpected dst in MOV\n %8d | %v\n", vm.ip, instr)
 			}
 
 		case bytecode.ARR:
@@ -122,7 +139,7 @@ func (vm *Type) Run(m *memory.Type, cs *[]bytecode.Type, ds []value.Type) value.
 
 			slc, ok := ary.ToArray()
 			if !ok {
-				panic("cannot convert value to array")
+				log.Panicf("cannot convert value to array\n %8d | %v\n", vm.ip, instr)
 			}
 
 			slc = append(slc, val)
@@ -131,48 +148,56 @@ func (vm *Type) Run(m *memory.Type, cs *[]bytecode.Type, ds []value.Type) value.
 			m.Push(val)
 
 		case bytecode.FUNC:
-			f := value.NewFunction(instr.Src0Addr(), slices.Clone(m.Top()), instr.Src1Addr())
+      funInfo := instr.Src1Addr()
+      localCnt := funInfo >> 12
+      paramCnt := funInfo & 0xfff
+			f := value.NewFunction(instr.Src0Addr(), slices.Clone(m.Top()), paramCnt, localCnt)
 			m.Push(f)
 
-    case bytecode.CALL:
-      f := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
-      args := instr.Src1Addr()
+		case bytecode.CALL:
+			f := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+			args := instr.Src1Addr()
 
-      m.PushFrame(args)
+			fVal, ok := f.ToFunction()
 
-      fVal, ok := f.ToFunction()
-      if !ok {
-        m.PopFrame()
-        m.Push(value.TypeError)
-        break
-      }
-      if fVal.ParamCnt != args {
-        m.PopFrame()
-        m.Push(value.ArgumentError)
-        break
-      }
+			if !ok {
+				m.Push(value.TypeError)
+				break
+			}
 
-      m.PushClosure(fVal.Frame.(memory.Frame))
-      m.Push(value.NewInt(vm.ip))
+			if fVal.ParamCnt != args {
+				m.Push(value.ArgumentError)
+				break
+			}
 
-      vm.ip = fVal.Node - 1
+			m.PushFrame(args, fVal.LocalCnt)
+			m.PushClosure(fVal.Frame.(memory.Frame))
+			m.Push(value.NewInt(vm.ip))
 
-    case bytecode.RET:
-      ip, ok := m.IP().ToInt()
-      if !ok {
-        panic("can't pop instruction pointer")
-      }
+			vm.ip = fVal.Node - 1
 
-      val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+		case bytecode.RET:
+			ip, ok := m.IP().ToInt()
+			if !ok {
+				log.Panicf("can't pop instruction pointer\n %8d | %v\n", vm.ip, instr)
+			}
 
-      m.PopFrame()
-      m.PopClosure()
+			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 
-      m.Push(val)
+			m.PopFrame()
+			m.PopClosure()
 
-      vm.ip = ip
+			m.Push(val)
+
+			vm.ip = ip
+
+    case bytecode.WRITE:
+        val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+        fmt.Println(val)
+        m.Push(value.NoResultError)
+
 		default:
-			log.Panicf("unknown opcode: %v", opCode)
+			log.Panicf("unknown opcode: %v\n %8d | %v\n", opCode, vm.ip, instr)
 		}
 
 		vm.ip++
@@ -194,10 +219,11 @@ func (vm Type) fetch(src uint64, addr int, m *memory.Type, ds []value.Type) valu
 	case bytecode.ADDR_GBL:
 		name, ok := ds[addr].ToString()
 		if !ok {
-			panic("unknown global")
+			log.Panicf("unknown global\n %8d | ???\n", vm.ip) // TODO would be nice to decode instr
 		}
 		return m.LookUpGlobal(name)
 	default:
-		panic("unknown source")
+		log.Panicf("unknown source\n %8d | ???\n", vm.ip) // TODO would be nice to decode instr
 	}
+	panic("unreachable code")
 }
