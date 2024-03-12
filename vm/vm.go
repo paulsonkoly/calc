@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"slices"
+	"strconv"
 
 	"github.com/paulsonkoly/calc/memory"
 	"github.com/paulsonkoly/calc/types/bytecode"
@@ -24,7 +25,7 @@ func (vm *Type) Run(m *memory.Type, cs *[]bytecode.Type, ds []value.Type) value.
 	for vm.ip < len(*cs) {
 		instr := (*cs)[vm.ip]
 
-    // fmt.Printf("%8d | %v\n", vm.ip, instr)
+		// fmt.Printf("%8d | %v\n", vm.ip, instr)
 
 		opCode := instr.OpCode()
 
@@ -32,7 +33,7 @@ func (vm *Type) Run(m *memory.Type, cs *[]bytecode.Type, ds []value.Type) value.
 		case bytecode.ADD, bytecode.SUB, bytecode.MUL, bytecode.DIV:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
-      op := [...]string{"+", "-", "*", "/"}[opCode - bytecode.ADD]
+			op := [...]string{"+", "-", "*", "/"}[opCode-bytecode.ADD]
 
 			val = src1.Arith(op, src0)
 
@@ -49,13 +50,13 @@ func (vm *Type) Run(m *memory.Type, cs *[]bytecode.Type, ds []value.Type) value.
 		case bytecode.AND, bytecode.OR:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
-      op := [...]string{"&", "|"}[opCode - bytecode.AND]
+			op := [...]string{"&", "|"}[opCode-bytecode.AND]
 
 			val = src1.Logic(op, src0)
 
 			m.Push(val)
 
-    case bytecode.NOT:
+		case bytecode.NOT:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			val = src0.Not()
 			m.Push(val)
@@ -63,7 +64,7 @@ func (vm *Type) Run(m *memory.Type, cs *[]bytecode.Type, ds []value.Type) value.
 		case bytecode.LT, bytecode.GT, bytecode.LE, bytecode.GE:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
-      op := [...]string{"<", ">", "<=", ">="}[opCode - bytecode.LT]
+			op := [...]string{"<", ">", "<=", ">="}[opCode-bytecode.LT]
 
 			val = src1.Relational(op, src0)
 
@@ -72,7 +73,7 @@ func (vm *Type) Run(m *memory.Type, cs *[]bytecode.Type, ds []value.Type) value.
 		case bytecode.EQ, bytecode.NE:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
-      op := [...]string{"==", "!="}[opCode - bytecode.EQ]
+			op := [...]string{"==", "!="}[opCode-bytecode.EQ]
 
 			val = src1.Eq(op, src0)
 
@@ -92,7 +93,7 @@ func (vm *Type) Run(m *memory.Type, cs *[]bytecode.Type, ds []value.Type) value.
 			m.Push(val)
 
 		case bytecode.IX2:
-      ary := m.Pop()
+			ary := m.Pop()
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 
@@ -153,9 +154,9 @@ func (vm *Type) Run(m *memory.Type, cs *[]bytecode.Type, ds []value.Type) value.
 			m.Push(val)
 
 		case bytecode.FUNC:
-      funInfo := instr.Src1Addr()
-      localCnt := funInfo >> 12
-      paramCnt := funInfo & 0xfff
+			funInfo := instr.Src1Addr()
+			localCnt := funInfo >> 12
+			paramCnt := funInfo & 0xfff
 			f := value.NewFunction(instr.Src0Addr(), slices.Clone(m.Top()), paramCnt, localCnt)
 			m.Push(f)
 
@@ -196,10 +197,36 @@ func (vm *Type) Run(m *memory.Type, cs *[]bytecode.Type, ds []value.Type) value.
 
 			vm.ip = ip
 
-    case bytecode.WRITE:
-        val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
-        fmt.Println(val)
-        m.Push(value.NoResultError)
+		case bytecode.WRITE:
+			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+			fmt.Println(val)
+			m.Push(value.NoResultError)
+
+		case bytecode.ATON:
+			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+
+			sv, ok := val.ToString()
+			if !ok {
+				m.Push(value.TypeError)
+				break
+			}
+
+			if v, err := strconv.Atoi(string(sv)); err == nil {
+				m.Push(value.NewInt(v))
+				break
+			}
+
+			if v, err := strconv.ParseFloat(string(sv), 64); err == nil {
+				m.Push(value.NewFloat(v))
+        break
+			}
+
+			m.Push(value.ConversionError)
+
+		case bytecode.TOA:
+			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+			val = value.NewString(fmt.Sprint(val))
+			m.Push(val)
 
 		default:
 			log.Panicf("unknown opcode: %v\n %8d | %v\n", opCode, vm.ip, instr)

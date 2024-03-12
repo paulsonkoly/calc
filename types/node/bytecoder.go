@@ -322,8 +322,8 @@ func (w While) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytec
 	instr := bytecode.NewByteCode(bytecode.PUSH, 0, 0, bytecode.ADDR_DS, ix)
 	*cs = append(*cs, instr)
 
+	condAddr := len(*cs)
 	instr = w.Condition.byteCode(0, cs, ds)
-	condAddr := len(*cs) - 1
 	instr |= bytecode.NewByteCode(bytecode.JMPF, 0, 0, 0, 0)
 	*cs = append(*cs, instr)
 
@@ -394,7 +394,21 @@ func (w Write) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytec
 	return encodeSrc(srcsel, bytecode.ADDR_STCK, 0)
 }
 
-func (a Aton) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type   { return 0 }
-func (t Toa) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type    { return 0 }
+func (a Aton) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type   {
+	instr := a.Value.byteCode(0, cs, ds)
+	instr |= bytecode.NewByteCode(bytecode.ATON, 0, 0, 0, 0)
+	*cs = append(*cs, instr)
+
+	return encodeSrc(srcsel, bytecode.ADDR_STCK, 0)
+}
+
+func (t Toa) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type    { 
+	instr := t.Value.byteCode(0, cs, ds)
+	instr |= bytecode.NewByteCode(bytecode.TOA, 0, 0, 0, 0)
+	*cs = append(*cs, instr)
+
+	return encodeSrc(srcsel, bytecode.ADDR_STCK, 0)
+}
+
 func (e Error) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type  { return 0 }
 func (e Exit) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type   { return 0 }

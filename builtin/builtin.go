@@ -17,9 +17,9 @@ func Load(m *memory.Type, cs *[]bytecode.Type, ds *[]value.Type) {
 var all = [...]node.Assign{
 	// "read":  readF,
 	writeF,
-	// "aton":  atonF,
+	atonF,
+	toaF,
 	// "error": errorF,
-	// "toa":   toaF,
 	// "exit":  exitF,
 }
 
@@ -27,9 +27,9 @@ var readF = node.Assign{VarRef: node.Name("read"), Value: node.Function{Paramete
 
 var writeF = node.Assign{VarRef: node.Name("write"), Value: node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Write{Value: v}}}
 
-var atonF = node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Aton{Value: v}}
+var atonF = node.Assign{ VarRef: node.Name("aton"), Value: node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Aton{Value: v}}}
 
-var toaF = node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Toa{Value: v}}
+var toaF = node.Assign{VarRef: node.Name("toa"), Value: node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Toa{Value: v}}}
 
 var errorF = node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Error{Value: v}}
 
