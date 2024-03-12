@@ -3,7 +3,6 @@ package node
 
 // Type is AST node type
 type Type interface {
-	Evaluator
 	STRewriter
 	graphvizzer
   ByteCoder

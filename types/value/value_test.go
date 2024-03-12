@@ -14,6 +14,8 @@ type TestDatum struct {
 	Expected value.Type
 }
 
+var emptyFunc = value.NewFunction(0, nil, 0, 0)
+
 var testData = []TestDatum{
 	{"Arithmetics int + int", value.NewInt(1), value.NewInt(2), func(a, b value.Type) value.Type { return a.Arith("+", b) }, value.NewInt(3)},
 	{"Arithmetics int - int", value.NewInt(1), value.NewInt(2), func(a, b value.Type) value.Type { return a.Arith("-", b) }, value.NewInt(-1)},
@@ -52,12 +54,12 @@ var testData = []TestDatum{
 	},
 
 	{"Arithmetics bool + bool", value.NewBool(true), value.NewBool(true), func(a, b value.Type) value.Type { return a.Arith("+", b) }, value.InvalidOpError},
-	{"Arithmetics function + function", value.NewFunction(nil, nil), value.NewFunction(nil, nil), func(a, b value.Type) value.Type { return a.Arith("+", b) }, value.InvalidOpError},
+	{"Arithmetics function + function", emptyFunc, emptyFunc, func(a, b value.Type) value.Type { return a.Arith("+", b) }, value.InvalidOpError},
 	{"Arithmetics int + error", value.NewInt(1), value.TypeError, func(a, b value.Type) value.Type { return a.Arith("+", b) }, value.TypeError},
 	{"Arithmetics error + int", value.TypeError, value.NewInt(1), func(a, b value.Type) value.Type { return a.Arith("+", b) }, value.TypeError},
 	{"Arithmetics error + error", value.ZeroDivError, value.IndexError, func(a, b value.Type) value.Type { return a.Arith("+", b) }, value.ZeroDivError},
-	{"Arithmetics int + function", value.NewInt(1), value.NewFunction(nil, nil), func(a, b value.Type) value.Type { return a.Arith("+", b) }, value.TypeError},
-	{"Arithmetics function + int", value.NewFunction(nil, nil), value.NewInt(1), func(a, b value.Type) value.Type { return a.Arith("+", b) }, value.TypeError},
+	{"Arithmetics int + function", value.NewInt(1), emptyFunc, func(a, b value.Type) value.Type { return a.Arith("+", b) }, value.TypeError},
+	{"Arithmetics function + int", emptyFunc, value.NewInt(1), func(a, b value.Type) value.Type { return a.Arith("+", b) }, value.TypeError},
 
 	{"Modulo int % int", value.NewInt(5), value.NewInt(3), func(a, b value.Type) value.Type { return a.Mod(b) }, value.NewInt(2)},
 	{"Modulo int % float", value.NewInt(5), value.NewFloat(3), func(a, b value.Type) value.Type { return a.Mod(b) }, value.TypeError},
@@ -78,8 +80,8 @@ var testData = []TestDatum{
 		func(a, b value.Type) value.Type { return a.Logic("&", b) },
 		value.InvalidOpError},
 	{"Logic function & function",
-		value.NewFunction(nil, nil),
-		value.NewFunction(nil, nil),
+		emptyFunc,
+		emptyFunc,
 		func(a, b value.Type) value.Type { return a.Logic("&", b) },
 		value.InvalidOpError},
 
@@ -95,7 +97,7 @@ var testData = []TestDatum{
 	{"Not !float", value.NewFloat(1), value.NewBool(false), func(a, b value.Type) value.Type { return a.Not() }, value.TypeError},
 	{"Not !string", value.NewString("1"), value.NewBool(false), func(a, b value.Type) value.Type { return a.Not() }, value.TypeError},
 	{"Not !array", value.NewArray([]value.Type{value.NewInt(1)}), value.NewBool(false), func(a, b value.Type) value.Type { return a.Not() }, value.TypeError},
-	{"Not !function", value.NewFunction(nil, nil), value.NewBool(false), func(a, b value.Type) value.Type { return a.Not() }, value.TypeError},
+	{"Not !function", emptyFunc, value.NewBool(false), func(a, b value.Type) value.Type { return a.Not() }, value.TypeError},
 	{"Not !error", value.ZeroDivError, value.NewBool(false), func(a, b value.Type) value.Type { return a.Not() }, value.ZeroDivError},
 
 	{"Relational int < int", value.NewInt(1), value.NewInt(2), func(a, b value.Type) value.Type { return a.Relational("<", b) }, value.NewBool(true)},
@@ -126,8 +128,8 @@ var testData = []TestDatum{
 		value.InvalidOpError,
 	},
 	{"Relational function < function",
-		value.NewFunction(nil, nil),
-		value.NewFunction(nil, nil),
+		emptyFunc,
+		emptyFunc,
 		func(a, b value.Type) value.Type { return a.Relational("<", b) },
 		value.InvalidOpError,
 	},
@@ -180,7 +182,7 @@ var testData = []TestDatum{
 	{"Len int", value.NewInt(1), value.NewInt(1), func(a, b value.Type) value.Type { return a.Len() }, value.TypeError},
 	{"Len float", value.NewFloat(1.0), value.NewInt(1), func(a, b value.Type) value.Type { return a.Len() }, value.TypeError},
 	{"Len bool", value.NewBool(true), value.NewInt(1), func(a, b value.Type) value.Type { return a.Len() }, value.TypeError},
-	{"Len function", value.NewFunction(nil, nil), value.NewInt(1), func(a, b value.Type) value.Type { return a.Len() }, value.TypeError},
+	{"Len function", emptyFunc, value.NewInt(1), func(a, b value.Type) value.Type { return a.Len() }, value.TypeError},
 	{"Len error", value.ZeroDivError, value.NewInt(1), func(a, b value.Type) value.Type { return a.Len() }, value.ZeroDivError},
 
 	{"Equality int == int", value.NewInt(1), value.NewInt(1), func(a, b value.Type) value.Type { return a.Eq("==", b) }, value.NewBool(true)},
@@ -209,7 +211,7 @@ var testData = []TestDatum{
 	{"Equality error == error", value.IndexError, value.IndexError, func(a, b value.Type) value.Type { return a.Eq("==", b) }, value.NewBool(true)},
 	{"Equality error != error", value.IndexError, value.ZeroDivError, func(a, b value.Type) value.Type { return a.Eq("!=", b) }, value.NewBool(true)},
 
-	{"Equality function == function", value.NewFunction(nil, nil), value.NewFunction(nil, nil), func(a, b value.Type) value.Type { return a.Eq("==", b) }, value.NewBool(false)},
+	{"Equality function == function", emptyFunc, emptyFunc, func(a, b value.Type) value.Type { return a.Eq("==", b) }, value.NewBool(false)},
 
 	{"Equality int == array", value.NewInt(1), value.NewArray([]value.Type{value.NewInt(1)}), func(a, b value.Type) value.Type { return a.Eq("==", b) }, value.NewBool(false)},
 	{"Equality int!= array", value.NewInt(1), value.NewArray([]value.Type{value.NewInt(2)}), func(a, b value.Type) value.Type { return a.Eq("!=", b) }, value.NewBool(true)},

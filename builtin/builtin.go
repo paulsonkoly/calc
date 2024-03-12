@@ -1,13 +1,12 @@
 package builtin
 
 import (
-	"github.com/paulsonkoly/calc/memory"
 	"github.com/paulsonkoly/calc/types/bytecode"
 	"github.com/paulsonkoly/calc/types/node"
 	"github.com/paulsonkoly/calc/types/value"
 )
 
-func Load(m *memory.Type, cs *[]bytecode.Type, ds *[]value.Type) {
+func Load(cs *[]bytecode.Type, ds *[]value.Type) {
 	for _, fun := range all {
 		fNode := fun.STRewrite(node.SymTbl{})
 		node.ByteCodeNoStck(fNode, cs, ds)
