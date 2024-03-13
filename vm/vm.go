@@ -25,14 +25,14 @@ func New(m *memory.Type, cs *[]bytecode.Type, ds *[]value.Type) *Type {
 func (vm *Type) Run(retResult bool) value.Type {
 	m := vm.m
 	ds := vm.DS
-  cs := vm.CS
-  ip := vm.ip
+	cs := vm.CS
+	ip := vm.ip
 
 	for ip < len(*cs) {
 		instr := (*cs)[ip]
 
 		// TODO allow tracing flag
-		// fmt.Printf("%8d | %v\n", vm.ip, instr)
+		// fmt.Printf("%8d | %v\n", ip, instr)
 
 		opCode := instr.OpCode()
 
@@ -100,7 +100,7 @@ func (vm *Type) Run(retResult bool) value.Type {
 			m.Push(val)
 
 		case bytecode.IX2:
-      src2 := vm.fetch(instr.Src2(), instr.Src2Addr(), m, ds)
+			src2 := vm.fetch(instr.Src2(), instr.Src2Addr(), m, ds)
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 
@@ -116,8 +116,15 @@ func (vm *Type) Run(retResult bool) value.Type {
 		case bytecode.JMPF:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			src1Imm := instr.Src1Addr()
-			// TODO - how do we do type errors?
-			if b, ok := src0.ToBool(); !b && ok {
+			src2Imm := instr.Src2Addr()
+
+			b, ok := src0.ToBool()
+
+			if !ok {
+				ip += src2Imm - 1
+				break
+			}
+			if !b {
 				ip += src1Imm - 1
 			}
 
@@ -161,8 +168,8 @@ func (vm *Type) Run(retResult bool) value.Type {
 			m.Push(val)
 
 		case bytecode.FUNC:
-      localCnt := instr.Src2Addr()
-      paramCnt := instr.Src1Addr()
+			localCnt := instr.Src2Addr()
+			paramCnt := instr.Src1Addr()
 
 			f := value.NewFunction(instr.Src0Addr(), slices.Clone(m.Top()), paramCnt, localCnt)
 			m.Push(f)
@@ -242,7 +249,7 @@ func (vm *Type) Run(retResult bool) value.Type {
 		ip++
 	}
 
-  vm.ip = ip
+	vm.ip = ip
 
 	if retResult {
 		return m.Pop()

@@ -172,7 +172,7 @@ func TestCalc(t *testing.T) {
 			cs := []bytecode.Type{}
 			ds := []value.Type{}
 			builtin.Load(&cs, &ds)
-			virtM := vm.New(m, cs, ds)
+			virtM := vm.New(m, &cs, &ds)
 
 			ast, err := parser.Parse(test.input)
 			if test.parseError == nil {
@@ -181,7 +181,6 @@ func TestCalc(t *testing.T) {
 				for _, stmnt := range ast {
 					stmnt = stmnt.STRewrite(node.SymTbl{})
 					node.ByteCode(stmnt, &cs, &ds)
-					virtM.SetSegments(cs, ds)
 					v = virtM.Run(true)
 				}
 

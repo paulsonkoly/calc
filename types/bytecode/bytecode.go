@@ -89,7 +89,6 @@ func New(op OpCode) Type {
 	if op < NOP || op > EXIT {
 		panic("op out of range")
 	}
-	// TODO mask overflows
 	op &= (1 << ((OPCODE_HI - OPCODE_LO) + 1)) - 1
 
 	return Type(uint64(op) << OPCODE_LO)
