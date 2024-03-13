@@ -12,7 +12,7 @@ type ByteCoder interface {
 func ByteCode(bc ByteCoder, cs *[]bytecode.Type, ds *[]value.Type) {
 	instr := bc.byteCode(0, cs, ds)
 	if instr.Src0() != bytecode.ADDR_STCK { // leave the final result on the stack
-		instr = bytecode.New(bytecode.PUSH)
+		instr |= bytecode.New(bytecode.PUSH)
 		*cs = append(*cs, instr)
 	}
 }
@@ -20,7 +20,7 @@ func ByteCode(bc ByteCoder, cs *[]bytecode.Type, ds *[]value.Type) {
 func ByteCodeNoStck(bc ByteCoder, cs *[]bytecode.Type, ds *[]value.Type) {
 	instr := bc.byteCode(0, cs, ds)
 	if instr.Src0() == bytecode.ADDR_STCK { // don't leave the final result on the stack
-		instr |= bytecode.New(bytecode.POP)
+		instr = bytecode.New(bytecode.POP)
 		*cs = append(*cs, instr)
 	}
 }
