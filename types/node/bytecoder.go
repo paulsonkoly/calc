@@ -281,11 +281,10 @@ func (i IfElse) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) byte
 	// if trucase result is not on the stack     |
 	//    PUSH truecase result                   |
 	// JMP                                     --|-+
-	// falsecase                               <-+ |
-	// if falsecase result is not on the stack   | |
-	//    PUSH falsecase result                  | |
-	// JMP +2                                    | |
 	// PUSH type error                         <-+ |
+	// falsecase                               <-+ |
+	// if falsecase result is not on the stack     |
+	//    PUSH falsecase result                    |
 	//                                         <---+
 	//
 	instr := bytecode.New(bytecode.JMPF) | i.Condition.byteCode(0, cs, ds)
@@ -302,20 +301,17 @@ func (i IfElse) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) byte
 	instr = bytecode.New(bytecode.JMP)
 	*cs = append(*cs, instr)
 
-	instr = i.FalseCase.byteCode(0, cs, ds)
-	if instr.Src0() != bytecode.ADDR_STCK {
-		instr |= bytecode.New(bytecode.PUSH)
-		*cs = append(*cs, instr)
-	}
-
-	instr = bytecode.New(bytecode.JMP) | bytecode.EncodeSrc(0, bytecode.ADDR_IMM, 2)
-	*cs = append(*cs, instr)
-
 	typErrAddr := len(*cs)
 	ix := len(*ds)
 	*ds = append(*ds, value.TypeError)
 	instr = bytecode.New(bytecode.PUSH) | bytecode.EncodeSrc(0, bytecode.ADDR_DS, ix)
 	*cs = append(*cs, instr)
+
+	instr = i.FalseCase.byteCode(0, cs, ds)
+	if instr.Src0() != bytecode.ADDR_STCK {
+		instr |= bytecode.New(bytecode.PUSH)
+		*cs = append(*cs, instr)
+	}
 
 	// patch jmpf
 	(*cs)[jmpfAddr] |=
