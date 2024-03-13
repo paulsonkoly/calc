@@ -3,6 +3,7 @@ package vm
 import (
 	"fmt"
 	"log"
+	"os"
 	"slices"
 	"strconv"
 
@@ -241,6 +242,19 @@ func (vm *Type) Run(retResult bool) value.Type {
 			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			val = value.NewString(fmt.Sprint(val))
 			m.Push(val)
+
+		case bytecode.ERROR:
+			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+			str, ok := val.ToString()
+			if !ok {
+				m.Push(value.TypeError)
+				break
+			}
+			val = value.NewError(&str)
+			m.Push(val)
+
+		case bytecode.EXIT:
+			os.Exit(0)
 
 		default:
 			log.Panicf("unknown opcode: %v\n %8d | %v\n", opCode, ip, instr)

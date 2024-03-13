@@ -14,12 +14,12 @@ func Load(cs *[]bytecode.Type, ds *[]value.Type) {
 }
 
 var all = [...]node.Assign{
-	// "read":  readF,
+	readF,
 	writeF,
 	atonF,
 	toaF,
-	// "error": errorF,
-	// "exit":  exitF,
+	errorF,
+	exitF,
 }
 
 var readF = node.Assign{VarRef: node.Name("read"), Value: node.Function{Parameters: node.List{Elems: []node.Type{}}, Body: node.Read{}}}
@@ -30,8 +30,8 @@ var atonF = node.Assign{ VarRef: node.Name("aton"), Value: node.Function{Paramet
 
 var toaF = node.Assign{VarRef: node.Name("toa"), Value: node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Toa{Value: v}}}
 
-var errorF = node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Error{Value: v}}
+var errorF = node.Assign{VarRef: node.Name("error"), Value: node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Error{Value: v}}}
 
-var exitF = node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Exit{Value: v}}
+var exitF = node.Assign {VarRef: node.Name("exit"), Value: node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Exit{Value: v}}}
 
 var v = node.Name("v")

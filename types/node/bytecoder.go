@@ -430,5 +430,18 @@ func (t Toa) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecod
 	return bytecode.EncodeSrc(srcsel, bytecode.ADDR_STCK, 0)
 }
 
-func (e Error) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type { return 0 }
-func (e Exit) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type  { return 0 }
+func (e Error) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type {
+	instr := e.Value.byteCode(0, cs, ds)
+	instr |= bytecode.New(bytecode.ERROR)
+	*cs = append(*cs, instr)
+
+	return bytecode.EncodeSrc(srcsel, bytecode.ADDR_STCK, 0)
+}
+
+func (e Exit) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type  {
+	instr := bytecode.New(bytecode.EXIT)
+
+	*cs = append(*cs, instr)
+
+	return bytecode.EncodeSrc(srcsel, bytecode.ADDR_STCK, 0)
+}
