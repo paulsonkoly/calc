@@ -12,7 +12,7 @@ type ByteCoder interface {
 func ByteCode(bc ByteCoder, cs *[]bytecode.Type, ds *[]value.Type) {
 	instr := bc.byteCode(0, cs, ds)
 	if instr.Src0() != bytecode.ADDR_STCK { // leave the final result on the stack
-		instr |= bytecode.New(bytecode.PUSH)
+		instr = bytecode.New(bytecode.PUSH)
 		*cs = append(*cs, instr)
 	}
 }
