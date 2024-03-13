@@ -142,6 +142,10 @@ func (r Return) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) byte
 	return bytecode.EncodeSrc(srcsel, bytecode.ADDR_STCK, 0)
 }
 
+func (y Yield) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type {
+  panic("imeplement me")
+}
+
 func (a Assign) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type {
 	srcInstr := a.Value.byteCode(0, cs, ds)
 	instr := srcInstr | a.VarRef.byteCode(1, cs, ds)
@@ -370,6 +374,10 @@ func (w While) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytec
 			bytecode.EncodeSrc(1, bytecode.ADDR_IMM, len(*cs)-jmpfAddr)
 
 	return bytecode.EncodeSrc(srcsel, bytecode.ADDR_STCK, 0)
+}
+
+func (f For) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type {
+  panic("implement me")
 }
 
 func (i IndexAt) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type {

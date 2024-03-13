@@ -35,17 +35,21 @@ func _() {
 	_ = x[FUNC-24]
 	_ = x[CALL-25]
 	_ = x[RET-26]
-	_ = x[READ-27]
-	_ = x[WRITE-28]
-	_ = x[ATON-29]
-	_ = x[TOA-30]
-	_ = x[ERROR-31]
-	_ = x[EXIT-32]
+	_ = x[CCONT-27]
+	_ = x[PCONT-28]
+	_ = x[DCONT-29]
+	_ = x[SCONT-30]
+	_ = x[READ-31]
+	_ = x[WRITE-32]
+	_ = x[ATON-33]
+	_ = x[TOA-34]
+	_ = x[ERROR-35]
+	_ = x[EXIT-36]
 }
 
-const _OpCode_name = "NOPPUSHPOPMOVADDSUBMULDIVMODNOTANDORLTGTLEGEEQNEIX1IX2LENARRJMPJMPFFUNCCALLRETREADWRITEATONTOAERROREXIT"
+const _OpCode_name = "NOPPUSHPOPMOVADDSUBMULDIVMODNOTANDORLTGTLEGEEQNEIX1IX2LENARRJMPJMPFFUNCCALLRETCCONTPCONTDCONTSCONTREADWRITEATONTOAERROREXIT"
 
-var _OpCode_index = [...]uint8{0, 3, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34, 36, 38, 40, 42, 44, 46, 48, 51, 54, 57, 60, 63, 67, 71, 75, 78, 82, 87, 91, 94, 99, 103}
+var _OpCode_index = [...]uint8{0, 3, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34, 36, 38, 40, 42, 44, 46, 48, 51, 54, 57, 60, 63, 67, 71, 75, 78, 83, 88, 93, 98, 102, 107, 111, 114, 119, 123}
 
 func (i OpCode) String() string {
 	if i >= OpCode(len(_OpCode_index)-1) {

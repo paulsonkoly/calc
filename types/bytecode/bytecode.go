@@ -73,9 +73,27 @@ const (
 
 	JMP  // JMP jumps relative to ip + src0
 	JMPF // JMPF jumps relative to ip+src1 if src0 is false or ip+src2 if src0 is not bool
-	FUNC // FUNC pushes a function value with code address from src0 and parameter count src1
+	FUNC // FUNC pushes a function value with code address from src0, parameter count src1, local count src2
 	CALL // CALL calls src0 with argument cnt src1
 	RET  // RET returns from a function call pushing src0 after rolling back the stack
+
+  // CCONT creates a new execution context cloning the current one (only
+  // last closure and local frames + global) and pushes it to the context stack
+	CCONT
+
+  // PCONT pops the last execution context and does not switch
+  // master co-routine return path
+	PCONT 
+
+  // DCONT pops the last execution context and switches with current but does not jump
+  // slave co-routine return path
+	DCONT 
+
+  // SCONT switches the current context with the top of the context stack
+  // setting IP to the other context IP (jumps). If src0 is valid it is read
+  // before the switch and pushed on the stack after the switch.
+  // co-routine yield
+	SCONT 
 
 	READ  // READ builtin
 	WRITE // WRITE builtin
