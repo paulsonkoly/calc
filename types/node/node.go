@@ -3,9 +3,9 @@ package node
 
 // Type is AST node type
 type Type interface {
-	Evaluator
 	STRewriter
 	graphvizzer
+	ByteCoder
 }
 
 // Invalid is an invalid AST node

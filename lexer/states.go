@@ -10,7 +10,7 @@ import (
 
 const (
 	stickyChars     = "+*/=<>!-&|@#%"
-  nonStrickyChars = "(){}[],:"
+	nonStrickyChars = "(){}[],:"
 )
 
 // stateFuncResult

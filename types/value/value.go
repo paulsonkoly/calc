@@ -31,8 +31,10 @@ type Type struct {
 
 // A structure that represents a function value
 type FunctionData struct {
-	Node  any // Pointer to the code of the function - the AST node that holds the function
-	Frame any // Pointer to the closure stack frame
+	Node     int // Pointer to the code of the function - the AST node that holds the function
+	Frame    any // Pointer to the closure stack frame
+	ParamCnt int // ParamCnt is the number of parameters of the function
+	LocalCnt int // LocalCnt is the number of local variables of the function including ParamCnt
 }
 
 // unsafe (no type check) accessors
@@ -70,8 +72,8 @@ func NewString(s string) Type { return Type{typ: stringT, ptr: unsafe.Pointer(&s
 func NewError(m *string) Type { return Type{typ: errorT, ptr: unsafe.Pointer(m)} }
 
 // NewFunction allocates a new function value
-func NewFunction(node any, frame any) Type {
-	d := FunctionData{Node: node, Frame: frame}
+func NewFunction(node int, frame any, paramCnt int, localCnt int) Type {
+	d := FunctionData{Node: node, Frame: frame, ParamCnt: paramCnt, LocalCnt: localCnt}
 	return Type{typ: functionT, ptr: unsafe.Pointer(&d)}
 }
 
@@ -114,6 +116,13 @@ func (v Type) ToString() (string, bool) {
 		return "", false
 	}
 	return *(*string)(unsafe.Pointer(v.ptr)), true
+}
+
+func (v Type) ToArray() ([]Type, bool) {
+	if v.typ != arrayT {
+		return nil, false
+	}
+	return *(*[]Type)(unsafe.Pointer(v.ptr)), true
 }
 
 // Value of any type to string

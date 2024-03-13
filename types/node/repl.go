@@ -10,7 +10,8 @@ import (
 	"strings"
 
 	"github.com/chzyer/readline"
-	"github.com/paulsonkoly/calc/memory"
+	"github.com/paulsonkoly/calc/flags"
+	"github.com/paulsonkoly/calc/vm"
 )
 
 type lineReader interface {
@@ -55,7 +56,7 @@ type Parser interface {
 	Parse(string) ([]Type, error)
 }
 
-func Loop(r lineReader, p Parser, m *memory.Type, doOut bool, ast bool) {
+func Loop(r lineReader, p Parser, vm *vm.Type, doOut bool) {
 	blocksOpen := 0
 	quotesOpen := 0
 	input := ""
@@ -86,23 +87,29 @@ func Loop(r lineReader, p Parser, m *memory.Type, doOut bool, ast bool) {
 				continue
 			}
 
-			if ast {
-				for _, e := range t {
-					e := e.STRewrite(SymTbl{})
+			for _, e := range t {
+				e := e.STRewrite(SymTbl{})
+
+				if *flags.AstFlag {
 					Graphviz(e)
 				}
-			} else {
-				t[0] = t[0].STRewrite(SymTbl{})
-				// t[0].PrettyPrint(0)
-				v := Evaluate(m, t[0])
 
-				for _, e := range t[1:] {
-					e := e.STRewrite(SymTbl{})
-					v = Evaluate(m, e)
+				ip := len(*vm.CS)
+				if doOut {
+					ByteCode(e, vm.CS, vm.DS)
+				} else {
+					ByteCodeNoStck(e, vm.CS, vm.DS)
 				}
 
+				if *flags.ByteCodeFlag {
+					for i, c := range (*vm.CS)[ip:] {
+						fmt.Printf(" %8d | %v\n", ip+i, c)
+					}
+				}
+
+				v := vm.Run(doOut)
 				if doOut {
-					fmt.Println("> ", v)
+					fmt.Printf("> %v\n", v)
 				}
 			}
 			input = ""

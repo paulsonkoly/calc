@@ -8,8 +8,10 @@ import (
 	"github.com/paulsonkoly/calc/builtin"
 	"github.com/paulsonkoly/calc/memory"
 	"github.com/paulsonkoly/calc/parser"
+	"github.com/paulsonkoly/calc/types/bytecode"
 	"github.com/paulsonkoly/calc/types/node"
 	"github.com/paulsonkoly/calc/types/value"
+	"github.com/paulsonkoly/calc/vm"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -21,6 +23,7 @@ type TestDatum struct {
 }
 
 var messages = []string{"a not defined", "hi"}
+var emptyFunction = value.NewFunction(0, nil, 0, 0)
 
 var testData = [...]TestDatum{
 	{"simple literal/integer", "1", nil, value.NewInt(1)},
@@ -35,7 +38,7 @@ var testData = [...]TestDatum{
 	{"string indexing/simple", "\"apple\"[1]", nil, value.NewString("p")},
 	{"string indexing/complex empty", "\"apple\" [ 1 : 1]", nil, value.NewString("")},
 
-  {"string concatenation", "\"abc\" + \"def\"", nil, value.NewString("abcdef")},
+	{"string concatenation", "\"abc\" + \"def\"", nil, value.NewString("abcdef")},
 
 	{"arithmetics/left assoc", "1-2+1", nil, value.NewInt(0)},
 	{"arithmetics/parenthesis", "1-(2+1)", nil, value.NewInt(-2)},
@@ -46,7 +49,7 @@ var testData = [...]TestDatum{
 	{"relop/int==int true", "1==1", nil, value.NewBool(true)},
 
 	{"relop/int!=int false", "1!=1", nil, value.NewBool(false)},
-	
+
 	{"relop/float accuracy", "1==0.9999999", nil, value.NewBool(false)},
 
 	{"relop/int<int false", "1<1", nil, value.NewBool(false)},
@@ -92,12 +95,12 @@ var testData = [...]TestDatum{
 		}
 	}`, nil, value.TypeError},
 
-	{"function definition", "(n) -> 1", nil, value.NewFunction(nil, nil)},
-	{"function/no argument", "() -> 1", nil, value.NewFunction(nil, nil)},
+	{"function definition", "(n) -> 1", nil, emptyFunction},
+	{"function/no argument", "() -> 1", nil, emptyFunction},
 	{"function/block",
 		`(n) -> {
 			n + 1
-	  }`, nil, value.NewFunction(nil, nil)},
+	  }`, nil, emptyFunction},
 
 	{"call",
 		`{
@@ -120,6 +123,7 @@ var testData = [...]TestDatum{
 			a(2)
 		}`, nil, value.NewInt(1),
 	},
+	{"naked return", "return 1", nil, value.NewInt(1)},
 	{"function/closure",
 		`{
 			f = (a) -> {
@@ -164,15 +168,21 @@ var testData = [...]TestDatum{
 func TestCalc(t *testing.T) {
 	for _, test := range testData {
 		t.Run(test.name, func(t *testing.T) {
+
 			m := memory.NewMemory()
-			builtin.Load(m)
+			cs := []bytecode.Type{}
+			ds := []value.Type{}
+			builtin.Load(&cs, &ds)
+			virtM := vm.New(m, &cs, &ds)
+
 			ast, err := parser.Parse(test.input)
 			if test.parseError == nil {
 				assert.NoError(t, err)
 				var v value.Type
 				for _, stmnt := range ast {
 					stmnt = stmnt.STRewrite(node.SymTbl{})
-					v = node.Evaluate(m, stmnt)
+					node.ByteCode(stmnt, &cs, &ds)
+					v = virtM.Run(true)
 				}
 
 				if !test.value.StrictEq(v) {

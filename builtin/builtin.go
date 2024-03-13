@@ -1,37 +1,37 @@
 package builtin
 
 import (
-	"github.com/paulsonkoly/calc/memory"
+	"github.com/paulsonkoly/calc/types/bytecode"
 	"github.com/paulsonkoly/calc/types/node"
+	"github.com/paulsonkoly/calc/types/value"
 )
 
-func Load(m *memory.Type) {
-	for name, fun := range all {
+func Load(cs *[]bytecode.Type, ds *[]value.Type) {
+	for _, fun := range all {
 		fNode := fun.STRewrite(node.SymTbl{})
-		fVal, _ := fNode.Evaluate(m)
-		m.SetGlobal(name, fVal)
+		node.ByteCodeNoStck(fNode, cs, ds)
 	}
 }
 
-var all = map[string]node.Function{
-	"read":  readF,
-	"write": writeF,
-	"aton":  atonF,
-	"error": errorF,
-	"toa":   toaF,
-	"exit":  exitF,
+var all = [...]node.Assign{
+	readF,
+	writeF,
+	atonF,
+	toaF,
+	errorF,
+	exitF,
 }
 
-var readF = node.Function{Parameters: node.List{Elems: []node.Type{}}, Body: node.Read{}}
+var readF = node.Assign{VarRef: node.Name("read"), Value: node.Function{Parameters: node.List{Elems: []node.Type{}}, Body: node.Read{}}}
 
-var writeF = node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Write{Value: v}}
+var writeF = node.Assign{VarRef: node.Name("write"), Value: node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Write{Value: v}}}
 
-var atonF = node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Aton{Value: v}}
+var atonF = node.Assign{VarRef: node.Name("aton"), Value: node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Aton{Value: v}}}
 
-var toaF = node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Toa{Value: v}}
+var toaF = node.Assign{VarRef: node.Name("toa"), Value: node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Toa{Value: v}}}
 
-var errorF = node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Error{Value: v}}
+var errorF = node.Assign{VarRef: node.Name("error"), Value: node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Error{Value: v}}}
 
-var exitF = node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Exit{Value: v}}
+var exitF = node.Assign{VarRef: node.Name("exit"), Value: node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Exit{Value: v}}}
 
 var v = node.Name("v")
