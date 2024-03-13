@@ -123,6 +123,7 @@ var testData = [...]TestDatum{
 			a(2)
 		}`, nil, value.NewInt(1),
 	},
+	{"naked return", "return 1", nil, value.NewInt(1)},
 	{"function/closure",
 		`{
 			f = (a) -> {

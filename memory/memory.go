@@ -77,7 +77,7 @@ func (m *Type) LookUpGlobal(name string) value.Type {
 
 // PushFrame pushes a stack frame
 func (m *Type) PushFrame(argsCnt, localCnt int) {
-  m.sp += localCnt - argsCnt
+	m.sp += localCnt - argsCnt
 	m.fp = append(m.fp, m.sp-localCnt, m.sp)
 }
 
@@ -87,8 +87,8 @@ func (m *Type) Push(v value.Type) {
 	m.sp++
 }
 
-func (m *Type)PushClosure(f Frame) {
-  m.closure = append(m.closure, f)
+func (m *Type) PushClosure(f Frame) {
+	m.closure = append(m.closure, f)
 }
 
 // PopFrame pops a stack frame
@@ -103,8 +103,8 @@ func (m *Type) Pop() value.Type {
 	return m.stack[m.sp]
 }
 
-func (m *Type)PopClosure() {
-  m.closure = m.closure[:len(m.closure)-1]
+func (m *Type) PopClosure() {
+	m.closure = m.closure[:len(m.closure)-1]
 }
 
 // Top is the last stack frame pushed
@@ -117,9 +117,16 @@ func (m *Type) Top() Frame {
 	return m.stack[fp:le]
 }
 
-func (m * Type)IP() value.Type {
+func (m *Type) IP() *value.Type {
+	if len(m.fp)+localFE < 0 {
+		return nil
+	}
 	le := m.fp[len(m.fp)+localFE]
-  return m.stack[le]
+	return &m.stack[le]
+}
+
+func (m *Type) ResetSP() {
+	m.sp = 0
 }
 
 func (m *Type) growStack(size int) {

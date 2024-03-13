@@ -199,12 +199,19 @@ func (vm *Type) Run(retResult bool) value.Type {
 			ip = fVal.Node - 1
 
 		case bytecode.RET:
+			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+
+      nip := m.IP()
+      if nip == nil {
+        m.ResetSP()
+        m.Push(val)
+        ip = len(*cs)
+        break
+      }
 			lip, ok := m.IP().ToInt()
 			if !ok {
 				log.Panicf("can't pop instruction pointer\n %8d | %v\n", lip, instr)
 			}
-
-			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 
 			m.PopFrame()
 			m.PopClosure()
