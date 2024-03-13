@@ -407,39 +407,35 @@ func (r Read) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) byteco
 }
 
 func (w Write) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type {
-	instr := w.Value.byteCode(0, cs, ds)
-	instr |= bytecode.New(bytecode.WRITE)
+	instr := bytecode.New(bytecode.WRITE) | w.Value.byteCode(0, cs, ds)
 	*cs = append(*cs, instr)
 
 	return bytecode.EncodeSrc(srcsel, bytecode.ADDR_STCK, 0)
 }
 
 func (a Aton) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type {
-	instr := a.Value.byteCode(0, cs, ds)
-	instr |= bytecode.New(bytecode.ATON)
+	instr := bytecode.New(bytecode.ATON) |a.Value.byteCode(0, cs, ds)
 	*cs = append(*cs, instr)
 
 	return bytecode.EncodeSrc(srcsel, bytecode.ADDR_STCK, 0)
 }
 
 func (t Toa) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type {
-	instr := t.Value.byteCode(0, cs, ds)
-	instr |= bytecode.New(bytecode.TOA)
+	instr := bytecode.New(bytecode.TOA) | t.Value.byteCode(0, cs, ds)
 	*cs = append(*cs, instr)
 
 	return bytecode.EncodeSrc(srcsel, bytecode.ADDR_STCK, 0)
 }
 
 func (e Error) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type {
-	instr := e.Value.byteCode(0, cs, ds)
-	instr |= bytecode.New(bytecode.ERROR)
+	instr := bytecode.New(bytecode.ERROR) | e.Value.byteCode(0, cs, ds)
 	*cs = append(*cs, instr)
 
 	return bytecode.EncodeSrc(srcsel, bytecode.ADDR_STCK, 0)
 }
 
 func (e Exit) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type  {
-	instr := bytecode.New(bytecode.EXIT)
+	instr := bytecode.New(bytecode.EXIT)| e.Value.byteCode(0, cs, ds)
 
 	*cs = append(*cs, instr)
 

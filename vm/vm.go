@@ -1,6 +1,7 @@
 package vm
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"os"
@@ -212,6 +213,16 @@ func (vm *Type) Run(retResult bool) value.Type {
 
 			ip = lip
 
+		case bytecode.READ:
+			b := bufio.NewReader(os.Stdin)
+			line, err := b.ReadString('\n')
+			if err != nil {
+				msg := fmt.Sprintf("read error %s", err)
+				m.Push(value.NewError(&msg))
+				break
+			}
+			m.Push(value.NewString(line))
+
 		case bytecode.WRITE:
 			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			fmt.Println(val)
@@ -254,7 +265,12 @@ func (vm *Type) Run(retResult bool) value.Type {
 			m.Push(val)
 
 		case bytecode.EXIT:
-			os.Exit(0)
+			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+			i, ok := val.ToInt()
+			if !ok {
+				os.Exit(255)
+			}
+			os.Exit(i)
 
 		default:
 			log.Panicf("unknown opcode: %v\n %8d | %v\n", opCode, ip, instr)
