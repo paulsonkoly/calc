@@ -100,11 +100,11 @@ func (vm *Type) Run(retResult bool) value.Type {
 			m.Push(val)
 
 		case bytecode.IX2:
-			ary := m.Pop()
+      src2 := vm.fetch(instr.Src2(), instr.Src2Addr(), m, ds)
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 
-			val := ary.Index(src1, src0)
+			val := src2.Index(src1, src0)
 
 			m.Push(val)
 
@@ -161,9 +161,9 @@ func (vm *Type) Run(retResult bool) value.Type {
 			m.Push(val)
 
 		case bytecode.FUNC:
-			funInfo := instr.Src1Addr()
-			localCnt := funInfo >> 12
-			paramCnt := funInfo & 0xfff
+      localCnt := instr.Src2Addr()
+      paramCnt := instr.Src1Addr()
+
 			f := value.NewFunction(instr.Src0Addr(), slices.Clone(m.Top()), paramCnt, localCnt)
 			m.Push(f)
 
