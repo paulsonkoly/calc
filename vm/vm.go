@@ -201,13 +201,13 @@ func (vm *Type) Run(retResult bool) value.Type {
 		case bytecode.RET:
 			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 
-      nip := m.IP()
-      if nip == nil {
-        m.ResetSP()
-        m.Push(val)
-        ip = len(*cs)
-        break
-      }
+			nip := m.IP()
+			if nip == nil {
+				m.ResetSP()
+				m.Push(val)
+				ip = len(*cs)
+				break
+			}
 			lip, ok := m.IP().ToInt()
 			if !ok {
 				log.Panicf("can't pop instruction pointer\n %8d | %v\n", lip, instr)

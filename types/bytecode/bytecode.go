@@ -127,7 +127,7 @@ func (b Type) String() string {
 	oc := b.OpCode()
 	src0 := srcString(b.Src0(), b.Src0Addr())
 	src1 := srcString(b.Src1(), b.Src1Addr())
-  src2 := srcString(b.Src2(), b.Src2Addr())
+	src2 := srcString(b.Src2(), b.Src2Addr())
 
 	return fmt.Sprintf("%#016X : %v %s%s%s", uint64(b), oc, src2, src1, src0)
 }

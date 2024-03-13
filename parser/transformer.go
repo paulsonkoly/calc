@@ -73,8 +73,8 @@ func mkIndex(nodes []c.Node) []c.Node {
 	case 2: // ary[at]
 		return []c.Node{node.IndexAt{Ary: nodes[0].(node.Type), At: nodes[1].(node.Type)}}
 
-  case 1:
-    return nodes
+	case 1:
+		return nodes
 
 	default:
 		log.Panicf("incorrect number of sub nodes for indexing (%d)", len(nodes))

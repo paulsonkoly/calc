@@ -34,7 +34,7 @@ type FunctionData struct {
 	Node     int // Pointer to the code of the function - the AST node that holds the function
 	Frame    any // Pointer to the closure stack frame
 	ParamCnt int // ParamCnt is the number of parameters of the function
-  LocalCnt int // LocalCnt is the number of local variables of the function including ParamCnt
+	LocalCnt int // LocalCnt is the number of local variables of the function including ParamCnt
 }
 
 // unsafe (no type check) accessors

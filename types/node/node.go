@@ -5,7 +5,7 @@ package node
 type Type interface {
 	STRewriter
 	graphvizzer
-  ByteCoder
+	ByteCoder
 }
 
 // Invalid is an invalid AST node

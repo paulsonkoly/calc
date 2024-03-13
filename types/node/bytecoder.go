@@ -410,7 +410,7 @@ func (w Write) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytec
 }
 
 func (a Aton) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type {
-	instr := bytecode.New(bytecode.ATON) |a.Value.byteCode(0, cs, ds)
+	instr := bytecode.New(bytecode.ATON) | a.Value.byteCode(0, cs, ds)
 	*cs = append(*cs, instr)
 
 	return bytecode.EncodeSrc(srcsel, bytecode.ADDR_STCK, 0)
@@ -430,8 +430,8 @@ func (e Error) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytec
 	return bytecode.EncodeSrc(srcsel, bytecode.ADDR_STCK, 0)
 }
 
-func (e Exit) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type  {
-	instr := bytecode.New(bytecode.EXIT)| e.Value.byteCode(0, cs, ds)
+func (e Exit) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type {
+	instr := bytecode.New(bytecode.EXIT) | e.Value.byteCode(0, cs, ds)
 
 	*cs = append(*cs, instr)
 

@@ -26,12 +26,12 @@ var readF = node.Assign{VarRef: node.Name("read"), Value: node.Function{Paramete
 
 var writeF = node.Assign{VarRef: node.Name("write"), Value: node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Write{Value: v}}}
 
-var atonF = node.Assign{ VarRef: node.Name("aton"), Value: node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Aton{Value: v}}}
+var atonF = node.Assign{VarRef: node.Name("aton"), Value: node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Aton{Value: v}}}
 
 var toaF = node.Assign{VarRef: node.Name("toa"), Value: node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Toa{Value: v}}}
 
 var errorF = node.Assign{VarRef: node.Name("error"), Value: node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Error{Value: v}}}
 
-var exitF = node.Assign {VarRef: node.Name("exit"), Value: node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Exit{Value: v}}}
+var exitF = node.Assign{VarRef: node.Name("exit"), Value: node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Exit{Value: v}}}
 
 var v = node.Name("v")
