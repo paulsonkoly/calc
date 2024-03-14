@@ -29,7 +29,7 @@ func New(m *memory.Type, cs *[]bytecode.Type, ds *[]value.Type) *Type {
 }
 
 func (vm *Type) Run(retResult bool) value.Type {
-  // cid := 0
+	// cid := 0
 	m := (*vm.ctx)[0].m
 	ip := (*vm.ctx)[0].ip
 	ds := vm.DS
@@ -225,46 +225,49 @@ func (vm *Type) Run(retResult bool) value.Type {
 
 			ip = lip
 
-    case bytecode.CCONT:
-      jmp := instr.Src0Addr()
+		case bytecode.CCONT:
+			jmp := instr.Src0Addr()
 
-      ctx := append(*vm.ctx, context{ ip : ip + jmp - 1, m: m })
-      vm.ctx = &ctx
+			ctx := append(*vm.ctx, context{ip: ip + jmp - 1, m: m})
+			vm.ctx = &ctx
 
-      m = m.Clone()
+			m = m.Clone()
 
-    case bytecode.DCONT:
-      m = (*vm.ctx)[len(*vm.ctx)-1].m
-      ctx := (*vm.ctx)[:len(*vm.ctx)-1]
-      vm.ctx = &ctx
+		case bytecode.DCONT:
+			m = (*vm.ctx)[len(*vm.ctx)-1].m
+			ctx := (*vm.ctx)[:len(*vm.ctx)-1]
+			vm.ctx = &ctx
 
-    case bytecode.SCONT:
-      nip := (*vm.ctx)[len(*vm.ctx)-1].ip
-      nm := (*vm.ctx)[len(*vm.ctx)-1].m
+		case bytecode.SCONT:
+			nip := (*vm.ctx)[len(*vm.ctx)-1].ip
+			nm := (*vm.ctx)[len(*vm.ctx)-1].m
 
-      (*vm.ctx)[len(*vm.ctx)-1].ip = ip
-      (*vm.ctx)[len(*vm.ctx)-1].m = m
+			(*vm.ctx)[len(*vm.ctx)-1].ip = ip
+			(*vm.ctx)[len(*vm.ctx)-1].m = m
 
-      m = nm
-      ip = nip
+			m = nm
+			ip = nip
 
-    case bytecode.YIELD:
-      val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+		case bytecode.YIELD:
+			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 
-      // yield needs to push in the slave context because a subsequent pop, we
-      // should optimise this away
-      m.Push(val)
+			// yield needs to push in the slave context because a subsequent pop, we
+			// should optimise this away
+			m.Push(val)
 
-      nip := (*vm.ctx)[len(*vm.ctx)-1].ip
-      nm := (*vm.ctx)[len(*vm.ctx)-1].m
+			// otherwise naked yield, in the master context
+			if len(*vm.ctx) > 1 {
+				nip := (*vm.ctx)[len(*vm.ctx)-1].ip
+				nm := (*vm.ctx)[len(*vm.ctx)-1].m
 
-      (*vm.ctx)[len(*vm.ctx)-1].ip = ip
-      (*vm.ctx)[len(*vm.ctx)-1].m = m
+				(*vm.ctx)[len(*vm.ctx)-1].ip = ip
+				(*vm.ctx)[len(*vm.ctx)-1].m = m
 
-      m = nm
-      ip = nip
+				m = nm
+				ip = nip
 
-      m.Push(val)
+				m.Push(val)
+			}
 
 		case bytecode.READ:
 			b := bufio.NewReader(os.Stdin)
