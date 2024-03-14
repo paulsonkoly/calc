@@ -306,7 +306,7 @@ The language has the following statement types:
  - conditional
  - return
 
-The followings are keywords: if, else, while, true, false. A variable name cannot be one of the keywords.
+The followings are keywords: if, else, while, for, return, yield, true, false. A variable name cannot be one of the keywords.
 
 ### Expressions
 
