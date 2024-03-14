@@ -77,23 +77,16 @@ const (
 	CALL // CALL calls src0 with argument cnt src1
 	RET  // RET returns from a function call pushing src0 after rolling back the stack
 
-  // CCONT creates a new execution context cloning the current one (only
-  // last closure and local frames + global) and pushes it to the context stack
+  // CCONT pushes the current context on the context stack, creates a new
+  // execution context and switches to it
 	CCONT
-
-  // PCONT pops the last execution context and does not switch
-  // master co-routine return path
-	PCONT 
-
-  // DCONT pops the last execution context and switches with current but does not jump
-  // slave co-routine return path
+  // DCONT pops the context stack and discards
 	DCONT 
-
-  // SCONT switches the current context with the top of the context stack
-  // setting IP to the other context IP (jumps). If src0 is valid it is read
-  // before the switch and pushed on the stack after the switch.
-  // co-routine yield
+  // SCONT swaps the current context with the top of the context stack
 	SCONT 
+  // YIELD pushes src0 in the current context, swaps the current context with
+  // the top of the context stack, and pushes src0 in the new context
+  YIELD
 
 	READ  // READ builtin
 	WRITE // WRITE builtin

@@ -143,7 +143,11 @@ func (r Return) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) byte
 }
 
 func (y Yield) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type {
-  panic("imeplement me")
+	instr := y.Target.byteCode(0, cs, ds)
+	instr |= bytecode.New(bytecode.YIELD)
+	*cs = append(*cs, instr)
+
+	return bytecode.EncodeSrc(srcsel, bytecode.ADDR_STCK, 0)
 }
 
 func (a Assign) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type {
@@ -376,8 +380,53 @@ func (w While) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytec
 	return bytecode.EncodeSrc(srcsel, bytecode.ADDR_STCK, 0)
 }
 
+var contextId = 0
+
 func (f For) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type {
-  panic("implement me")
+  ccontAddr:=len(*cs)
+	instr := bytecode.New(bytecode.CCONT) //| bytecode.EncodeSrc(0, bytecode.ADDR_IMM, contextId)
+	*cs = append(*cs, instr)
+  contextId++
+
+	instr = f.Iterator.byteCode(0, cs, ds)
+	if instr.Src0() == bytecode.ADDR_STCK {
+		instr = bytecode.New(bytecode.POP)
+    *cs = append(*cs, instr)
+	}
+
+	instr = bytecode.New(bytecode.DCONT)
+	*cs = append(*cs, instr)
+
+	jmpAddr := len(*cs)
+	instr = bytecode.New(bytecode.JMP)
+	*cs = append(*cs, instr)
+
+	switchAddr := len(*cs)
+	instr = bytecode.New(bytecode.SCONT)
+	*cs = append(*cs, instr)
+
+	assignAddr := len(*cs)
+	vref := f.VarRef.byteCode(1, cs, ds)
+	instr = bytecode.New(bytecode.MOV) | vref | bytecode.EncodeSrc(0, bytecode.ADDR_STCK, 0)
+	*cs = append(*cs, instr)
+
+	instr = f.Body.byteCode(0, cs, ds)
+
+  if instr.Src0() != bytecode.ADDR_STCK {
+    instr = bytecode.New(bytecode.PUSH) | instr
+    *cs = append(*cs, instr)
+  }
+
+	instr = bytecode.New(bytecode.JMP) | bytecode.EncodeSrc(0, bytecode.ADDR_IMM, switchAddr-len(*cs))
+	*cs = append(*cs, instr)
+
+	// patch jump
+	(*cs)[jmpAddr] |= bytecode.EncodeSrc(0, bytecode.ADDR_IMM, len(*cs)-jmpAddr)
+
+  // patch ccont
+  (*cs)[ccontAddr] |= bytecode.EncodeSrc(0, bytecode.ADDR_IMM, assignAddr-ccontAddr)
+
+	return bytecode.EncodeSrc(srcsel, bytecode.ADDR_STCK, 0)
 }
 
 func (i IndexAt) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type {

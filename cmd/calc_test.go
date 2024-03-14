@@ -169,7 +169,7 @@ func TestCalc(t *testing.T) {
 	for _, test := range testData {
 		t.Run(test.name, func(t *testing.T) {
 
-			m := memory.NewMemory()
+			m := memory.New()
 			cs := []bytecode.Type{}
 			ds := []value.Type{}
 			builtin.Load(&cs, &ds)
