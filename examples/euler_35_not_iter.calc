@@ -32,25 +32,22 @@ isprime = (n) -> {
 
 rotations = (n) -> {
   s = toa(n)
+  i = 0
   r = []
-  for i <- fromto(0, #s) {
+  while i < #s {
     r = r + [aton(s[i: #s] + s[0:i])]
+    i = i + 1
   }
   r
 }
 
-fromto = (a, b) -> {
-  while a < b {
-    yield(a)
-    a = a + 1
-  }
-}
-
+i = 0
 c = 0
-for i <- fromto(0,1000000 ) {
+while i < 1000000 {
   if all(rotations(i), isprime) {
     c = c + 1
   }
+  i = i+1
 }
 write(c)
 
