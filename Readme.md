@@ -33,9 +33,9 @@ Functional programming / Currying
 Iterators / generators
 
     evens = () -> {
-      yield(0)
-      yield(2)
-      yield(4)
+      yield 0
+      yield 2
+      yield 4
     }
     > function
 
