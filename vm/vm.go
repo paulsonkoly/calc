@@ -19,19 +19,19 @@ type context struct {
 }
 
 type Type struct {
-	ctx []context        // ctx is the context stack
+	ctx *[]context       // ctx is the context stack
 	CS  *[]bytecode.Type // CS is the code segment
 	DS  *[]value.Type    // DS is the data segment
 }
 
 func New(m *memory.Type, cs *[]bytecode.Type, ds *[]value.Type) *Type {
-	return &Type{ctx: []context{context{m: m}}, CS: cs, DS: ds}
+	return &Type{ctx: &[]context{{m: m}}, CS: cs, DS: ds}
 }
 
 func (vm *Type) Run(retResult bool) value.Type {
   // cid := 0
-	m := vm.ctx[0].m
-	ip := vm.ctx[0].ip
+	m := (*vm.ctx)[0].m
+	ip := (*vm.ctx)[0].ip
 	ds := vm.DS
 	cs := vm.CS
 
@@ -213,7 +213,7 @@ func (vm *Type) Run(retResult bool) value.Type {
 				ip = len(*cs)
 				break
 			}
-			lip, ok := m.IP().ToInt()
+			lip, ok := nip.ToInt()
 			if !ok {
 				log.Panicf("can't pop instruction pointer\n %8d | %v\n", lip, instr)
 			}
@@ -228,20 +228,22 @@ func (vm *Type) Run(retResult bool) value.Type {
     case bytecode.CCONT:
       jmp := instr.Src0Addr()
 
-      vm.ctx = append(vm.ctx, context{ ip : ip + jmp - 1, m: m })
+      ctx := append(*vm.ctx, context{ ip : ip + jmp - 1, m: m })
+      vm.ctx = &ctx
 
       m = m.Clone()
 
     case bytecode.DCONT:
-      m = vm.ctx[len(vm.ctx)-1].m
-      vm.ctx = vm.ctx[:len(vm.ctx)-1]
+      m = (*vm.ctx)[len(*vm.ctx)-1].m
+      ctx := (*vm.ctx)[:len(*vm.ctx)-1]
+      vm.ctx = &ctx
 
     case bytecode.SCONT:
-      nip := vm.ctx[len(vm.ctx)-1].ip
-      nm := vm.ctx[len(vm.ctx)-1].m
+      nip := (*vm.ctx)[len(*vm.ctx)-1].ip
+      nm := (*vm.ctx)[len(*vm.ctx)-1].m
 
-      vm.ctx[len(vm.ctx)-1].ip = ip
-      vm.ctx[len(vm.ctx)-1].m = m
+      (*vm.ctx)[len(*vm.ctx)-1].ip = ip
+      (*vm.ctx)[len(*vm.ctx)-1].m = m
 
       m = nm
       ip = nip
@@ -253,11 +255,11 @@ func (vm *Type) Run(retResult bool) value.Type {
       // should optimise this away
       m.Push(val)
 
-      nip := vm.ctx[len(vm.ctx)-1].ip
-      nm := vm.ctx[len(vm.ctx)-1].m
+      nip := (*vm.ctx)[len(*vm.ctx)-1].ip
+      nm := (*vm.ctx)[len(*vm.ctx)-1].m
 
-      vm.ctx[len(vm.ctx)-1].ip = ip
-      vm.ctx[len(vm.ctx)-1].m = m
+      (*vm.ctx)[len(*vm.ctx)-1].ip = ip
+      (*vm.ctx)[len(*vm.ctx)-1].m = m
 
       m = nm
       ip = nip
@@ -330,7 +332,7 @@ func (vm *Type) Run(retResult bool) value.Type {
 		ip++
 	}
 
-	vm.ctx[0].ip = ip
+	(*vm.ctx)[0].ip = ip
 
 	if retResult {
 		return m.Pop()
@@ -352,11 +354,11 @@ func (vm Type) fetch(src uint64, addr int, m *memory.Type, ds *[]value.Type) val
 	case bytecode.ADDR_GBL:
 		name, ok := (*ds)[addr].ToString()
 		if !ok {
-			log.Panicf("unknown global ip %8d\n", vm.ctx[len(vm.ctx)-1].ip)
+			log.Panicf("unknown global ip %8d\n", (*vm.ctx)[len(*vm.ctx)-1].ip)
 		}
 		return m.LookUpGlobal(name)
 	default:
-		log.Panicf("unknown source ip %8d\n", vm.ctx[len(vm.ctx)-1].ip)
+		log.Panicf("unknown source ip %8d\n", (*vm.ctx)[len(*vm.ctx)-1].ip)
 	}
 	panic("unreachable code")
 }
