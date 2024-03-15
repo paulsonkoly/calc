@@ -20,7 +20,7 @@ import (
 func main() {
 	flag.Parse()
 
-	m := memory.NewMemory()
+	m := memory.New()
 	p := parser.Type{}
 	cs := []bytecode.Type{}
 	ds := []value.Type{}

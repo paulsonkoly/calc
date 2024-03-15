@@ -9,7 +9,7 @@ import (
 	"github.com/paulsonkoly/calc/types/token"
 )
 
-var Keywords = [...]string{"if", "else", "while", "return", "true", "false"}
+var Keywords = [...]string{"if", "else", "while", "for", "return", "yield", "true", "false"}
 
 type Type struct{}
 
@@ -154,8 +154,10 @@ func assignment(input c.RollbackLexer) ([]c.Node, error) {
 func statement(input c.RollbackLexer) ([]c.Node, error) {
 	return c.Choose(
 		c.Conditional{Gate: c.Assert(acceptToken("if")), OnSuccess: conditional},
-		c.Conditional{Gate: c.Assert(acceptToken("while")), OnSuccess: loop},
+		c.Conditional{Gate: c.Assert(acceptToken("while")), OnSuccess: whileLoop},
+		c.Conditional{Gate: c.Assert(acceptToken("for")), OnSuccess: forLoop},
 		c.Conditional{Gate: c.Assert(acceptToken("return")), OnSuccess: returning},
+		c.Conditional{Gate: c.Assert(acceptToken("yield")), OnSuccess: yield},
 		c.Conditional{Gate: c.Assert(c.And(varName, acceptToken("="))), OnSuccess: assignment},
 		c.Conditional{Gate: c.Ok(), OnSuccess: expression})(input)
 }
@@ -172,12 +174,20 @@ func conditional(input c.RollbackLexer) ([]c.Node, error) {
 		))(input)
 }
 
-func loop(input c.RollbackLexer) ([]c.Node, error) {
+func whileLoop(input c.RollbackLexer) ([]c.Node, error) {
 	return c.Fmap(mkWhile, c.Seq(acceptToken("while"), expression, block))(input)
+}
+
+func forLoop(input c.RollbackLexer) ([]c.Node, error) {
+	return c.Fmap(mkFor, c.Seq(acceptToken("for"), varName, acceptToken("<-"), expression, block))(input)
 }
 
 func returning(input c.RollbackLexer) ([]c.Node, error) {
 	return c.Fmap(mkReturn, c.And(acceptToken("return"), expression))(input)
+}
+
+func yield(input c.RollbackLexer) ([]c.Node, error) {
+	return c.Fmap(mkYield, c.And(acceptToken("yield"), expression))(input)
 }
 
 func function(input c.RollbackLexer) ([]c.Node, error) {

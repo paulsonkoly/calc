@@ -13,28 +13,32 @@ import (
 	"github.com/paulsonkoly/calc/types/value"
 )
 
+type context struct {
+	ip int          // instruction pointer
+	m  *memory.Type // variables
+}
+
 type Type struct {
-	ip int              // instruction pointer
-	m  *memory.Type     // variables
-	CS *[]bytecode.Type // CS is the code segment
-	DS *[]value.Type    // DS is the data segment
+	ctx *[]context       // ctx is the context stack
+	CS  *[]bytecode.Type // CS is the code segment
+	DS  *[]value.Type    // DS is the data segment
 }
 
 func New(m *memory.Type, cs *[]bytecode.Type, ds *[]value.Type) *Type {
-	return &Type{m: m, CS: cs, DS: ds}
+	return &Type{ctx: &[]context{{m: m}}, CS: cs, DS: ds}
 }
 
 func (vm *Type) Run(retResult bool) value.Type {
-	m := vm.m
+	m := (*vm.ctx)[0].m
+	ip := (*vm.ctx)[0].ip
 	ds := vm.DS
 	cs := vm.CS
-	ip := vm.ip
 
 	for ip < len(*cs) {
 		instr := (*cs)[ip]
 
 		// TODO allow tracing flag
-		// fmt.Printf("%8d | %v\n", ip, instr)
+		// fmt.Printf("%8d | %8p | %v\n", ip, m, instr)
 
 		opCode := instr.OpCode()
 
@@ -208,7 +212,7 @@ func (vm *Type) Run(retResult bool) value.Type {
 				ip = len(*cs)
 				break
 			}
-			lip, ok := m.IP().ToInt()
+			lip, ok := nip.ToInt()
 			if !ok {
 				log.Panicf("can't pop instruction pointer\n %8d | %v\n", lip, instr)
 			}
@@ -219,6 +223,54 @@ func (vm *Type) Run(retResult bool) value.Type {
 			m.Push(val)
 
 			ip = lip
+
+		case bytecode.CCONT:
+			jmp := instr.Src0Addr()
+
+			ctx := append(*vm.ctx, context{ip: ip + jmp - 1, m: m})
+			vm.ctx = &ctx
+
+			m = m.Clone()
+
+		case bytecode.RCONT:
+			ctx := (*vm.ctx)[:len(*vm.ctx)-1]
+			vm.ctx = &ctx
+
+		case bytecode.DCONT:
+			m = (*vm.ctx)[len(*vm.ctx)-1].m
+			ctx := (*vm.ctx)[:len(*vm.ctx)-1]
+			vm.ctx = &ctx
+
+		case bytecode.SCONT:
+			nip := (*vm.ctx)[len(*vm.ctx)-1].ip
+			nm := (*vm.ctx)[len(*vm.ctx)-1].m
+
+			(*vm.ctx)[len(*vm.ctx)-1].ip = ip
+			(*vm.ctx)[len(*vm.ctx)-1].m = m
+
+			m = nm
+			ip = nip
+
+		case bytecode.YIELD:
+			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+
+			// yield needs to push in the slave context because a subsequent pop, we
+			// should optimise this away
+			m.Push(val)
+
+			// otherwise naked yield, in the master context
+			if len(*vm.ctx) > 1 {
+				nip := (*vm.ctx)[len(*vm.ctx)-1].ip
+				nm := (*vm.ctx)[len(*vm.ctx)-1].m
+
+				(*vm.ctx)[len(*vm.ctx)-1].ip = ip
+				(*vm.ctx)[len(*vm.ctx)-1].m = m
+
+				m = nm
+				ip = nip
+
+				m.Push(val)
+			}
 
 		case bytecode.READ:
 			b := bufio.NewReader(os.Stdin)
@@ -286,7 +338,7 @@ func (vm *Type) Run(retResult bool) value.Type {
 		ip++
 	}
 
-	vm.ip = ip
+	(*vm.ctx)[0].ip = ip
 
 	if retResult {
 		return m.Pop()
@@ -308,11 +360,11 @@ func (vm Type) fetch(src uint64, addr int, m *memory.Type, ds *[]value.Type) val
 	case bytecode.ADDR_GBL:
 		name, ok := (*ds)[addr].ToString()
 		if !ok {
-			log.Panicf("unknown global\n %8d | %v\n", vm.ip, (*vm.CS)[vm.ip])
+			log.Panicf("unknown global ip %8d\n", (*vm.ctx)[len(*vm.ctx)-1].ip)
 		}
 		return m.LookUpGlobal(name)
 	default:
-		log.Panicf("unknown source\n %8d | %v\n", vm.ip, (*vm.CS)[vm.ip])
+		log.Panicf("unknown source ip %8d\n", (*vm.ctx)[len(*vm.ctx)-1].ip)
 	}
 	panic("unreachable code")
 }
