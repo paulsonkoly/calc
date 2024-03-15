@@ -20,6 +20,9 @@ var all = [...]node.Assign{
 	toaF,
 	errorF,
 	exitF,
+	fromToF,
+	indicesF,
+	elemsF,
 }
 
 var readF = node.Assign{VarRef: node.Name("read"), Value: node.Function{Parameters: node.List{Elems: []node.Type{}}, Body: node.Read{}}}
@@ -34,4 +37,64 @@ var errorF = node.Assign{VarRef: node.Name("error"), Value: node.Function{Parame
 
 var exitF = node.Assign{VarRef: node.Name("exit"), Value: node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Exit{Value: v}}}
 
+var fromToF = node.Assign{
+	VarRef: node.Name("fromto"),
+	Value: node.Function{
+		Parameters: node.List{Elems: []node.Type{a, b}},
+		Body: node.While{
+			Condition: node.BinOp{Op: "<", Left: a, Right: b},
+			Body: node.Block{
+				Body: []node.Type{
+					node.Yield{Target: a},
+					node.Assign{VarRef: node.Name("a"), Value: node.BinOp{Op: "+", Left: a, Right: node.Int(1)}},
+				},
+			},
+		},
+	},
+}
+
+var indicesF = node.Assign{
+	VarRef: node.Name("indices"),
+	Value: node.Function{
+		Parameters: node.List{Elems: []node.Type{a}},
+		Body: node.Block{
+			Body: []node.Type{
+				node.Assign{VarRef: node.Name("i"), Value: node.Int(0)},
+				node.While{
+					Condition: node.BinOp{Op: "<", Left: node.Name("i"), Right: node.UnOp{Op: "#", Target: a}},
+					Body: node.Block{
+						Body: []node.Type{
+							node.Yield{Target: node.Name("i")},
+							node.Assign{VarRef: node.Name("i"), Value: node.BinOp{Op: "+", Left: node.Name("i"), Right: node.Int(1)}},
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
+var elemsF = node.Assign{
+	VarRef: node.Name("elems"),
+	Value: node.Function{
+		Parameters: node.List{Elems: []node.Type{a}},
+		Body: node.Block{
+			Body: []node.Type{
+				node.Assign{VarRef: node.Name("i"), Value: node.Int(0)},
+				node.While{
+					Condition: node.BinOp{Op: "<", Left: node.Name("i"), Right: node.UnOp{Op: "#", Target: a}},
+					Body: node.Block{
+						Body: []node.Type{
+							node.Yield{Target: node.IndexAt{Ary: a, At: node.Name("i")}},
+							node.Assign{VarRef: node.Name("i"), Value: node.BinOp{Op: "+", Left: node.Name("i"), Right: node.Int(1)}},
+						},
+					},
+				},
+			},
+		},
+	},
+}
+
 var v = node.Name("v")
+var a = node.Name("a")
+var b = node.Name("b")

@@ -37,13 +37,6 @@ rotations = (n) -> {
   r
 }
 
-fromto = (a, b) -> {
-  while a < b {
-    yield(a)
-    a = a + 1
-  }
-}
-
 c = 0
 for i <- fromto(0,1000000 ) {
   if all(rotations(i), isprime) {
