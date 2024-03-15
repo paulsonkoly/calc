@@ -135,10 +135,10 @@ func (c Call) byteCode(srcsel int, inFor bool, cs *[]bytecode.Type, ds *[]value.
 }
 
 func (r Return) byteCode(srcsel int, inFor bool, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type {
-  if inFor {
-    instr := bytecode.New(bytecode.RCONT)
-    *cs = append(*cs, instr)
-  }
+	if inFor {
+		instr := bytecode.New(bytecode.RCONT)
+		*cs = append(*cs, instr)
+	}
 	instr := r.Target.byteCode(0, inFor, cs, ds)
 	instr |= bytecode.New(bytecode.RET)
 	*cs = append(*cs, instr)
@@ -387,17 +387,17 @@ func (w While) byteCode(srcsel int, inFor bool, cs *[]bytecode.Type, ds *[]value
 func (f For) byteCode(srcsel int, inFor bool, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type {
 	ix := len(*ds)
 	*ds = append(*ds, value.NoResultError)
-  instr := bytecode.New(bytecode.PUSH) | bytecode.EncodeSrc(0, bytecode.ADDR_DS, ix)
+	instr := bytecode.New(bytecode.PUSH) | bytecode.EncodeSrc(0, bytecode.ADDR_DS, ix)
 	*cs = append(*cs, instr)
 
-  ccontAddr:=len(*cs)
+	ccontAddr := len(*cs)
 	instr = bytecode.New(bytecode.CCONT) //| bytecode.EncodeSrc(0, bytecode.ADDR_IMM, contextId)
 	*cs = append(*cs, instr)
 
 	instr = f.Iterator.byteCode(0, inFor, cs, ds)
 	if instr.Src0() == bytecode.ADDR_STCK {
 		instr = bytecode.New(bytecode.POP)
-    *cs = append(*cs, instr)
+		*cs = append(*cs, instr)
 	}
 
 	instr = bytecode.New(bytecode.DCONT)
@@ -421,10 +421,10 @@ func (f For) byteCode(srcsel int, inFor bool, cs *[]bytecode.Type, ds *[]value.T
 
 	instr = f.Body.byteCode(0, true, cs, ds)
 
-  if instr.Src0() != bytecode.ADDR_STCK {
-    instr = bytecode.New(bytecode.PUSH) | instr
-    *cs = append(*cs, instr)
-  }
+	if instr.Src0() != bytecode.ADDR_STCK {
+		instr = bytecode.New(bytecode.PUSH) | instr
+		*cs = append(*cs, instr)
+	}
 
 	instr = bytecode.New(bytecode.JMP) | bytecode.EncodeSrc(0, bytecode.ADDR_IMM, switchAddr-len(*cs))
 	*cs = append(*cs, instr)
@@ -432,8 +432,8 @@ func (f For) byteCode(srcsel int, inFor bool, cs *[]bytecode.Type, ds *[]value.T
 	// patch jump
 	(*cs)[jmpAddr] |= bytecode.EncodeSrc(0, bytecode.ADDR_IMM, len(*cs)-jmpAddr)
 
-  // patch ccont
-  (*cs)[ccontAddr] |= bytecode.EncodeSrc(0, bytecode.ADDR_IMM, assignAddr-ccontAddr)
+	// patch ccont
+	(*cs)[ccontAddr] |= bytecode.EncodeSrc(0, bytecode.ADDR_IMM, assignAddr-ccontAddr)
 
 	return bytecode.EncodeSrc(srcsel, bytecode.ADDR_STCK, 0)
 }

@@ -74,13 +74,13 @@ func (w While) STRewrite(symTbl SymTbl) Type {
 }
 
 func (f For) STRewrite(symTbl SymTbl) Type {
-  iterator := f.Iterator.STRewrite(symTbl)
-  
+	iterator := f.Iterator.STRewrite(symTbl)
+
 	varRef := f.VarRef.(Name)
 	name := string(varRef)
 
 	if len(symTbl) < 1 {
-	return For{VarRef: varRef, Iterator: iterator, Body: f.Body.STRewrite(symTbl)}
+		return For{VarRef: varRef, Iterator: iterator, Body: f.Body.STRewrite(symTbl)}
 	}
 
 	ix, ok := symTbl[len(symTbl)-1][name]

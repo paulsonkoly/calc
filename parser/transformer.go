@@ -32,13 +32,12 @@ func mkReturn(nodes []c.Node) []c.Node {
 
 // mkYield is for yield statements
 func mkYield(nodes []c.Node) []c.Node {
-	if len(nodes)!= 2 {
+	if len(nodes) != 2 {
 		log.Panicf("incorrect number of sub nodes for yield (%d)", len(nodes))
 	}
 	n := node.Yield{Target: nodes[1].(node.Type)}
 	return []c.Node{n}
 }
-
 
 // mkLeftChain rewrites a sequence of binary operators applied on operands in a
 // left assictive structure
@@ -152,9 +151,9 @@ func mkWhile(nodes []c.Node) []c.Node {
 
 // mkFor creates a for loop structure
 func mkFor(nodes []c.Node) []c.Node {
-    if len(nodes) !=5 {
-        log.Panicf("incorrect number of sub nodes for for (%d)", len(nodes))
-    }
-    n := node.For{VarRef: nodes[1].(node.Type), Iterator: nodes[3].(node.Type), Body: nodes[4].(node.Type)}
-    return []c.Node{n}
+	if len(nodes) != 5 {
+		log.Panicf("incorrect number of sub nodes for for (%d)", len(nodes))
+	}
+	n := node.For{VarRef: nodes[1].(node.Type), Iterator: nodes[3].(node.Type), Body: nodes[4].(node.Type)}
+	return []c.Node{n}
 }

@@ -100,8 +100,8 @@ var testData = [...]TestDatum{
       c = 0
       for i <- elems([2,5,7]) c = c+i
    }`, nil, value.NewInt(14)},
-  { "iterator/no yield", "for i <- 1 2", nil, value.NoResultError},
-  { "iterator/return", "for i<- fromto(5, 10) if i == 8 return 3*i else 2*i", nil, value.NewInt(24)},
+	{"iterator/no yield", "for i <- 1 2", nil, value.NoResultError},
+	{"iterator/return", "for i<- fromto(5, 10) if i == 8 return 3*i else 2*i", nil, value.NewInt(24)},
 
 	{"function definition", "(n) -> 1", nil, emptyFunction},
 	{"function/no argument", "() -> 1", nil, emptyFunction},

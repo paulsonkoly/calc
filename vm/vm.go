@@ -232,7 +232,7 @@ func (vm *Type) Run(retResult bool) value.Type {
 
 			m = m.Clone()
 
-    case bytecode.RCONT:
+		case bytecode.RCONT:
 			ctx := (*vm.ctx)[:len(*vm.ctx)-1]
 			vm.ctx = &ctx
 

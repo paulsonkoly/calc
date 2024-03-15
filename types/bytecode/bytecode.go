@@ -77,18 +77,18 @@ const (
 	CALL // CALL calls src0 with argument cnt src1
 	RET  // RET returns from a function call pushing src0 after rolling back the stack
 
-  // CCONT pushes the current context on the context stack, creates a new
-  // execution context and switches to it
+	// CCONT pushes the current context on the context stack, creates a new
+	// execution context and switches to it
 	CCONT
-  // DCONT pops the context stack, switches memory but keeps ip
-	DCONT 
-  // RCONT pops the context stack and discards
-  RCONT
-  // SCONT swaps the current context with the top of the context stack
-	SCONT 
-  // YIELD pushes src0 in the current context, swaps the current context with
-  // the top of the context stack, and pushes src0 in the new context
-  YIELD
+	// DCONT pops the context stack, switches memory but keeps ip
+	DCONT
+	// RCONT pops the context stack and discards
+	RCONT
+	// SCONT swaps the current context with the top of the context stack
+	SCONT
+	// YIELD pushes src0 in the current context, swaps the current context with
+	// the top of the context stack, and pushes src0 in the new context
+	YIELD
 
 	READ  // READ builtin
 	WRITE // WRITE builtin

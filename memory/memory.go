@@ -56,7 +56,7 @@ func (m *Type) Clone() *Type {
 	fp := m.fp[len(m.fp)+localFP]
 	le := m.fp[len(m.fp)+localFE]
 	frm := slices.Clone(m.stack[fp:m.sp])
-	return &Type{sp: len(frm), fp: []int{0, le-fp}, global: m.global, closure: m.closure, stack: frm}
+	return &Type{sp: len(frm), fp: []int{0, le - fp}, global: m.global, closure: m.closure, stack: frm}
 }
 
 // SetGlobal sets a global variable
