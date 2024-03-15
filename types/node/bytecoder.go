@@ -383,8 +383,13 @@ func (w While) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytec
 var contextId = 0
 
 func (f For) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type {
+	ix := len(*ds)
+	*ds = append(*ds, value.NoResultError)
+  instr := bytecode.New(bytecode.PUSH) | bytecode.EncodeSrc(0, bytecode.ADDR_DS, ix)
+	*cs = append(*cs, instr)
+
   ccontAddr:=len(*cs)
-	instr := bytecode.New(bytecode.CCONT) //| bytecode.EncodeSrc(0, bytecode.ADDR_IMM, contextId)
+	instr = bytecode.New(bytecode.CCONT) //| bytecode.EncodeSrc(0, bytecode.ADDR_IMM, contextId)
 	*cs = append(*cs, instr)
   contextId++
 
@@ -408,6 +413,9 @@ func (f For) byteCode(srcsel int, cs *[]bytecode.Type, ds *[]value.Type) bytecod
 	assignAddr := len(*cs)
 	vref := f.VarRef.byteCode(1, cs, ds)
 	instr = bytecode.New(bytecode.MOV) | vref | bytecode.EncodeSrc(0, bytecode.ADDR_STCK, 0)
+	*cs = append(*cs, instr)
+
+	instr = bytecode.New(bytecode.POP)
 	*cs = append(*cs, instr)
 
 	instr = f.Body.byteCode(0, cs, ds)
