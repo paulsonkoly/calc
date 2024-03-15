@@ -90,9 +90,9 @@ Built in functions are loaded in the top level frame on the interpreter start up
 | toa      | 1     | string                     | Converts a value to a string            |
 | error    | 1     | error                      | Converts a string to an error           |
 | exit     | 1     | doesn't return/type error  | Exits the interpreter with exit code    |
-| fromto   | 2     | iterator/type error        | fromto(a, b) iterates from a to b-1     |
-| elems    | 1     | iterator/type error        | elems(ary) iterates the array elements  |
-| indices  | 1     | iterator/type error        | indices(ary) iterates the array indices |
+| fromto   | 2     | iterator                   | fromto(a, b) iterates from a to b-1     |
+| elems    | 1     | iterator                   | elems(ary) iterates the array elements  |
+| indices  | 1     | iterator                   | indices(ary) iterates the array indices |
 
 ## Type coercions
 
@@ -368,12 +368,14 @@ In the following BNF non-terminals are lower case, terminals are upper case or q
     program: block "\n" program | block EOF
     block: "{" "\n" statements "\n" "}" | statement
     statements: statement "\n" statements | statement
-    statement: loop | conditional | returning | assignment| expression
+    statement: whileLoop | forLoop | conditional | returning | yield | assignment| expression
 
     assignment: VARIABLE '=' block 
-    loop: "while" expression block
+    whileLoop: "while" expression block
+    forLoop: "for" VARIABLE "<-" expression block
     conditional: "if" expression block "else" block | "if" expression block
     returning: "return" expression
+    yield: "yield" expression
 
     expression: relational
     relational: logic /<|>|<=|>=|==|!=/ logic | logic
