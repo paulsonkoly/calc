@@ -20,12 +20,10 @@ all = (ary, f) -> {
 isprime = (n) -> {
   if n < 2 return false
   sqrt = sqrt(n)
-  i = 2
-  while i <= sqrt {
+  for i <- fromto(2, sqrt+1) {
     if n % i == 0 {
       return false
     }
-    i = i + 1
   }
   true
 }

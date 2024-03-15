@@ -29,7 +29,6 @@ func New(m *memory.Type, cs *[]bytecode.Type, ds *[]value.Type) *Type {
 }
 
 func (vm *Type) Run(retResult bool) value.Type {
-	// cid := 0
 	m := (*vm.ctx)[0].m
 	ip := (*vm.ctx)[0].ip
 	ds := vm.DS
@@ -39,7 +38,7 @@ func (vm *Type) Run(retResult bool) value.Type {
 		instr := (*cs)[ip]
 
 		// TODO allow tracing flag
-		// fmt.Printf("%8d | %v\n", ip, instr)
+		// fmt.Printf("%8d | %8p | %v\n", ip, m, instr)
 
 		opCode := instr.OpCode()
 
@@ -232,6 +231,10 @@ func (vm *Type) Run(retResult bool) value.Type {
 			vm.ctx = &ctx
 
 			m = m.Clone()
+
+    case bytecode.RCONT:
+			ctx := (*vm.ctx)[:len(*vm.ctx)-1]
+			vm.ctx = &ctx
 
 		case bytecode.DCONT:
 			m = (*vm.ctx)[len(*vm.ctx)-1].m
