@@ -14,23 +14,26 @@ import (
 )
 
 type context struct {
-	ip int          // instruction pointer
-	m  *memory.Type // variables
+	ip       int          // instruction pointer
+	m        *memory.Type // variables
+	parent   *context     // parent context
+	children []*context   //child contexts
 }
 
 type Type struct {
-	ctx *[]context       // ctx is the context stack
+	ctx *context         // ctx is the context tree
 	CS  *[]bytecode.Type // CS is the code segment
 	DS  *[]value.Type    // DS is the data segment
 }
 
 func New(m *memory.Type, cs *[]bytecode.Type, ds *[]value.Type) *Type {
-	return &Type{ctx: &[]context{{m: m}}, CS: cs, DS: ds}
+	return &Type{ctx: &context{m: m, children: []*context{}}, CS: cs, DS: ds}
 }
 
 func (vm *Type) Run(retResult bool) value.Type {
-	m := (*vm.ctx)[0].m
-	ip := (*vm.ctx)[0].ip
+	ctxp := vm.ctx
+	m := ctxp.m
+	ip := ctxp.ip
 	ds := vm.DS
 	cs := vm.CS
 
@@ -226,30 +229,31 @@ func (vm *Type) Run(retResult bool) value.Type {
 
 		case bytecode.CCONT:
 			jmp := instr.Src0Addr()
-
-			ctx := append(*vm.ctx, context{ip: ip + jmp - 1, m: m})
-			vm.ctx = &ctx
+      ctxp.ip = ip + jmp - 1
 
 			m = m.Clone()
+      childCtx := context{m: m, parent: ctxp, children: make([]*context, 0)}
+			ctxp.children = append(ctxp.children, &childCtx)
+			ctxp = &childCtx
 
 		case bytecode.RCONT:
-			ctx := (*vm.ctx)[:len(*vm.ctx)-1]
-			vm.ctx = &ctx
+			ctxp.children = ctxp.children[:len(ctxp.children)-1] //make([]*context, 0)
 
 		case bytecode.DCONT:
-			m = (*vm.ctx)[len(*vm.ctx)-1].m
-			ctx := (*vm.ctx)[:len(*vm.ctx)-1]
-			vm.ctx = &ctx
+			ctxp = ctxp.parent
+			if len(ctxp.children) > 0 {
+				ctxp.children = ctxp.children[:len(ctxp.children)-1] //make([]*context, 0)
+			}
+			m = ctxp.m
 
 		case bytecode.SCONT:
-			nip := (*vm.ctx)[len(*vm.ctx)-1].ip
-			nm := (*vm.ctx)[len(*vm.ctx)-1].m
+			ctxp.m = m
+			ctxp.ip = ip
 
-			(*vm.ctx)[len(*vm.ctx)-1].ip = ip
-			(*vm.ctx)[len(*vm.ctx)-1].m = m
+			ctxp = ctxp.children[len(ctxp.children)-1]
 
-			m = nm
-			ip = nip
+			m = ctxp.m
+			ip = ctxp.ip
 
 		case bytecode.YIELD:
 			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
@@ -259,15 +263,14 @@ func (vm *Type) Run(retResult bool) value.Type {
 			m.Push(val)
 
 			// otherwise naked yield, in the master context
-			if len(*vm.ctx) > 1 {
-				nip := (*vm.ctx)[len(*vm.ctx)-1].ip
-				nm := (*vm.ctx)[len(*vm.ctx)-1].m
+			if ctxp.parent != nil {
+				ctxp.m = m
+				ctxp.ip = ip
 
-				(*vm.ctx)[len(*vm.ctx)-1].ip = ip
-				(*vm.ctx)[len(*vm.ctx)-1].m = m
+				ctxp = ctxp.parent
 
-				m = nm
-				ip = nip
+				m = ctxp.m
+				ip = ctxp.ip
 
 				m.Push(val)
 			}
@@ -338,7 +341,7 @@ func (vm *Type) Run(retResult bool) value.Type {
 		ip++
 	}
 
-	(*vm.ctx)[0].ip = ip
+	ctxp.ip = ip
 
 	if retResult {
 		return m.Pop()
@@ -360,11 +363,11 @@ func (vm Type) fetch(src uint64, addr int, m *memory.Type, ds *[]value.Type) val
 	case bytecode.ADDR_GBL:
 		name, ok := (*ds)[addr].ToString()
 		if !ok {
-			log.Panicf("unknown global ip %8d\n", (*vm.ctx)[len(*vm.ctx)-1].ip)
+			log.Panic("unknown global")
 		}
 		return m.LookUpGlobal(name)
 	default:
-		log.Panicf("unknown source ip %8d\n", (*vm.ctx)[len(*vm.ctx)-1].ip)
+		log.Panicf("unknown source")
 	}
 	panic("unreachable code")
 }

@@ -8,11 +8,9 @@ binsearch = (a, b, cond) -> {
 
 sqrt = (a) -> binsearch(1, a / 2, (n) -> (n+1)*(n+1) > a)
 
-all = (ary, f) -> {
-  i = 0
-  while i < #ary {
-    if !f(ary[i]) return false
-    i = i + 1
+all = (iter, f) -> {
+  for e <- iter() {
+    if !f(e) return false
   }
   true
 }
@@ -28,17 +26,15 @@ isprime = (n) -> {
   true
 }
 
-rotations = (n) -> {
+rotations = (n) -> () -> {
   s = toa(n)
-  r = []
   for i <- fromto(0, #s) {
-    r = r + [aton(s[i: #s] + s[0:i])]
+    yield aton(s[i: #s] + s[0:i])
   }
-  r
 }
 
 c = 0
-for i <- fromto(0,1000000 ) {
+for i <- fromto(0, 1000000) {
   if all(rotations(i), isprime) {
     c = c + 1
   }
