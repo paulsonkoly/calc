@@ -50,9 +50,9 @@ func main() {
 		if len(t) > 0 {
 			n := t[0]
 			node.ByteCode(n, &cs, &ds)
+			v := virtM.Run(true)
+			fmt.Println(v)
 		}
-		v := virtM.Run(true)
-		fmt.Println(v)
 		return
 	}
 

@@ -213,11 +213,12 @@ func arguments(input c.RollbackLexer) ([]c.Node, error) {
 }
 
 var eol = c.Fmap(func(n []c.Node) []c.Node { return []c.Node{} }, acceptTerm(token.EOL, "end of line"))
+var eols = c.And(eol, c.Any(c.Conditional{Gate: eol, OnSuccess: c.Ok()}))
 var eof = c.Fmap(func(n []c.Node) []c.Node { return []c.Node{} }, acceptTerm(token.EOF, "end of file"))
 
 func statements(input c.RollbackLexer) ([]c.Node, error) {
-	pred := c.Assert(c.And(eol, c.Not(acceptToken("}"))))
-	return c.And(statement, c.Any(c.Conditional{Gate: pred, OnSuccess: c.And(eol, statement)}))(input)
+	pred := c.Assert(c.And(eols, c.Not(acceptToken("}"))))
+	return c.And(statement, c.Any(c.Conditional{Gate: pred, OnSuccess: c.And(eols, statement)}))(input)
 }
 
 func block(input c.RollbackLexer) ([]c.Node, error) {
@@ -225,13 +226,10 @@ func block(input c.RollbackLexer) ([]c.Node, error) {
 		c.Conditional{Gate: c.Assert(acceptToken("{")),
 			OnSuccess: c.Fmap(mkBlock,
 				c.SurroundedBy(
-					c.And(acceptToken("{"), eol),
+					c.And(acceptToken("{"), eols),
 					statements,
-					c.And(eol, acceptToken("}"))))},
+					c.And(eols, acceptToken("}"))))},
 		c.Conditional{Gate: c.Ok(), OnSuccess: statement})(input)
 }
 
-var program = c.Seq(
-	block,
-	c.Any(c.Conditional{Gate: c.Assert(c.And(eol, c.Not(eof))), OnSuccess: c.And(eol, block)}),
-	eof)
+var program = c.Seq(c.SeparatedBy(block, eols), eols, eof)

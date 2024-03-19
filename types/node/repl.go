@@ -60,6 +60,7 @@ func Loop(r lineReader, p Parser, vm *vm.Type, doOut bool) {
 	blocksOpen := 0
 	quotesOpen := 0
 	input := ""
+	sep := ""
 
 	for {
 		line, err := r.read()
@@ -67,23 +68,17 @@ func Loop(r lineReader, p Parser, vm *vm.Type, doOut bool) {
 			break
 		}
 
-		line = strings.TrimSpace(line)
-		if line == "" {
-			continue
-		}
-
 		blocksOpen += strings.Count(line, "{") - strings.Count(line, "}")
 		quotesOpen += strings.Count(line, "\"") - strings.Count(line, "\\\"")
-		input = join(input, line)
+		input += sep + line
+		sep = "\n"
 
 		if blocksOpen == 0 && quotesOpen%2 == 0 {
 			t, err := p.Parse(input)
+			input = ""
+			sep = ""
 			if err != nil {
 				fmt.Println(err)
-				input = ""
-				continue
-			}
-			if len(t) < 1 {
 				continue
 			}
 
@@ -112,14 +107,6 @@ func Loop(r lineReader, p Parser, vm *vm.Type, doOut bool) {
 					fmt.Printf("> %v\n", v)
 				}
 			}
-			input = ""
 		}
 	}
-}
-
-func join(a, b string) string {
-	if a == "" {
-		return b
-	}
-	return a + "\n" + b
 }

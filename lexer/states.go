@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	stickyChars     = "+*/=<>!-&|@#%"
+	stickyChars     = "+*/=<>!-&|#%"
 	nonStrickyChars = "(){}[],:"
 )
 
@@ -28,6 +28,9 @@ func newSTR(c rune, typ token.TokenType, emit, adv bool, format string, args ...
 	switch {
 	case c == ' ' || c == '\t':
 		return str{next: whiteSpace, doEmit: emit, doAdv: adv, typ: typ}
+
+	case c == ';':
+		return str{next: comment, doEmit: emit, doAdv: adv, typ: typ}
 
 	case c == '\n':
 		return str{next: eol, doEmit: emit, doAdv: adv, typ: typ}
@@ -57,6 +60,13 @@ func newSTR(c rune, typ token.TokenType, emit, adv bool, format string, args ...
 
 func whiteSpace(c rune) str {
 	return newSTR(c, token.Invalid, false, true, "Lexer: unexpected char %c", c)
+}
+
+func comment(c rune) str {
+	if c == '\n' {
+		return str{next: eol, doEmit: false, doAdv: true, typ: token.Invalid}
+	}
+	return str{next: comment}
 }
 
 func intLit(c rune) str {

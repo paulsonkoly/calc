@@ -229,10 +229,10 @@ func (vm *Type) Run(retResult bool) value.Type {
 
 		case bytecode.CCONT:
 			jmp := instr.Src0Addr()
-      ctxp.ip = ip + jmp - 1
+			ctxp.ip = ip + jmp - 1
 
 			m = m.Clone()
-      childCtx := context{m: m, parent: ctxp, children: make([]*context, 0)}
+			childCtx := context{m: m, parent: ctxp, children: make([]*context, 0)}
 			ctxp.children = append(ctxp.children, &childCtx)
 			ctxp = &childCtx
 

@@ -70,10 +70,15 @@ func (l *Lexer) Next() bool {
 		}
 		l.to += s
 	}
-	if !l.eof {
-		l.eof = true
+
+	l.Err = nil
+	switch {
+	case !l.eof && l.Token.Type != token.EOL:
+		l.Token = token.Type{Value: "\n", Type: token.EOL}
+		return true
+	case !l.eof:
 		l.Token = token.Type{Value: string(EOF), Type: token.EOF}
-		l.Err = nil
+		l.eof = true
 		return true
 	}
 	return false

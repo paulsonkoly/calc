@@ -102,7 +102,7 @@ var testData = [...]TestDatum{
    }`, nil, value.NewInt(14)},
 	{"iterator/no yield", "for i <- 1 2", nil, value.NoResultError},
 	{"iterator/return", "for i<- fromto(5, 10) if i == 8 return 3*i else 2*i", nil, value.NewInt(24)},
-  {"iterator/yield in for",
+	{"iterator/yield in for",
 		`{
     f = () -> for i <- fromto(2,5) {
       if i % 2 == 0 yield i
@@ -111,7 +111,7 @@ var testData = [...]TestDatum{
     for i <- f() c = c+i
     }`, nil, value.NewInt(6)},
 
-  {"iterator/for in for",
+	{"iterator/for in for",
 		`{
       c = 0
       for i <- fromto(1,2) {

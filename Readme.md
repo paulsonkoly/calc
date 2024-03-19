@@ -296,6 +296,8 @@ One can make this example work by making an explicit copy of x:
 
 ## Language
 
+Comments start with ; until the end of the line.
+
 The top level non-terminal is the program, a program consists of statements. Statements are on a single line up to the first new line character, blocks span across multiple lines.
 
 The language has the following statement types:
