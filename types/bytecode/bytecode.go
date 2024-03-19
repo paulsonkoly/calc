@@ -65,6 +65,9 @@ const (
 	EQ // EQ pushes src1==src0
 	NE // NE pushes src1!=src0
 
+  LSH // LSH pushes src1<<src0
+	RSH // RSH pushes src1>>src0
+
 	IX1 // IX1 pushes src1[src0]
 	IX2 // IX2 pushes src2[src1:src0]
 

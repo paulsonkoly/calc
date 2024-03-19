@@ -98,7 +98,7 @@ Built in functions are loaded in the top level frame on the interpreter start up
 
 There are 7 value types: integers, floats, booleans, functions, strings, arrays and errors.
 
-Arithmetic operations and relational operations work on numbers, an expression containing only integers results in integer (or error), an expression containing a float results in a float. Relational operations work both on numbers, booleans and strings, logic operations work only on booleans.
+Equality check works with any type. A function does not equal anything even itself. Arithmetic operations and relational operations work on numbers, an expression containing only integers results in integer (or error), an expression containing a float results in a float. Relational operations work both on numbers, booleans and strings. Logic operations work on booleans, and using bitwise logic on integers. Bit shifts work with integers only.
 
 Arrays are dynamic container of any type.
 
@@ -109,9 +109,9 @@ There are 6 precedence groups (from lowest to highest):
 
     - <, >, <=, >=, ==, !=
     - &, |
-    - + or -
-    - *, / and %
-    - unary -, # and !
+    - +, -
+    - *, /, <<, >>, %
+    - unary -, #, !
 
 ### Length operator
 

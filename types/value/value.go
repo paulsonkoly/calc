@@ -315,6 +315,16 @@ func (a Type) Relational(op string, b Type) Type {
 func (a Type) Logic(op string, b Type) Type {
 
 	switch (a.typ)<<4 | b.typ {
+  case (intT << 4) | intT:
+		aVal := a.morph
+		bVal := b.morph
+
+		if op == "&" {
+			aVal &= bVal
+		} else {
+			aVal |= bVal
+		}
+		return NewInt(int(aVal)) 
 
 	case (boolT << 4) | boolT:
 		aVal := a.morph
@@ -326,6 +336,39 @@ func (a Type) Logic(op string, b Type) Type {
 			aVal |= bVal
 		}
 		return NewBool(aVal == 1)
+
+	case (intT << 4) | errorT, (floatT << 4) | errorT, (stringT << 4) | errorT,
+		(arrayT << 4) | errorT, (boolT << 4) | errorT, (functionT << 4) | errorT:
+		return b
+
+	case (errorT << 4) | intT, (errorT << 4) | floatT, (errorT << 4) | stringT,
+		(errorT << 4) | arrayT, (errorT << 4) | errorT, (errorT << 4) | boolT,
+		(errorT << 4) | functionT:
+		return a
+
+	default:
+		if a.typ == b.typ {
+			return InvalidOpError
+		} else {
+			return TypeError
+		}
+	}
+}
+
+// Shift is bit shift ops <<, >>
+func (a Type) Shift(op string, b Type) Type {
+
+	switch (a.typ)<<4 | b.typ {
+  case (intT << 4) | intT:
+		aVal := a.morph
+		bVal := b.morph
+
+		if op == "<<" {
+			aVal <<= bVal
+		} else {
+			aVal >>= bVal
+		}
+		return NewInt(int(aVal)) 
 
 	case (intT << 4) | errorT, (floatT << 4) | errorT, (stringT << 4) | errorT,
 		(arrayT << 4) | errorT, (boolT << 4) | errorT, (functionT << 4) | errorT:

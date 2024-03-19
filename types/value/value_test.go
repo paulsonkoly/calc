@@ -71,7 +71,9 @@ var testData = []TestDatum{
 	{"Logic bool & bool", value.NewBool(true), value.NewBool(false), func(a, b value.Type) value.Type { return a.Logic("&", b) }, value.NewBool(false)},
 	{"Logic bool | bool", value.NewBool(true), value.NewBool(false), func(a, b value.Type) value.Type { return a.Logic("|", b) }, value.NewBool(true)},
 
-	{"Logic int & int", value.NewInt(1), value.NewInt(2), func(a, b value.Type) value.Type { return a.Logic("&", b) }, value.InvalidOpError},
+	{"Logic int & int", value.NewInt(3), value.NewInt(6), func(a, b value.Type) value.Type { return a.Logic("&", b) }, value.NewInt(2)},
+	{"Logic int | int", value.NewInt(3), value.NewInt(6), func(a, b value.Type) value.Type { return a.Logic("|", b) }, value.NewInt(7)},
+
 	{"Logic float & float", value.NewFloat(1.0), value.NewFloat(2.0), func(a, b value.Type) value.Type { return a.Logic("&", b) }, value.InvalidOpError},
 	{"Logic string & string", value.NewString("1"), value.NewString("2"), func(a, b value.Type) value.Type { return a.Logic("&", b) }, value.InvalidOpError},
 	{"Logic array & array",
@@ -90,6 +92,13 @@ var testData = []TestDatum{
 	{"Logic error & int", value.ZeroDivError, value.NewInt(1), func(a, b value.Type) value.Type { return a.Logic("&", b) }, value.ZeroDivError},
 	{"Logic int & error", value.NewInt(1), value.ZeroDivError, func(a, b value.Type) value.Type { return a.Logic("&", b) }, value.ZeroDivError},
 	{"Logic error & error", value.ZeroDivError, value.IndexError, func(a, b value.Type) value.Type { return a.Logic("&", b) }, value.ZeroDivError},
+
+  {"Shift int << int", value.NewInt(1), value.NewInt(2), func(a, b value.Type) value.Type { return a.Shift("<<", b) }, value.NewInt(4)},
+	{"Shift int >> int", value.NewInt(10), value.NewInt(1), func(a, b value.Type) value.Type { return a.Shift(">>", b) }, value.NewInt(5)},
+  {"Shift int << float", value.NewInt(1), value.NewFloat(2), func(a, b value.Type) value.Type { return a.Shift("<<", b) }, value.TypeError},
+  {"Shift int << bool", value.NewInt(1), value.NewBool(true), func(a, b value.Type) value.Type { return a.Shift("<<", b) }, value.TypeError},
+  {"Shift bool << bool", value.NewBool(true), value.NewBool(true), func(a, b value.Type) value.Type { return a.Shift("<<", b) }, value.InvalidOpError},
+  {"Shift error << error", value.ZeroDivError, value.IndexError, func(a, b value.Type) value.Type { return a.Shift("<<", b) }, value.ZeroDivError},
 
 	{"Not !true", value.NewBool(true), value.NewBool(false), func(a, b value.Type) value.Type { return a.Not() }, value.NewBool(false)},
 	{"Not !false", value.NewBool(false), value.NewBool(false), func(a, b value.Type) value.Type { return a.Not() }, value.NewBool(true)},
