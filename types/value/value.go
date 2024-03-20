@@ -398,6 +398,18 @@ func (a Type) Shift(op string, b Type) Type {
 	}
 }
 
+// Flip is integer bit flip operator.
+func (a Type) Flip() Type {
+	switch a.typ {
+	case intT:
+		return NewInt(int(^a.morph))
+	case errorT:
+		return a
+	default:
+		return TypeError
+	}
+}
+
 // Not is boolean not operator.
 func (a Type) Not() Type {
 	switch a.typ {

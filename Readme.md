@@ -105,13 +105,13 @@ Arrays are dynamic container of any type.
     funs = [ ["+", (a, b) -> a+b ], ["-", (a, b) -> a - b ] ]
     >  [["+", function], ["-", function]]
 
-There are 6 precedence groups (from lowest to highest): 
+There are 5 precedence groups (from lowest to highest): 
 
     - <, >, <=, >=, ==, !=
     - &, |
     - +, -
     - *, /, <<, >>, %
-    - unary -, #, !
+    - unary -, #, !, ~
 
 ### Length operator
 

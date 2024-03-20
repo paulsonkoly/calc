@@ -107,7 +107,7 @@ func index(input c.RollbackLexer) ([]c.Node, error) {
 }
 
 func unary(input c.RollbackLexer) ([]c.Node, error) {
-	op := c.OneOf(acceptToken("-"), acceptToken("#"), acceptToken("!"))
+	op := c.OneOf(acceptToken("-"), acceptToken("#"), acceptToken("!"), acceptToken("~"))
 	return c.OneOf(c.Fmap(mkUnaryOp, (c.And(op, index))), index)(input)
 }
 

@@ -65,8 +65,9 @@ const (
 	EQ // EQ pushes src1==src0
 	NE // NE pushes src1!=src0
 
-  LSH // LSH pushes src1<<src0
-	RSH // RSH pushes src1>>src0
+	LSH  // LSH pushes src1<<src0
+	RSH  // RSH pushes src1>>src0
+	FLIP // FLIP pushes ~src0
 
 	IX1 // IX1 pushes src1[src0]
 	IX2 // IX2 pushes src2[src1:src0]
@@ -80,17 +81,17 @@ const (
 	CALL // CALL calls src0 with argument cnt src1
 	RET  // RET returns from a function call pushing src0 after rolling back the stack
 
-	// CCONT pushes the current context on the context stack, creates a new
-	// execution context and switches to it
+	// CCONT jumps relative to ip + src0 in current context, saves context, and
+	// switches to a new context that continues from old ip.
 	CCONT
-	// DCONT pops the context stack, switches memory but keeps ip
+	// DCONT restores previous context switches memory, but doesn't switch ip
 	DCONT
-	// RCONT pops the context stack and discards
+	// RCONT removes last memory context saved
 	RCONT
-	// SCONT swaps the current context with the top of the context stack
+	// SCONT swaps the current context with the last saved
 	SCONT
 	// YIELD pushes src0 in the current context, swaps the current context with
-	// the top of the context stack, and pushes src0 in the new context
+	// the saved, and pushes src0 in the new context
 	YIELD
 
 	READ  // READ builtin

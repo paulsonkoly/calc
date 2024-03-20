@@ -60,10 +60,10 @@ func (l *Lexer) Next() bool {
 		st = str.next
 
 		if str.doEmit {
-      word:= l.input[l.from:l.to]
-      if str.typ == token.StringLit {
-        word = strings.ReplaceAll(word, "\\n", "\n")
-      }
+			word := l.input[l.from:l.to]
+			if str.typ == token.StringLit {
+				word = strings.ReplaceAll(word, "\\n", "\n")
+			}
 			l.Token = token.Type{Value: word, Type: str.typ}
 			l.state = str.next
 			l.from = l.to

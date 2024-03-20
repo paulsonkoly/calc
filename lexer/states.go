@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	stickyChars     = "+*/=<>!-&|#%"
+	stickyChars     = "+*/=<>!-&|#%~"
 	nonStrickyChars = "(){}[],:"
 )
 

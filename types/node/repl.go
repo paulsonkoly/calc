@@ -59,7 +59,7 @@ type Parser interface {
 func Loop(r lineReader, p Parser, vm *vm.Type, doOut bool) {
 	blocksOpen := 0
 	quotesOpen := 0
-  bracketsOpen := 0
+	bracketsOpen := 0
 	input := ""
 	sep := ""
 
@@ -71,7 +71,7 @@ func Loop(r lineReader, p Parser, vm *vm.Type, doOut bool) {
 
 		blocksOpen += strings.Count(line, "{") - strings.Count(line, "}")
 		quotesOpen += strings.Count(line, "\"") - strings.Count(line, "\\\"")
-    bracketsOpen += strings.Count(line, "[") - strings.Count(line, "]")
+		bracketsOpen += strings.Count(line, "[") - strings.Count(line, "]")
 		input += sep + line
 		sep = "\n"
 

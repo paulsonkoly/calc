@@ -193,10 +193,10 @@ func (b BinOp) byteCode(srcsel int, inFor bool, cs *[]bytecode.Type, ds *[]value
 		op = bytecode.GT
 	case ">=":
 		op = bytecode.GE
-  case "<<":
-    op = bytecode.LSH
-  case ">>":
-    op = bytecode.RSH
+	case "<<":
+		op = bytecode.LSH
+	case ">>":
+		op = bytecode.RSH
 	default:
 		panic("unexpected op")
 	}
@@ -218,6 +218,8 @@ func (u UnOp) byteCode(srcsel int, inFor bool, cs *[]bytecode.Type, ds *[]value.
 		op = bytecode.LEN
 	case "!":
 		op = bytecode.NOT
+	case "~":
+		op = bytecode.FLIP
 	default:
 		panic("unexpected op")
 	}

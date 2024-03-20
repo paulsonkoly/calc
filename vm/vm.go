@@ -86,6 +86,11 @@ func (vm *Type) Run(retResult bool) value.Type {
 			val := src0.Not()
 			m.Push(val)
 
+		case bytecode.FLIP:
+			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+			val := src0.Flip()
+			m.Push(val)
+
 		case bytecode.LT, bytecode.GT, bytecode.LE, bytecode.GE:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)

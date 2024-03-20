@@ -36,6 +36,7 @@ var testData = []testDatum{
 	{"single lexeme", "]", []token.Type{{Value: "]", Type: token.NotSticky}, eol, eof}},
 	{"single lexeme", "&", []token.Type{{Value: "&", Type: token.Sticky}, eol, eof}},
 	{"single lexeme", "|", []token.Type{{Value: "|", Type: token.Sticky}, eol, eof}},
+	{"single lexeme", "~", []token.Type{{Value: "~", Type: token.Sticky}, eol, eof}},
 	{"string literal", "\"abc\"", []token.Type{{Value: "\"abc\"", Type: token.StringLit}, eol, eof}},
 	{"escaped string literal", "\"a\\\"bc\"", []token.Type{{Value: "\"a\\\"bc\"", Type: token.StringLit}, eol, eof}},
 	{"string literal with new line", "\"a\nbc\"", []token.Type{{Value: "\"a\nbc\"", Type: token.StringLit}, eol, eof}},

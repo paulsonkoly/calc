@@ -32,15 +32,15 @@ var testData = [...]TestDatum{
 	{"simple literal/string", "\"abc\"", nil, value.NewString("abc")},
 	{"simple literal/array empty", "[]", nil, value.NewArray([]value.Type{})},
 	{"simple literal/array", "[1, false]", nil, value.NewArray([]value.Type{value.NewInt(1), value.NewBool(false)})},
-  {"array lit with newline", "[1,2,\n3,4]", nil, value.NewArray([]value.Type{value.NewInt(1), value.NewInt(2), value.NewInt(3), value.NewInt(4)})},
-  {"array lit with leading newline", "[\n1,2,\n3,4]", nil, value.NewArray([]value.Type{value.NewInt(1), value.NewInt(2), value.NewInt(3), value.NewInt(4)})},
+	{"array lit with newline", "[1,2,\n3,4]", nil, value.NewArray([]value.Type{value.NewInt(1), value.NewInt(2), value.NewInt(3), value.NewInt(4)})},
+	{"array lit with leading newline", "[\n1,2,\n3,4]", nil, value.NewArray([]value.Type{value.NewInt(1), value.NewInt(2), value.NewInt(3), value.NewInt(4)})},
 
 	{"simple arithmetic/addition", "1+2", nil, value.NewInt(3)},
 
 	{"string indexing/simple", "\"apple\"[1]", nil, value.NewString("p")},
 	{"string indexing/complex empty", "\"apple\" [ 1 : 1]", nil, value.NewString("")},
 
-  {"indices/all from stack", "\"apple\"[ 1+0 : 3+0 ]", nil, value.NewString("pp")},
+	{"indices/all from stack", "\"apple\"[ 1+0 : 3+0 ]", nil, value.NewString("pp")},
 
 	{"string concatenation", "\"abc\" + \"def\"", nil, value.NewString("abcdef")},
 
