@@ -104,7 +104,7 @@ func Loop(r lineReader, p Parser, vm *vm.Type, doOut bool) {
 
 				v := vm.Run(doOut)
 				if doOut {
-					fmt.Printf("> %v\n", v)
+					fmt.Printf("> %s\n", v.Display())
 				}
 			}
 		}

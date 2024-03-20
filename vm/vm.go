@@ -296,7 +296,7 @@ func (vm *Type) Run(retResult bool) value.Type {
 
 		case bytecode.WRITE:
 			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
-			fmt.Println(val)
+			fmt.Print(val)
 			m.Push(value.NoResultError)
 
 		case bytecode.ATON:

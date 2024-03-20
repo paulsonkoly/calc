@@ -14,3 +14,4 @@ for y <- fromto(1900, 2001) {
 }
 
 write(sundays)
+write("\n")

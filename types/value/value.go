@@ -126,22 +126,22 @@ func (v Type) ToArray() ([]Type, bool) {
 }
 
 // Value of any type to string
-func (d Type) String() string {
-	switch d.typ {
+func (t Type) String() string {
+	switch t.typ {
 	case intT:
-		return fmt.Sprint(*(*int)(unsafe.Pointer(&d.morph)))
+		return fmt.Sprint(*(*int)(unsafe.Pointer(&t.morph)))
 	case floatT:
-		return fmt.Sprint(*(*float64)(unsafe.Pointer(&d.morph)))
+		return fmt.Sprint(*(*float64)(unsafe.Pointer(&t.morph)))
 	case boolT:
-		return fmt.Sprint(d.morph == 1)
+		return fmt.Sprint(t.morph == 1)
 	case stringT:
-		return fmt.Sprintf("\"%v\"", *(*string)(d.ptr))
+		return *(*string)(t.ptr)
 	case errorT:
-		return fmt.Sprintf("%v", *(*string)(d.ptr))
+		return fmt.Sprintf("%v", *(*string)(t.ptr))
 	case functionT:
 		return "function"
 	case arrayT:
-		a := *(*[]Type)(d.ptr)
+		a := *(*[]Type)(t.ptr)
 
 		r := ""
 		if len(a) > 0 {
@@ -154,6 +154,16 @@ func (d Type) String() string {
 		return "[" + r + "]"
 	}
 	panic("type not handled in String")
+}
+
+// Display converts a value to a string for calc result printing.
+//
+// Adds extra quotes around string type.
+func (t Type) Display() string {
+	if t.typ == stringT {
+		return fmt.Sprintf("\"%v\"", *(*string)(t.ptr))
+	}
+	return t.String()
 }
 
 // Predefined errors
@@ -315,7 +325,7 @@ func (a Type) Relational(op string, b Type) Type {
 func (a Type) Logic(op string, b Type) Type {
 
 	switch (a.typ)<<4 | b.typ {
-  case (intT << 4) | intT:
+	case (intT << 4) | intT:
 		aVal := a.morph
 		bVal := b.morph
 
@@ -324,7 +334,7 @@ func (a Type) Logic(op string, b Type) Type {
 		} else {
 			aVal |= bVal
 		}
-		return NewInt(int(aVal)) 
+		return NewInt(int(aVal))
 
 	case (boolT << 4) | boolT:
 		aVal := a.morph
@@ -359,7 +369,7 @@ func (a Type) Logic(op string, b Type) Type {
 func (a Type) Shift(op string, b Type) Type {
 
 	switch (a.typ)<<4 | b.typ {
-  case (intT << 4) | intT:
+	case (intT << 4) | intT:
 		aVal := a.morph
 		bVal := b.morph
 
@@ -368,7 +378,7 @@ func (a Type) Shift(op string, b Type) Type {
 		} else {
 			aVal >>= bVal
 		}
-		return NewInt(int(aVal)) 
+		return NewInt(int(aVal))
 
 	case (intT << 4) | errorT, (floatT << 4) | errorT, (stringT << 4) | errorT,
 		(arrayT << 4) | errorT, (boolT << 4) | errorT, (functionT << 4) | errorT:
