@@ -178,6 +178,11 @@ var testData = []TestDatum{
 		func(a, b value.Type) value.Type { return a.Index(value.NewInt(2), value.NewInt(1)) },
 		value.IndexError,
 	},
+	{"Index array[int:int] indices past end",
+		value.NewArray([]value.Type{value.NewInt(1), value.NewInt(2), value.NewInt(3)}),
+		value.NewInt(0),
+		func(a, b value.Type) value.Type { return a.Index(value.NewInt(3), value.NewInt(3)) },
+		value.NewArray([]value.Type{})},
 	{"Index string[bool]", value.NewString("ab"), value.NewBool(true), func(a, b value.Type) value.Type { return a.Index(b) }, value.TypeError},
 
 	{"Len string", value.NewString("a"), value.NewInt(1), func(a, b value.Type) value.Type { return a.Len() }, value.NewInt(1)},

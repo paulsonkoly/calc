@@ -432,7 +432,7 @@ func (a Type) Index(b ...Type) Type {
 
 		switch len(b) {
 		case 2:
-			if iix[0] < 0 || iix[0] >= len(s) || iix[1] < iix[0] || iix[1] > len(s) {
+			if iix[0] < 0 || iix[0] > len(s) || iix[1] < iix[0] || iix[1] > len(s) {
 
 				return IndexError
 			}
@@ -455,7 +455,7 @@ func (a Type) Index(b ...Type) Type {
 
 		switch len(b) {
 		case 2:
-			if iix[0] < 0 || iix[0] >= len(ary) || iix[1] < iix[0] || iix[1] > len(ary) {
+			if iix[0] < 0 || iix[0] > len(ary) || iix[1] < iix[0] || iix[1] > len(ary) {
 
 				return IndexError
 			}
