@@ -118,9 +118,9 @@ func (vm *Type) Run(retResult bool) value.Type {
 			m.Push(val)
 
 		case bytecode.IX2:
-			src2 := vm.fetch(instr.Src2(), instr.Src2Addr(), m, ds)
-			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
+			src2 := vm.fetch(instr.Src2(), instr.Src2Addr(), m, ds)
 
 			val := src2.Index(src1, src0)
 
