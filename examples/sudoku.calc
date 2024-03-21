@@ -1,0 +1,169 @@
+; cell indices
+cells = () -> fromto(0, 81)
+
+; values from 0 to 8
+values = () -> fromto(0, 9)
+
+; indices in ith row
+row = (i) -> fromto(i*9, i*9 + 9)
+rows = values
+rowof = (n) -> n / 9
+
+; indices in jth column
+column = (j) -> {
+  while j < 81 {
+    yield j
+    j = j + 9
+  }
+}
+columnof = (n) -> n % 9
+
+; indices in ith box
+box = (i) -> {
+  base = (i / 3) * 27 + (i % 3) * 3
+  for bi <- fromto(0, 3) {
+    for bj <- fromto(0, 3) {
+      yield base + bi * 9 + bj
+    }
+  }
+}
+boxof = (n) -> (n / 27) * 3 + (n % 9) / 3
+
+; all pencilmarks
+allset = 1 << 9 - 1
+
+; is single digit 
+single = (n) -> n & (n - 1) == 0 && n != 0
+
+; cell to string
+cellstring = (n) -> {
+  for v <- values() {
+    if n & (1 << v) != 0 {
+      return toa(v + 1)
+    }
+  }
+  " "
+}
+
+printboard = (board) -> {
+  s = ""
+  for i <- rows() {
+    for c <- row(i) {
+      s = s + cellstring(board[c]) + " "
+      if c % 3 == 2 {
+         s = s + "| "
+      }
+    }
+    s = s + "\n"
+    if i % 3 == 2 {
+      s = s +"------+-------+-------|\n"
+    }
+  }
+  write(s)
+}
+
+board = [
+ 0,0,0,0,0,0,0,0,0,
+ 0,0,0,0,0,0,0,0,0,
+ 0,0,0,0,0,0,0,0,0,
+ 0,0,0,0,0,0,0,0,0,
+ 0,0,0,0,0,0,0,0,0,
+ 0,0,0,0,0,0,0,0,0,
+ 0,0,0,0,0,0,0,0,0,
+ 0,0,0,0,0,0,0,0,0,
+ 0,0,0,0,0,0,0,0,0]
+set = (board, i, v) -> board[0:i] + [v] + board[i+1: #board]
+for i <- cells() board = set(board, i, allset)
+
+; fill in a known cell
+fill = (board, i, v) -> {
+  board = set(board, i, v)
+  do = (board, c) -> {
+    n = board[c] & ~v
+    if c != i && n != board[c] {
+      if single(n) return fill(board, c, n) else return set(board, c, n)
+    }
+    board
+  }
+  for c <- row(rowof(i)) board = do(board, c) 
+  for c <- column(columnof(i)) board = do(board, c)
+  for c <- box(boxof(i)) board = do(board, c)
+  board
+}
+
+; lowest bitcount unsolved cell
+heuristics = (board) -> {
+  bitcnt = (v) -> {
+    c = 0
+    for i <- values() {
+      if v & (1<<i) != 0 c = c + 1
+    }
+    c
+  }
+  r = -1
+  bits = 9
+  for c <- cells() {
+    bcnt = bitcnt(board[c])
+    if !single(board[c]) && bcnt != 0 && bcnt <= bits {
+      r = c
+      bits = bcnt
+    }
+  }
+  return r
+}
+
+; brute force solve with depth number of guesses allowed
+solve = (board, depth) -> {
+  zerocell = () -> {
+    for c <- cells() {
+      if board[c] == 0 return c
+    }
+    -1
+  }
+  this = heuristics(board)
+  if zerocell() != -1 return false
+  if this == -1 return board
+  if depth == 0 return false
+  for v <- values() {
+    if (1<<v) & board[this] != 0 {
+      guess = fill(board, this, 1<<v) 
+      res = solve(guess, depth - 1)
+      if res != false return res
+    }
+  }
+  return false
+}
+
+deepen = (board) -> {
+  for depth <- fromto(1, 20) {
+    r = solve(board, depth)
+    if r != false return r
+  }
+}
+
+; https://sudoku2.com/play-the-hardest-sudoku-in-the-world/
+board = fill(board, 0*9 + 0, 1 << (8 - 1))
+board = fill(board, 1*9 + 2, 1 << (3 - 1))
+board = fill(board, 1*9 + 3, 1 << (6 - 1))
+board = fill(board, 2*9 + 1, 1 << (7 - 1))
+board = fill(board, 2*9 + 4, 1 << (9 - 1))
+board = fill(board, 2*9 + 6, 1 << (2 - 1))
+board = fill(board, 3*9 + 1, 1 << (5 - 1))
+board = fill(board, 3*9 + 5, 1 << (7 - 1))
+board = fill(board, 4*9 + 4, 1 << (4 - 1))
+board = fill(board, 4*9 + 5, 1 << (5 - 1))
+board = fill(board, 4*9 + 6, 1 << (7 - 1))
+board = fill(board, 5*9 + 3, 1 << (1 - 1))
+board = fill(board, 5*9 + 7, 1 << (3 - 1))
+board = fill(board, 6*9 + 2, 1 << (1 - 1))
+board = fill(board, 6*9 + 7, 1 << (6 - 1))
+board = fill(board, 6*9 + 8, 1 << (8 - 1))
+board = fill(board, 7*9 + 2, 1 << (8 - 1))
+board = fill(board, 7*9 + 3, 1 << (5 - 1))
+board = fill(board, 7*9 + 7, 1 << (1 - 1))
+board = fill(board, 8*9 + 1, 1 << (9 - 1))
+board = fill(board, 8*9 + 6, 1 << (4 - 1))
+
+board = deepen(board)
+
+printboard(board)
