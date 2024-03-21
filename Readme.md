@@ -48,6 +48,8 @@ Iterators / generators
     4
     > 7 
 
+Further code examples: [here](https://github.com/paulsonkoly/calc/tree/main/examples)
+
 ## Editor support
 
 There is syntax highlighting based on tree-sitter, and a small nvim plugin that enables neovim to download the treesitter parser and adds file type detection (ssuming .calc extension). Add [paulsonkoly/calc.nvim](https://github.com/paulsonkoly/calc.nvim) to your neovim package manager and require("calc") to add language support.
@@ -380,7 +382,8 @@ In the following BNF non-terminals are lower case, terminals are upper case or q
     returning: "return" expression
     yield: "yield" expression
 
-    expression: relational
+    expression: lowprec
+    lowprec: relational /&&|[|]{2}/ relational | relational
     relational: logic /<|>|<=|>=|==|!=/ logic | logic
     logic: logic /[|&]/ addsub | addsub
     addsub: addsub /[+-]/ divmul | divmul
