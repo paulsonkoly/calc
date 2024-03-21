@@ -163,6 +163,14 @@ var testData = [...]TestDatum{
 	     x(2)
 		}`, nil, value.NewInt(3),
 	},
+
+  {"array addition/doesn't share sub-slices",
+  `{
+    a = [1,2,3]
+    b = a[1:2] + [1]
+    a
+  }`, nil, value.NewArray([]value.Type{value.NewInt(1), value.NewInt(2), value.NewInt(3)}),
+  },
 	{"keyword violation", "true = false", errors.New("Parser: "), value.Type{}},
 	{"builtin/aton int", "aton(\"12\")", nil, value.NewInt(12)},
 	{"builtin/aton float", "aton(\"1.2\")", nil, value.NewFloat(1.2)},

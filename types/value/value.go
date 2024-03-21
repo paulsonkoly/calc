@@ -3,6 +3,7 @@ package value
 
 import (
 	"fmt"
+	"slices"
 	"unsafe"
 )
 
@@ -240,7 +241,7 @@ func (a Type) Arith(op string, b Type) Type {
 
 		aVal := a.a()
 		bVal := b.a()
-		return NewArray(append(aVal, bVal...))
+		return NewArray(append(slices.Clone(aVal), bVal...))
 
 	default:
 		if a.typ == b.typ {
