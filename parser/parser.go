@@ -143,8 +143,14 @@ func relational(input c.RollbackLexer) ([]c.Node, error) {
 	return c.Fmap(mkLeftChain, c.And(logic, chain))(input)
 }
 
+func boolOp(input c.RollbackLexer) ([]c.Node, error) {
+	op := c.OneOf(acceptToken("&&"), acceptToken("||"))
+	chain := c.Any(c.Conditional{Gate: op, OnSuccess: relational})
+	return c.Fmap(mkLeftChain, c.And(relational, chain))(input)
+}
+
 func expression(input c.RollbackLexer) ([]c.Node, error) {
-	return relational(input)
+	return boolOp(input)
 }
 
 func assignment(input c.RollbackLexer) ([]c.Node, error) {

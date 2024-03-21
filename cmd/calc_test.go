@@ -62,6 +62,9 @@ var testData = [...]TestDatum{
 
 	{"logicop/bool&bool true", "true&true", nil, value.NewBool(true)},
 
+  {"bool or/low precedence", "true||false == false", nil, value.NewBool(true)},
+  {"bool or/high precedence", "true|false == false", nil, value.NewBool(false)},
+
 	{"block/single line", "{\n1\n}", nil, value.NewInt(1)},
 	{"block/multi line", "{\n1\n2\n}", nil, value.NewInt(2)},
 
