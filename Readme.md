@@ -249,27 +249,20 @@ When a function is not a top level function but defined within a function, it be
 
 In this example the function returned from f holds reference to the frame that was pushed on the call of f. This frame contains both a=1 and n=2. The anonymous function is assigned to foo later, and at the call of foo, we push this frame, and a second frame containing b=3.
 
-Closures frames are saved and attached to the function value at the point of time when a function is created. Different calls to a function can have different values of the same variable:
+Closure variables are shared with the defining function until the defining function returns. Updates to these variables are visible in the closure, but the closure cannot write these variables, as they are not local.
 
-    weird = (n) -> {
-      i = n
-      if n/2*2 == n {
-         () -> i* 10
-      } else {
-         () -> i * 100
-      }
+    f = () -> {
+      x = 1
+      g = () -> x
+      x = 2
+      g
     }
-    >  function
-    f = weird(2)
-    >  function
-    g = weird(3)
-    >  function
-    f()
-    >  20
-    g()
-    >  300
+    > function
 
-Note however that only immediately containing lexical scope of the function definition is retained, thus the following results in error:
+    g()
+    > 2
+
+For a closure only immediately containing lexical scope of the function definition is retained, thus the following results in error:
 
     f = (x) -> {
       (y) -> {

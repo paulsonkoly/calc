@@ -166,6 +166,18 @@ var testData = [...]TestDatum{
 	     x(2)
 		}`, nil, value.NewInt(3),
 	},
+	{"function/closure variable updates",
+		`{
+			f = () -> {
+        x = 1
+        g = () -> x
+        x = 2
+        g
+	    }
+			g = f()
+	    g()
+		}`, nil, value.NewInt(2),
+	},
 
   {"array addition/doesn't share sub-slices",
   `{

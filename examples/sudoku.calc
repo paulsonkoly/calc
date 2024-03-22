@@ -78,16 +78,16 @@ for i <- cells() board = set(board, i, allset)
 ; fill in a known cell
 fill = (board, i, v) -> {
   board = set(board, i, v)
-  do = (board, c) -> {
+  do = (c) -> {
     n = board[c] & ~v
     if c != i && n != board[c] {
       if single(n) return fill(board, c, n) else return set(board, c, n)
     }
     board
   }
-  for c <- row(rowof(i)) board = do(board, c) 
-  for c <- column(columnof(i)) board = do(board, c)
-  for c <- box(boxof(i)) board = do(board, c)
+  for c <- row(rowof(i)) board = do(c) 
+  for c <- column(columnof(i)) board = do(c)
+  for c <- box(boxof(i)) board = do(c)
   board
 }
 
