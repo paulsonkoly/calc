@@ -2,7 +2,7 @@
 
 A simple calculator language / REPL.
 
-The language can be used in a REPL or instructions can be read from a file. The REPL outputs its answer after '>' character.
+The language can be used in a REPL or instructions can be read from a file. The REPL outputs its answer after the '>' character.
 
     isprime = (n) -> {
       if n < 2 return false
@@ -52,7 +52,7 @@ Further code examples: [here](https://github.com/paulsonkoly/calc/tree/main/exam
 
 ## Editor support
 
-There is syntax highlighting based on tree-sitter, and a small nvim plugin that enables neovim to download the treesitter parser and adds file type detection (ssuming .calc extension). Add [paulsonkoly/calc.nvim](https://github.com/paulsonkoly/calc.nvim) to your neovim package manager and require("calc") to add language support.
+There is syntax highlighting based on tree-sitter, and a small nvim plugin that enables neovim to download the treesitter parser and adds file type detection (assuming .calc extension). Add [paulsonkoly/calc.nvim](https://github.com/paulsonkoly/calc.nvim) to your neovim package manager and require("calc") to add language support.
 
 ## Running calc
 
@@ -60,7 +60,7 @@ The language is meant to be a calculator REPL, and as such takes care of input/o
 
 ### REPL
 
-If there is no input file given and no command line argument to evaluate then the input is assumed to come from a terminal and we assume REPL mode. In this mode readline library is used to ease line editing. The token { defines a multi-line block, until the corresponding } is found. The REPL doesn't evaluate until multi line blocks are closed, and it automatically outputs the result after each evaluation.
+If there is no input file given and no command line argument to evaluate then the input is assumed to come from a terminal and we assume REPL mode. In this mode, readline library is used to ease line editing. The token { defines a multi-line block, until the corresponding } is found. The REPL doesn't evaluate until multi line blocks are closed, and it automatically outputs the result after each evaluation.
 
 ### Command line argument
 
@@ -82,7 +82,7 @@ If a single file name is provided on the command line the input is redirected fr
 
 ## Builtin functions
 
-Built in functions are loaded in the top level frame on the interpreter start up. They provide functionality that cannot be implemented in calc itself, or convinience functions. These are just regular function values defined in the global lexical scope.
+Built in functions are loaded in the top level frame on the interpreter start up. They provide functionality that cannot be implemented in calc itself, or convenience functions. These are just regular function values defined in the global lexical scope.
 
 | function | arity | returns                    | description                             |
 |----------|-------|----------------------------|-----------------------------------------|
@@ -102,7 +102,7 @@ There are 7 value types: integers, floats, booleans, functions, strings, arrays 
 
 Equality check works with any type. A function does not equal anything even itself. Arithmetic operations and relational operations work on numbers, an expression containing only integers results in integer (or error), an expression containing a float results in a float. Relational operations work both on numbers, booleans and strings. Logic operations work on booleans, and using bitwise logic on integers. Bit shifts work with integers only.
 
-Arrays are dynamic container of any type.
+Arrays are dynamic containers of any type.
 
     funs = [ ["+", (a, b) -> a+b ], ["-", (a, b) -> a - b ] ]
     >  [["+", function], ["-", function]]
@@ -174,7 +174,7 @@ with the more concise
 
     for i <- fromto(0, 10) write(i)
 
-`elems` and `indices` can also be implemented in similar fashion but also provided as builtin functions. One can write number generators or other iterators using yield.
+`elems` and `indices` can also be implemented in a similar fashion but also provided as builtin functions. One can write number generators or other iterators using yield.
 
 An iterator or generator is an expression that when evaluated calls the yield keyword with some value. The syntax for a for loop is
 
@@ -209,13 +209,13 @@ If one wants to observe side effects from the iterator it can lead to confusing 
 
 There are 3 types of variables, depending on the lexical scope, but their syntax is identical.
 
-A variable at the global lexical scope is a global variable and visible in every scope where it's not shadowed, but is only writable from the global lexical scope.
+A variable at the global lexical scope is a global variable and visible in every scope where it's not shadowed but is only writable from the global lexical scope.
 
-A variable defined withing a function or a parameter to a function is local variable in the function.
+A variable defined within a function or a parameter to a function is a local variable in the function.
 
-A variable that's local variable in some function f that defines function g, becomes a closure variable within the call of g.
+A variable that's a local variable in some function f that defines function g, becomes a closure variable within the call of g.
 
-Variable reads look up variables in the order of local, closure, global. Variable writes write variables as local, shadowing previously visible variables by the same name.
+Variable reads look up variables in the order of local, closure and global. Variable writes write variables as local, shadowing previously visible variables by the same name.
 
     a = 13
     >  13
@@ -233,7 +233,7 @@ Variable reads look up variables in the order of local, closure, global. Variabl
 
 `a` is a global variable shadowed in the function `f`.
 
-When a function is not a top level function but defined within a function, it becomes a closure. This is done by it holding a reference to the stack frame that belonged to the function call that defined it.
+When a function is not a top level function but defined within a function, it becomes a closure. This is done by holding a reference to the stack frame that belonged to the function call that defined it.
 
     f = (n) -> {
       a = 1
@@ -247,7 +247,7 @@ When a function is not a top level function but defined within a function, it be
     foo(3)
     >  6
 
-In this example the function returned from f holds reference to the frame that was pushed on the call of f. This frame contains both a=1 and n=2. The anonymous function is assigned to foo later, and at the call of foo, we push this frame, and a second frame containing b=3.
+In this example, the function returned from f holds reference to the frame that was pushed on the call of f. This frame contains both a=1 and n=2. The anonymous function is assigned to foo later, and at the call of foo, we push this frame, and a second frame containing b=3.
 
 Closure variables are shared with the defining function until the defining function returns. Updates to these variables are visible in the closure, but the closure cannot write these variables, as they are not local.
 
@@ -262,7 +262,7 @@ Closure variables are shared with the defining function until the defining funct
     g()
     > 2
 
-For a closure only immediately containing lexical scope of the function definition is retained, thus the following results in error:
+For a closure only the immediately containing lexical scope of the function definition is retained, thus the following results in error:
 
     f = (x) -> {
       (y) -> {
@@ -294,7 +294,7 @@ One can make this example work by making an explicit copy of x:
 
 Comments start with ; until the end of the line.
 
-The top level non-terminal is the program, a program consists of statements. Statements are on a single line up to the first new line character, blocks span across multiple lines.
+The top level non-terminal is the program, a program consists of statements. Statements are on a single line up to the first new line character, whereas blocks span across multiple lines.
 
 The language has the following statement types:
 
@@ -308,13 +308,13 @@ The followings are keywords: if, else, while, for, return, yield, true, false. A
 
 ### Expressions
 
-All operators are left associative thus following the natural notations. 1-2+1 is 0 and not -2. Unary minus is supported as an operator, not part of a number literal, thus work with any expression.
+All operators are left associative thus following the natural notations. 1-2+1 is 0 and not -2. Unary minus is supported as an operator, not part of a number literal, and thus work with any expression.
 
 ### Assignment
 
 Any value type can be assigned to a variable. The variable name is not defined in the scope of the assignment right hand side. Although assignments return the assigned value, they cannot be used in expressions, only as a statement.
 
-Recursive call to a function using the variable name the function is assigned to works however; because the function body is only evaluated when the function is called.
+Recursive call to a function using the variable name the function is assigned to works, however; because the function body is only evaluated when the function is called.
 
     f = (n) -> if n <= 0 0 else n + f(n-1)
     > function
@@ -343,11 +343,11 @@ while loops are a simple construct of a loop condition and a loop body. for loop
 
 ### Return
 
-Returns from the current function call or block. Returns are valid outside of a function and they produce the returned value. They have an effect on the containing structure. For blocks the containing block evaluates to the return value without evaluating subsequent lines. For loops, encountering a return breaks out of the loop and the result of the loop will be the return value.
+Returns from the current function call or block. Returns are valid outside of a function and they produce the returned value. They have an effect on the containing structure. For blocks, the containing block evaluates to the return value without evaluating subsequent lines. For loops, encountering a return breaks out of the loop and the result of the loop will be the return value.
 
 ### Tokens
 
-The following tokens are valid (using usual regular expression notation)
+The following tokens are valid (using the usual regular expression notation)
 
  - integer literal `/\d+/`
  - float literal `/\d+(\.\d+)?/`
@@ -357,11 +357,11 @@ The following tokens are valid (using usual regular expression notation)
  - sticky chars `/[+*/=<>!%-&|@]/`
  - new line `/\n/`
 
-Tokens are separated with white-spaces. Sticky chars together are returned from the lexer as single lexeme. For example "<=" is a single lexeme.
+Tokens are separated with white-spaces. Sticky chars together are returned from the lexer as a single lexeme. For example "<=" is a single lexeme.
 
 ### BNF
 
-In the following BNF non-terminals are lower case, terminals are upper case or quoted strings.
+In the following BNF non-terminals are lower case, and terminals are upper case or quoted strings.
 
     program: block "\n" program | block EOF
     block: "{" "\n" statements "\n" "}" | statement

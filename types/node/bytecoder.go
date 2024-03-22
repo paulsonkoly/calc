@@ -177,7 +177,7 @@ func (b BinOp) byteCode(srcsel int, inFor bool, cs *[]bytecode.Type, ds *[]value
 		op = bytecode.DIV
 	case "%":
 		op = bytecode.MOD
-  case "&", "&&":
+	case "&", "&&":
 		op = bytecode.AND
 	case "|", "||":
 		op = bytecode.OR

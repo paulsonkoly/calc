@@ -223,9 +223,9 @@ func (vm *Type) Run(retResult bool) value.Type {
 			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 
 			f, ok := val.ToFunction()
-      if ok && f.Frame != nil {
-					f.Frame = slices.Clone(f.Frame.(memory.Frame))
-          val = value.NewFunction(f.Node, f.Frame, f.ParamCnt, f.LocalCnt)
+			if ok && f.Frame != nil {
+				f.Frame = slices.Clone(f.Frame.(memory.Frame))
+				val = value.NewFunction(f.Node, f.Frame, f.ParamCnt, f.LocalCnt)
 			}
 
 			nip := m.IP()
