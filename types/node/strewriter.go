@@ -163,7 +163,7 @@ func (l List) STRewrite(symTbl SymTbl) Type {
 	return List{Elems: elems}
 }
 
-func (r Read) STRewrite(symTbl SymTbl) Type  { return r }
+func (r Read) STRewrite(_ SymTbl) Type       { return r }
 func (w Write) STRewrite(symTbl SymTbl) Type { return Write{Value: w.Value.STRewrite(symTbl)} }
 func (a Aton) STRewrite(symTbl SymTbl) Type  { return Aton{Value: a.Value.STRewrite(symTbl)} }
 func (t Toa) STRewrite(symTbl SymTbl) Type   { return Toa{Value: t.Value.STRewrite(symTbl)} }

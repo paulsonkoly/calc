@@ -6,36 +6,36 @@ type Type uint64
 
 // Instruction layout
 const (
-	OPCODE_HI    = 63
-	OPCODE_LO    = 57
-	SRC2_HI      = 56
-	SRC2_LO      = 54
-	SRC1_HI      = 53
-	SRC1_LO      = 51
-	SRC0_HI      = 50
-	SRC0_LO      = 48
-	SRC2_ADDR_HI = 47
-	SRC2_ADDR_LO = 32
-	SRC1_ADDR_HI = 31
-	SRC1_ADDR_LO = 16
-	SRC0_ADDR_HI = 15
-	SRC0_ADDR_LO = 0
+	OpcodeHi   = 63
+	OpcodeLo   = 57
+	Src2Hi     = 56
+	Src2Lo     = 54
+	Src1Hi     = 53
+	Src1Lo     = 51
+	Src0Hi     = 50
+	Src0Lo     = 48
+	Src2AddrHi = 47
+	Src2AddrLo = 32
+	Src1AddrHi = 31
+	Src1AddrLo = 16
+	Src0AddrHi = 15
+	Src0AddrLo = 0
 )
 
 const (
-	SRC_CHAN_WIDTH       = 16
-	SRC_CHAN_SIGN_EXTEND = 0xffffffffffff0000
+	SrcChanWidth      = 16
+	SrcChanSignExtend = 0xffffffffffff0000
 )
 
 // Source addressing
 const (
-	ADDR_INV  = iota
-	ADDR_IMM  // immediate
-	ADDR_GBL  // global variable
-	ADDR_LCL  // local variable
-	ADDR_CLS  // closure variable
-	ADDR_STCK // stack
-	ADDR_DS   // data segment
+	AddrInv  = iota
+	AddrImm  // immediate
+	AddrGbl  // global variable
+	AddrLcl  // local variable
+	AddrCls  // closure variable
+	AddrStck // stack
+	AddrDS   // data segment
 )
 
 type OpCode uint64
@@ -106,34 +106,34 @@ func New(op OpCode) Type {
 	if op < NOP || op > EXIT {
 		panic("op out of range")
 	}
-	op &= (1 << ((OPCODE_HI - OPCODE_LO) + 1)) - 1
+	op &= (1 << ((OpcodeHi - OpcodeLo) + 1)) - 1
 
-	return Type(uint64(op) << OPCODE_LO)
+	return Type(uint64(op) << OpcodeLo)
 }
 
 func EncodeSrc(srcsel int, src uint64, srcAddr int) Type {
-	if srcAddr <= -(1<<SRC_CHAN_WIDTH) || srcAddr >= (1<<SRC_CHAN_WIDTH) {
+	if srcAddr <= -(1<<SrcChanWidth) || srcAddr >= (1<<SrcChanWidth) {
 		panic("srcAddr out of range")
 	}
 	addr := uint64(srcAddr)
 	switch srcsel {
 	case 0:
-		src &= (1 << ((SRC0_HI - SRC0_LO) + 1)) - 1
-		addr &= (1 << ((SRC0_ADDR_HI - SRC0_ADDR_LO) + 1)) - 1
+		src &= (1 << ((Src0Hi - Src0Lo) + 1)) - 1
+		addr &= (1 << ((Src0AddrHi - Src0AddrLo) + 1)) - 1
 
-		return Type(src<<SRC0_LO | uint64(addr)<<SRC0_ADDR_LO)
+		return Type(src<<Src0Lo | uint64(addr)<<Src0AddrLo)
 	case 1:
 
-		src &= (1 << ((SRC1_HI - SRC1_LO) + 1)) - 1
-		addr &= (1 << ((SRC1_ADDR_HI - SRC1_ADDR_LO) + 1)) - 1
+		src &= (1 << ((Src1Hi - Src1Lo) + 1)) - 1
+		addr &= (1 << ((Src1AddrHi - Src1AddrLo) + 1)) - 1
 
-		return Type(src<<SRC1_LO | uint64(addr)<<SRC1_ADDR_LO)
+		return Type(src<<Src1Lo | uint64(addr)<<Src1AddrLo)
 
 	case 2:
-		src &= (1 << ((SRC2_HI - SRC2_LO) + 1)) - 1
-		addr &= (1 << ((SRC2_ADDR_HI - SRC2_ADDR_LO) + 1)) - 1
+		src &= (1 << ((Src2Hi - Src2Lo) + 1)) - 1
+		addr &= (1 << ((Src2AddrHi - Src2AddrLo) + 1)) - 1
 
-		return Type(src<<SRC2_LO | uint64(addr)<<SRC2_ADDR_LO)
+		return Type(src<<Src2Lo | uint64(addr)<<Src2AddrLo)
 
 	default:
 		panic("wrong srcsel")
@@ -151,17 +151,17 @@ func (b Type) String() string {
 
 func srcString(src uint64, addr int) string {
 	switch src {
-	case ADDR_DS:
+	case AddrDS:
 		return fmt.Sprintf("DS[%d] ", addr)
-	case ADDR_CLS:
+	case AddrCls:
 		return fmt.Sprintf("CLS[%d] ", addr)
-	case ADDR_LCL:
+	case AddrLcl:
 		return fmt.Sprintf("LCL[%d] ", addr)
-	case ADDR_GBL:
+	case AddrGbl:
 		return fmt.Sprintf("GBL[%d] ", addr)
-	case ADDR_STCK:
+	case AddrStck:
 		return "STCK "
-	case ADDR_IMM:
+	case AddrImm:
 		return fmt.Sprintf("%d ", addr)
 	default:
 		return ""
@@ -180,36 +180,36 @@ func (b Type) Src(srcsel int) uint64 {
 }
 
 func (b Type) OpCode() OpCode {
-	return OpCode(b>>OPCODE_LO) & ((1 << (OPCODE_HI - OPCODE_LO + 1)) - 1)
+	return OpCode(b>>OpcodeLo) & ((1 << (OpcodeHi - OpcodeLo + 1)) - 1)
 }
 
 func (b Type) Src0() uint64 {
-	return uint64((b >> SRC0_LO) & ((1 << (SRC0_HI - SRC0_LO + 1)) - 1))
+	return uint64((b >> Src0Lo) & ((1 << (Src0Hi - Src0Lo + 1)) - 1))
 }
 
 func (b Type) Src1() uint64 {
-	return uint64((b >> SRC1_LO) & ((1 << (SRC1_HI - SRC1_LO + 1)) - 1))
+	return uint64((b >> Src1Lo) & ((1 << (Src1Hi - Src1Lo + 1)) - 1))
 }
 
 func (b Type) Src2() uint64 {
-	return uint64((b >> SRC2_LO) & ((1 << (SRC2_HI - SRC2_LO + 1)) - 1))
+	return uint64((b >> Src2Lo) & ((1 << (Src2Hi - Src2Lo + 1)) - 1))
 }
 
 func (b Type) Src0Addr() int {
-	return convImm((b >> SRC0_ADDR_LO) & ((1 << (SRC0_ADDR_HI - SRC0_ADDR_LO + 1)) - 1))
+	return convImm((b >> Src0AddrLo) & ((1 << (Src0AddrHi - Src0AddrLo + 1)) - 1))
 }
 
 func (b Type) Src1Addr() int {
-	return convImm((b >> SRC1_ADDR_LO) & ((1 << (SRC1_ADDR_HI - SRC1_ADDR_LO + 1)) - 1))
+	return convImm((b >> Src1AddrLo) & ((1 << (Src1AddrHi - Src1AddrLo + 1)) - 1))
 }
 
 func (b Type) Src2Addr() int {
-	return convImm((b >> SRC2_ADDR_LO) & ((1 << (SRC2_ADDR_HI - SRC2_ADDR_LO + 1)) - 1))
+	return convImm((b >> Src2AddrLo) & ((1 << (Src2AddrHi - Src2AddrLo + 1)) - 1))
 }
 
 func convImm(n Type) int {
-	if n&(1<<(SRC_CHAN_WIDTH-1)) != 0 {
-		n |= SRC_CHAN_SIGN_EXTEND
+	if n&(1<<(SrcChanWidth-1)) != 0 {
+		n |= SrcChanSignExtend
 	}
 	return int(n)
 }

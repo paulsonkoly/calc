@@ -163,9 +163,9 @@ func (vm *Type) Run(retResult bool) value.Type {
 			src1T := instr.Src1()
 
 			switch src1T {
-			case bytecode.ADDR_LCL:
+			case bytecode.AddrLcl:
 				m.Set(instr.Src1Addr(), val)
-			case bytecode.ADDR_GBL:
+			case bytecode.AddrGbl:
 				name, ok := (*ds)[instr.Src1Addr()].ToString()
 				if !ok {
 					log.Panicf("unknown global\n %8d | %v\n", ip, instr)
@@ -372,15 +372,15 @@ func (vm *Type) Run(retResult bool) value.Type {
 
 func (vm Type) fetch(src uint64, addr int, m *memory.Type, ds *[]value.Type) value.Type {
 	switch src {
-	case bytecode.ADDR_STCK:
+	case bytecode.AddrStck:
 		return m.Pop()
-	case bytecode.ADDR_DS:
+	case bytecode.AddrDS:
 		return (*ds)[addr]
-	case bytecode.ADDR_CLS:
+	case bytecode.AddrCls:
 		return m.LookUpClosure(addr)
-	case bytecode.ADDR_LCL:
+	case bytecode.AddrLcl:
 		return m.LookUpLocal(addr)
-	case bytecode.ADDR_GBL:
+	case bytecode.AddrGbl:
 		name, ok := (*ds)[addr].ToString()
 		if !ok {
 			log.Panic("unknown global")

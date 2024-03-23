@@ -19,38 +19,38 @@ type lineReader interface {
 	io.Closer
 }
 
-type rlReader struct{ r *readline.Instance }
+type RLReader struct{ r *readline.Instance }
 
-func NewRLReader() rlReader {
+func NewRLReader() RLReader {
 	r, err := readline.New("")
 	if err != nil {
 		panic(err)
 	}
-	return rlReader{r: r}
+	return RLReader{r: r}
 }
 
-func (rl rlReader) read() (string, error) { return rl.r.Readline() }
+func (rl RLReader) read() (string, error) { return rl.r.Readline() }
 
-func (r rlReader) Close() error { return r.r.Close() }
+func (rl RLReader) Close() error { return rl.r.Close() }
 
-type fReader struct {
+type FReader struct {
 	r *os.File
 	b *bufio.Reader
 }
 
-func NewFReader(fn string) fReader {
+func NewFReader(fn string) FReader {
 	r, err := os.Open(fn)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	b := bufio.NewReader(r)
-	return fReader{r: r, b: b}
+	return FReader{r: r, b: b}
 }
 
-func (f fReader) read() (string, error) { return f.b.ReadString('\n') }
+func (f FReader) read() (string, error) { return f.b.ReadString('\n') }
 
-func (f fReader) Close() error { return f.r.Close() }
+func (f FReader) Close() error { return f.r.Close() }
 
 type Parser interface {
 	Parse(string) ([]Type, error)

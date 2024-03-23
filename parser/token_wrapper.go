@@ -16,7 +16,7 @@ import (
 
 type tokenWrapper struct{}
 
-func (_ tokenWrapper) Wrap(t combinator.Token) combinator.Node {
+func (tokenWrapper) Wrap(t combinator.Token) combinator.Node {
 	realT := t.(token.Type)
 
 	switch realT.Type {
