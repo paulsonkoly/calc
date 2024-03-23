@@ -18,7 +18,7 @@ type testDatum struct {
 
 type tokenWrapper struct{}
 
-func (_ tokenWrapper) Wrap(t combinator.Token) combinator.Node {
+func (tokenWrapper) Wrap(t combinator.Token) combinator.Node {
 	return testNode{token: t.(testToken)}
 }
 

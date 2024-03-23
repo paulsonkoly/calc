@@ -81,49 +81,49 @@ func NewFunction(node int, frame any, paramCnt int, localCnt int) Type {
 // ToFunction converts a value to FunctionData
 //
 // returns ok false if not a function
-func (v Type) ToFunction() (FunctionData, bool) {
-	if v.typ != functionT {
+func (t Type) ToFunction() (FunctionData, bool) {
+	if t.typ != functionT {
 		return FunctionData{}, false
 	}
 
-	return *(*FunctionData)(unsafe.Pointer(v.ptr)), true
+	return *(*FunctionData)(unsafe.Pointer(t.ptr)), true
 }
 
 // ToInt converts a value to int
 //
 // returns ok false if not an int
-func (v Type) ToInt() (int, bool) {
-	if v.typ != intT {
+func (t Type) ToInt() (int, bool) {
+	if t.typ != intT {
 		return 0, false
 	}
-	return *(*int)(unsafe.Pointer(&v.morph)), true
+	return *(*int)(unsafe.Pointer(&t.morph)), true
 }
 
 // ToBool converts a value to bool
 //
 // returns ok false if not an bool
-func (v Type) ToBool() (bool, bool) {
-	if v.typ != boolT {
+func (t Type) ToBool() (bool, bool) {
+	if t.typ != boolT {
 		return false, false
 	}
-	return v.morph == 1, true
+	return t.morph == 1, true
 }
 
 // ToString converts a value to string
 //
 // returns ok false if not a string
-func (v Type) ToString() (string, bool) {
-	if v.typ != stringT {
+func (t Type) ToString() (string, bool) {
+	if t.typ != stringT {
 		return "", false
 	}
-	return *(*string)(unsafe.Pointer(v.ptr)), true
+	return *(*string)(unsafe.Pointer(t.ptr)), true
 }
 
-func (v Type) ToArray() ([]Type, bool) {
-	if v.typ != arrayT {
+func (t Type) ToArray() ([]Type, bool) {
+	if t.typ != arrayT {
 		return nil, false
 	}
-	return *(*[]Type)(unsafe.Pointer(v.ptr)), true
+	return *(*[]Type)(unsafe.Pointer(t.ptr)), true
 }
 
 // Value of any type to string
@@ -187,12 +187,12 @@ var (
 )
 
 // Arith is value arithmetics, +, -, * /
-func (a Type) Arith(op string, b Type) Type {
+func (t Type) Arith(op string, b Type) Type {
 
-	switch (a.typ)<<4 | b.typ {
+	switch (t.typ)<<4 | b.typ {
 
 	case (intT << 4) | intT:
-		aVal := a.i()
+		aVal := t.i()
 		bVal := b.i()
 
 		if op == "/" && bVal == 0 {
@@ -202,17 +202,17 @@ func (a Type) Arith(op string, b Type) Type {
 		return NewInt(builtinArith(op, aVal, bVal))
 
 	case (intT << 4) | floatT:
-		aVal := a.i()
+		aVal := t.i()
 		bVal := b.f()
 		return NewFloat(builtinArith(op, float64(aVal), bVal))
 
 	case (floatT << 4) | intT:
-		aVal := a.f()
+		aVal := t.f()
 		bVal := b.i()
 		return NewFloat(builtinArith(op, aVal, float64(bVal)))
 
 	case (floatT << 4) | floatT:
-		aVal := a.f()
+		aVal := t.f()
 		bVal := b.f()
 		return NewFloat(builtinArith(op, aVal, bVal))
 
@@ -223,14 +223,14 @@ func (a Type) Arith(op string, b Type) Type {
 	case (errorT << 4) | intT, (errorT << 4) | floatT, (errorT << 4) | stringT,
 		(errorT << 4) | arrayT, (errorT << 4) | errorT, (errorT << 4) | boolT,
 		(errorT << 4) | functionT:
-		return a
+		return t
 
 	case (stringT << 4) | stringT:
 		if op != "+" {
 			return InvalidOpError
 		}
 
-		aVal := a.s()
+		aVal := t.s()
 		bVal := b.s()
 		return NewString(aVal + bVal)
 
@@ -239,12 +239,12 @@ func (a Type) Arith(op string, b Type) Type {
 			return InvalidOpError
 		}
 
-		aVal := a.a()
+		aVal := t.a()
 		bVal := b.a()
 		return NewArray(append(slices.Clone(aVal), bVal...))
 
 	default:
-		if a.typ == b.typ {
+		if t.typ == b.typ {
 			return InvalidOpError
 		} else {
 			return TypeError
@@ -252,11 +252,11 @@ func (a Type) Arith(op string, b Type) Type {
 	}
 }
 
-func (a Type) Mod(b Type) Type {
-	switch (a.typ)<<4 | b.typ {
+func (t Type) Mod(b Type) Type {
+	switch (t.typ)<<4 | b.typ {
 
 	case (intT << 4) | intT:
-		aVal := a.i()
+		aVal := t.i()
 		bVal := b.i()
 
 		return NewInt(aVal % bVal)
@@ -268,10 +268,10 @@ func (a Type) Mod(b Type) Type {
 	case (errorT << 4) | intT, (errorT << 4) | floatT, (errorT << 4) | stringT,
 		(errorT << 4) | arrayT, (errorT << 4) | errorT, (errorT << 4) | boolT,
 		(errorT << 4) | functionT:
-		return a
+		return t
 
 	default:
-		if a.typ == b.typ {
+		if t.typ == b.typ {
 			return InvalidOpError
 		} else {
 			return TypeError
@@ -280,27 +280,27 @@ func (a Type) Mod(b Type) Type {
 }
 
 // Relational is value relational <, >, <= ...
-func (a Type) Relational(op string, b Type) Type {
-	switch (a.typ)<<4 | b.typ {
+func (t Type) Relational(op string, b Type) Type {
+	switch (t.typ)<<4 | b.typ {
 
 	case (intT << 4) | intT:
-		aVal := a.i()
+		aVal := t.i()
 		bVal := b.i()
 
 		return NewBool(builtinRelational(op, aVal, bVal))
 
 	case (intT << 4) | floatT:
-		aVal := a.i()
+		aVal := t.i()
 		bVal := b.f()
 		return NewBool(builtinRelational(op, float64(aVal), bVal))
 
 	case (floatT << 4) | intT:
-		aVal := a.f()
+		aVal := t.f()
 		bVal := b.i()
 		return NewBool(builtinRelational(op, aVal, float64(bVal)))
 
 	case (floatT << 4) | floatT:
-		aVal := a.f()
+		aVal := t.f()
 		bVal := b.f()
 		return NewBool(builtinRelational(op, aVal, bVal))
 
@@ -311,10 +311,10 @@ func (a Type) Relational(op string, b Type) Type {
 	case (errorT << 4) | intT, (errorT << 4) | floatT, (errorT << 4) | stringT,
 		(errorT << 4) | arrayT, (errorT << 4) | errorT, (errorT << 4) | boolT,
 		(errorT << 4) | functionT:
-		return a
+		return t
 
 	default:
-		if a.typ == b.typ {
+		if t.typ == b.typ {
 			return InvalidOpError
 		} else {
 			return TypeError
@@ -323,11 +323,11 @@ func (a Type) Relational(op string, b Type) Type {
 }
 
 // Logic is value logic ops &, |
-func (a Type) Logic(op string, b Type) Type {
+func (t Type) Logic(op string, b Type) Type {
 
-	switch (a.typ)<<4 | b.typ {
+	switch (t.typ)<<4 | b.typ {
 	case (intT << 4) | intT:
-		aVal := a.morph
+		aVal := t.morph
 		bVal := b.morph
 
 		if op == "&" {
@@ -338,7 +338,7 @@ func (a Type) Logic(op string, b Type) Type {
 		return NewInt(int(aVal))
 
 	case (boolT << 4) | boolT:
-		aVal := a.morph
+		aVal := t.morph
 		bVal := b.morph
 
 		if op == "&" {
@@ -355,10 +355,10 @@ func (a Type) Logic(op string, b Type) Type {
 	case (errorT << 4) | intT, (errorT << 4) | floatT, (errorT << 4) | stringT,
 		(errorT << 4) | arrayT, (errorT << 4) | errorT, (errorT << 4) | boolT,
 		(errorT << 4) | functionT:
-		return a
+		return t
 
 	default:
-		if a.typ == b.typ {
+		if t.typ == b.typ {
 			return InvalidOpError
 		} else {
 			return TypeError
@@ -367,11 +367,11 @@ func (a Type) Logic(op string, b Type) Type {
 }
 
 // Shift is bit shift ops <<, >>
-func (a Type) Shift(op string, b Type) Type {
+func (t Type) Shift(op string, b Type) Type {
 
-	switch (a.typ)<<4 | b.typ {
+	switch (t.typ)<<4 | b.typ {
 	case (intT << 4) | intT:
-		aVal := a.morph
+		aVal := t.morph
 		bVal := b.morph
 
 		if op == "<<" {
@@ -388,10 +388,10 @@ func (a Type) Shift(op string, b Type) Type {
 	case (errorT << 4) | intT, (errorT << 4) | floatT, (errorT << 4) | stringT,
 		(errorT << 4) | arrayT, (errorT << 4) | errorT, (errorT << 4) | boolT,
 		(errorT << 4) | functionT:
-		return a
+		return t
 
 	default:
-		if a.typ == b.typ {
+		if t.typ == b.typ {
 			return InvalidOpError
 		} else {
 			return TypeError
@@ -400,31 +400,31 @@ func (a Type) Shift(op string, b Type) Type {
 }
 
 // Flip is integer bit flip operator.
-func (a Type) Flip() Type {
-	switch a.typ {
+func (t Type) Flip() Type {
+	switch t.typ {
 	case intT:
-		return NewInt(int(^a.morph))
+		return NewInt(int(^t.morph))
 	case errorT:
-		return a
+		return t
 	default:
 		return TypeError
 	}
 }
 
 // Not is boolean not operator.
-func (a Type) Not() Type {
-	switch a.typ {
+func (t Type) Not() Type {
+	switch t.typ {
 	case boolT:
-		return NewBool(a.morph != 1)
+		return NewBool(t.morph != 1)
 	case errorT:
-		return a
+		return t
 	default:
 		return TypeError
 	}
 }
 
 // Index is value indexing, @, and @:
-func (a Type) Index(b ...Type) Type {
+func (t Type) Index(b ...Type) Type {
 
 	if len(b) < 1 || len(b) > 2 {
 		panic("Index incorrectly called")
@@ -439,9 +439,9 @@ func (a Type) Index(b ...Type) Type {
 		return TypeError
 	}
 
-	switch a.typ {
+	switch t.typ {
 	case stringT:
-		s := *(*string)(a.ptr)
+		s := *(*string)(t.ptr)
 
 		switch len(b) {
 		case 2:
@@ -464,7 +464,7 @@ func (a Type) Index(b ...Type) Type {
 		}
 	case arrayT:
 
-		ary := *(*[]Type)(a.ptr)
+		ary := *(*[]Type)(t.ptr)
 
 		switch len(b) {
 		case 2:
@@ -488,7 +488,7 @@ func (a Type) Index(b ...Type) Type {
 	case (errorT << 4) | intT, (errorT << 4) | floatT, (errorT << 4) | stringT,
 		(errorT << 4) | arrayT, (errorT << 4) | errorT, (errorT << 4) | boolT,
 		(errorT << 4) | functionT:
-		return a
+		return t
 
 	default:
 		// There is no invalid op here, and indexing with error also throws away
@@ -500,22 +500,22 @@ func (a Type) Index(b ...Type) Type {
 }
 
 // Len is value length
-func (a Type) Len() Type {
+func (t Type) Len() Type {
 
-	switch a.typ {
+	switch t.typ {
 
 	case stringT:
-		s := *(*string)(a.ptr)
+		s := *(*string)(t.ptr)
 		i := len(s)
 		return NewInt(i)
 
 	case arrayT:
-		s := *(*[]Type)(a.ptr)
+		s := *(*[]Type)(t.ptr)
 		i := len(s)
 		return NewInt(i)
 
 	case errorT:
-		return a
+		return t
 
 	default:
 		return TypeError
@@ -528,41 +528,41 @@ func (a Type) Len() Type {
 //
 // in strict equality all functions are equal, this is counter intuitive, but
 // for testing it makes sense.
-func (a *Type) StrictEq(b Type) bool {
-	switch (a.typ)<<4 | b.typ {
+func (t *Type) StrictEq(b Type) bool {
+	switch (t.typ)<<4 | b.typ {
 
 	case (intT << 4) | intT:
-		aVal := a.i()
+		aVal := t.i()
 		bVal := b.i()
 
 		return aVal == bVal
 
 	case (floatT << 4) | floatT:
-		aVal := a.f()
+		aVal := t.f()
 		bVal := b.f()
 
 		return aVal == bVal
 
 	case (boolT << 4) | boolT:
-		aVal := a.b()
+		aVal := t.b()
 		bVal := b.b()
 
 		return aVal == bVal
 
 	case (stringT << 4) | stringT:
-		aVal := *(*string)(a.ptr)
+		aVal := *(*string)(t.ptr)
 		bVal := *(*string)(b.ptr)
 
 		return aVal == bVal
 
 	case (errorT << 4) | errorT:
-		aVal := *(*string)(a.ptr)
+		aVal := *(*string)(t.ptr)
 		bVal := *(*string)(b.ptr)
 
 		return aVal == bVal
 
 	case (arrayT << 4) | arrayT:
-		aVal := *(*[]Type)(a.ptr)
+		aVal := *(*[]Type)(t.ptr)
 		bVal := *(*[]Type)(b.ptr)
 
 		if len(aVal) != len(bVal) {
@@ -589,24 +589,24 @@ func (a *Type) StrictEq(b Type) bool {
 //	1 == 1.0 -> true
 //
 // all functions are un-equal
-func (a *Type) WeakEq(b Type) bool {
+func (t *Type) WeakEq(b Type) bool {
 
-	switch (a.typ)<<4 | b.typ {
+	switch (t.typ)<<4 | b.typ {
 
 	case (intT << 4) | floatT:
-		aVal := a.i()
+		aVal := t.i()
 		bVal := b.f()
 
 		return float64(aVal) == bVal
 
 	case (floatT << 4) | intT:
-		aVal := a.f()
+		aVal := t.f()
 		bVal := b.i()
 
 		return aVal == float64(bVal)
 
 	case (arrayT << 4) | arrayT:
-		aVal := *(*[]Type)(a.ptr)
+		aVal := *(*[]Type)(t.ptr)
 		bVal := *(*[]Type)(b.ptr)
 
 		if len(aVal) != len(bVal) {
@@ -624,13 +624,13 @@ func (a *Type) WeakEq(b Type) bool {
 		return false
 
 	default:
-		return a.StrictEq(b)
+		return t.StrictEq(b)
 	}
 }
 
 // Equality check, ==, !=
-func (a Type) Eq(op string, b Type) Type {
-	r := a.WeakEq(b)
+func (t Type) Eq(op string, b Type) Type {
+	r := t.WeakEq(b)
 	if op == "!=" {
 		r = !r
 	}

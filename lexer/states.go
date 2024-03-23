@@ -18,13 +18,13 @@ type str struct {
 	next   stateFunc // next state function
 	doEmit bool      // lexer emits token
 	doAdv  bool      // lexer advances from to to (current token becomes empty)
-	typ    token.TokenType
+	typ    token.Kind
 	err    error
 }
 
 type stateFunc func(c rune) str
 
-func newSTR(c rune, typ token.TokenType, emit, adv bool, format string, args ...any) str {
+func newSTR(c rune, typ token.Kind, emit, adv bool, format string, args ...any) str {
 	switch {
 	case c == ' ' || c == '\t':
 		return str{next: whiteSpace, doEmit: emit, doAdv: adv, typ: typ}
@@ -115,7 +115,7 @@ func stringLit(c rune) str {
 	}
 }
 
-func escapeStringLit(c rune) str {
+func escapeStringLit(_ rune) str {
 	return str{next: stringLit}
 }
 

@@ -28,7 +28,7 @@ func Parse(input string) ([]node.Type, error) {
 	return rn, err
 }
 
-func acceptTerm(tokType token.TokenType, msg string) c.Parser {
+func acceptTerm(tokType token.Kind, msg string) c.Parser {
 	tokenWrap := tokenWrapper{}
 	return c.Accept(func(tok c.Token) bool { return tok.(token.Type).Type == tokType }, msg, tokenWrap)
 }
