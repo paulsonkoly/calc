@@ -239,4 +239,4 @@ func block(input c.RollbackLexer) ([]c.Node, error) {
 		c.Conditional{Gate: c.Ok(), OnSuccess: statement})(input)
 }
 
-var program = c.Seq(c.SeparatedBy(block, eols1), eols1, eof)
+var program = c.Seq(c.Any(c.Conditional{Gate: c.Assert(c.Not(eol)), OnSuccess: block}), eols1, eof)
