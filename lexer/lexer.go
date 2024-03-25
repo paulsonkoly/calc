@@ -64,7 +64,7 @@ func (l *Lexer) Next() bool {
 			if str.typ == token.StringLit {
 				word = strings.ReplaceAll(word, "\\n", "\n")
 			}
-			l.Token = token.Type{Value: word, Type: str.typ}
+			l.Token = token.WithFromTo(str.typ, word, l.from, l.to)
 			l.state = str.next
 			l.from = l.to
 			l.to += s

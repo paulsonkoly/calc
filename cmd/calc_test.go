@@ -12,7 +12,6 @@ import (
 	"github.com/paulsonkoly/calc/types/node"
 	"github.com/paulsonkoly/calc/types/value"
 	"github.com/paulsonkoly/calc/vm"
-	"github.com/stretchr/testify/assert"
 )
 
 type TestDatum struct {
@@ -230,7 +229,10 @@ func TestCalc(t *testing.T) {
 
 			ast, err := parser.Parse(test.input)
 			if test.parseError == nil {
-				assert.NoError(t, err)
+        if err != nil {
+          t.Errorf("expected no error got %s", err.Error())
+          return
+        }
 				var v value.Type
 				for _, stmnt := range ast {
 					stmnt = stmnt.STRewrite(node.SymTbl{})

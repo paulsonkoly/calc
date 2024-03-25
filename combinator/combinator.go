@@ -2,14 +2,16 @@
 package combinator
 
 import (
-	"errors"
 	"fmt"
 )
 
 // seems one can write haskell in every language
 
 // Token represents a lexeme from a lexer
-type Token any
+type Token interface {
+	From() int
+	To() int
+}
 
 // Node is an AST node, with pointers to sub-tree nodes and potentially some
 // parse information data
@@ -24,6 +26,8 @@ type TokenWrapper interface {
 // returns true until all tokens are returned. Err() and Token() do not modify
 // the lexer and start returning values after the first Next() call
 type Lexer interface {
+	From() int
+	To() int
 	Next() bool   // Is there a next token
 	Err() error   // signal lexing error
 	Token() Token // The next Token
@@ -50,12 +54,12 @@ type RollbackLexer interface {
 // It's the users responsibility to combine compound nodes into one, ie. the
 // sub-parser results can be combined into a Node that has tree pointers to the
 // sub expressions
-type Parser func(input RollbackLexer) ([]Node, error)
+type Parser func(input RollbackLexer) ([]Node, *Error)
 
 // Ok is a parser that doesn't do anything just returns a successful parse
 // result
 func Ok() Parser {
-	return func(input RollbackLexer) ([]Node, error) {
+	return func(input RollbackLexer) ([]Node, *Error) {
 		return []Node{}, nil
 	}
 }
@@ -63,7 +67,7 @@ func Ok() Parser {
 // Assert asserts the given parser p would succeed without consuming input
 // It returns empty parse result
 func Assert(p Parser) Parser {
-	return func(input RollbackLexer) ([]Node, error) {
+	return func(input RollbackLexer) ([]Node, *Error) {
 		input.Snapshot()
 		defer input.Rollback()
 
@@ -75,10 +79,10 @@ func Assert(p Parser) Parser {
 
 // Not asserts that the given parser p will fail.
 func Not(p Parser) Parser {
-	return func(input RollbackLexer) ([]Node, error) {
+	return func(input RollbackLexer) ([]Node, *Error) {
 		_, pErr := p(input)
 		if pErr == nil {
-			return nil, errors.New("got no error")
+			return nil, &Error{message: "expecting error"}
 		}
 		return []Node{}, nil
 	}
@@ -121,7 +125,7 @@ type Conditional struct {
 // automatically. A succeeding predicate will be prepended to the result of
 // success.
 func Choose(choices ...Conditional) Parser {
-	return func(input RollbackLexer) ([]Node, error) {
+	return func(input RollbackLexer) ([]Node, *Error) {
 		for _, c := range choices {
 			input.Snapshot()
 			pRes, pErr := c.Gate(input)
@@ -153,7 +157,7 @@ func OneOf(args ...Parser) Parser {
 	if len(args) < 1 {
 		panic("Parser: OneOf needs at least one parser")
 	}
-	return func(input RollbackLexer) ([]Node, error) {
+	return func(input RollbackLexer) ([]Node, *Error) {
 		input.Snapshot()
 		pRes, pErr := args[0](input)
 		if pErr == nil {
@@ -179,7 +183,7 @@ func OneOf(args ...Parser) Parser {
 // Parses with a and then continues parsing with b. Only succeeds if both a and
 // b succeed and returns the concatenated result from both a and b.
 func And(a, b Parser) Parser {
-	return func(input RollbackLexer) ([]Node, error) {
+	return func(input RollbackLexer) ([]Node, *Error) {
 		aRes, aErr := a(input)
 		if aErr != nil {
 			return aRes, aErr
@@ -215,8 +219,8 @@ func Seq(args ...Parser) Parser {
 // the rule in the gate, and just use Ok() for OnSuccess. This gives a
 // behaviour where failures are rolled back.
 func Any(a Conditional) Parser {
-	return func(input RollbackLexer) ([]Node, error) {
-		r, err := make([]Node, 0), error(nil)
+	return func(input RollbackLexer) ([]Node, *Error) {
+		r, err := make([]Node, 0), (*Error)(nil)
 
 		for {
 			input.Snapshot()
@@ -244,7 +248,7 @@ func Any(a Conditional) Parser {
 // is interspersed with b, the sequence not ending with b. The parse results of
 // b are thrown away, it returns the sequenced results of a.
 func SeparatedBy(a, b Parser) Parser {
-	return func(input RollbackLexer) ([]Node, error) {
+	return func(input RollbackLexer) ([]Node, *Error) {
 		input.Snapshot()
 		r, aErr := a(input)
 		if aErr != nil {
@@ -275,7 +279,7 @@ func SeparatedBy(a, b Parser) Parser {
 //
 // It fails if any of a, b, c fails. Useful for asserting parenthesis style rules.
 func SurroundedBy(a, b, c Parser) Parser {
-	return func(input RollbackLexer) ([]Node, error) {
+	return func(input RollbackLexer) ([]Node, *Error) {
 		_, aErr := a(input)
 		if aErr != nil {
 			return nil, aErr
@@ -297,16 +301,17 @@ func SurroundedBy(a, b, c Parser) Parser {
 // that token.
 // If p is false or the lexer fails then Accept fails.
 func Accept(p func(Token) bool, msg string, wrp TokenWrapper) Parser {
-	return func(input RollbackLexer) ([]Node, error) {
+	return func(input RollbackLexer) ([]Node, *Error) {
 		if !input.Next() {
-			return nil, fmt.Errorf("Parser: unexpected end of input")
+			return nil, &Error{from: input.From(), to: input.To(), message: "Parser: unexpected end of input"}
 		}
 		if input.Err() != nil {
-			return nil, input.Err()
+			return nil, &Error{from: input.From(), to: input.To(), message: input.Err().Error()}
 		}
 		tok := input.Token()
 		if !p(tok) {
-			return nil, fmt.Errorf("Parser: %s expected, got %v", msg, tok)
+			msg := fmt.Sprintf("Parser: %s expected, got %v", msg, tok)
+			return nil, &Error{from: tok.From(), to: tok.To(), message: msg}
 		}
 		return []Node{wrp.Wrap(tok)}, nil
 	}
@@ -317,7 +322,7 @@ func Accept(p func(Token) bool, msg string, wrp TokenWrapper) Parser {
 // Returns a modified version of p that succeeds when p succeeds but if p
 // returns r the modified version returns f(r)
 func Fmap(f func([]Node) []Node, p Parser) Parser {
-	return func(input RollbackLexer) ([]Node, error) {
+	return func(input RollbackLexer) ([]Node, *Error) {
 		r, err := p(input)
 		if err != nil {
 			return nil, err

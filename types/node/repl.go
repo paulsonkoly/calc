@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/chzyer/readline"
+	"github.com/paulsonkoly/calc/combinator"
 	"github.com/paulsonkoly/calc/flags"
 	"github.com/paulsonkoly/calc/vm"
 )
@@ -52,8 +53,10 @@ func (f FReader) read() (string, error) { return f.b.ReadString('\n') }
 
 func (f FReader) Close() error { return f.r.Close() }
 
+type ParserError = *combinator.Error 
+
 type Parser interface {
-	Parse(string) ([]Type, error)
+	Parse(string) ([]Type, ParserError)
 }
 
 func Loop(r lineReader, p Parser, vm *vm.Type, doOut bool) {
@@ -77,12 +80,13 @@ func Loop(r lineReader, p Parser, vm *vm.Type, doOut bool) {
 
 		if blocksOpen == 0 && quotesOpen%2 == 0 && bracketsOpen == 0 {
 			t, err := p.Parse(input)
-			input = ""
 			sep = ""
 			if err != nil {
-				fmt.Println(err)
+				reportError(err, input)
+				input = ""
 				continue
 			}
+			input = ""
 
 			for _, e := range t {
 				e := e.STRewrite(SymTbl{})
@@ -111,4 +115,28 @@ func Loop(r lineReader, p Parser, vm *vm.Type, doOut bool) {
 			}
 		}
 	}
+}
+
+func reportError(err ParserError, line string) {
+	fmt.Println(err.Message())
+	start := strings.LastIndex(line[0:err.From()], "\n")
+	if start == -1 {
+		start = 0
+	}
+	end := strings.Index(line[err.To():], "\n")
+	if end == -1 {
+		end = len(line)
+	} else {
+    end += err.To()
+  }
+	fmt.Println(line[start:end])
+  empty := ""
+  if err.From() > start {
+    empty = strings.Repeat(" ", err.From() - start - 1)
+  }
+	squiggly := ""
+	if err.To() > err.From() {
+		squiggly = strings.Repeat("~", err.To()-err.From() - 1)
+	}
+	fmt.Println(empty + "^" + squiggly + "^")
 }

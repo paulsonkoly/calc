@@ -12,12 +12,13 @@ import (
 var Keywords = [...]string{"if", "else", "while", "for", "return", "yield", "true", "false"}
 
 type Type struct{}
+type Error = c.Error
 
-func (t Type) Parse(input string) ([]node.Type, error) {
+func (t Type) Parse(input string) ([]node.Type, *Error) {
 	return Parse(input)
 }
 
-func Parse(input string) ([]node.Type, error) {
+func Parse(input string) ([]node.Type, *Error) {
 	l := lexer.NewTLexer(input)
 	rn := make([]node.Type, 0)
 
@@ -43,7 +44,7 @@ var intLit = acceptTerm(token.IntLit, "integer literal")
 var floatLit = acceptTerm(token.FloatLit, "float literal")
 var stringLit = acceptTerm(token.StringLit, "string literal")
 
-func varName(input c.RollbackLexer) ([]c.Node, error) {
+func varName(input c.RollbackLexer) ([]c.Node, *Error) {
 	return c.Accept(
 		func(tok c.Token) bool {
 			ctok := tok.(token.Type)
@@ -58,11 +59,11 @@ func varName(input c.RollbackLexer) ([]c.Node, error) {
 // definitions, otherwise we could write:
 //
 //	var paren = c.Fmap(second, c.Seq(acceptToken("("), expression, acceptToken(")")))
-func paren(input c.RollbackLexer) ([]c.Node, error) {
+func paren(input c.RollbackLexer) ([]c.Node, *Error) {
 	return c.SurroundedBy(acceptToken("("), expression, acceptToken(")"))(input)
 }
 
-func arrayLit(input c.RollbackLexer) ([]c.Node, error) {
+func arrayLit(input c.RollbackLexer) ([]c.Node, *Error) {
 	return c.Fmap(mkList,
 		c.SurroundedBy(
 			c.And(acceptToken("["), eols),
@@ -70,7 +71,7 @@ func arrayLit(input c.RollbackLexer) ([]c.Node, error) {
 			acceptToken("]")))(input)
 }
 
-func atom(input c.RollbackLexer) ([]c.Node, error) {
+func atom(input c.RollbackLexer) ([]c.Node, *Error) {
 	return c.Choose(
 		c.Conditional{Gate: c.Assert(c.And(parameters, acceptToken("->"))), OnSuccess: function},
 		c.Conditional{Gate: c.Assert(c.And(varName, acceptToken("("))), OnSuccess: call},
@@ -84,7 +85,7 @@ func atom(input c.RollbackLexer) ([]c.Node, error) {
 		c.Conditional{Gate: c.Ok(), OnSuccess: varName})(input)
 }
 
-func index(input c.RollbackLexer) ([]c.Node, error) {
+func index(input c.RollbackLexer) ([]c.Node, *Error) {
 	indexInner := c.SurroundedBy(
 		acceptToken("["),
 		c.And(
@@ -106,24 +107,24 @@ func index(input c.RollbackLexer) ([]c.Node, error) {
 	return c.Fmap(mkIndex, c.And(atom, indexCond))(input)
 }
 
-func unary(input c.RollbackLexer) ([]c.Node, error) {
+func unary(input c.RollbackLexer) ([]c.Node, *Error) {
 	op := c.OneOf(acceptToken("-"), acceptToken("#"), acceptToken("!"), acceptToken("~"))
 	return c.OneOf(c.Fmap(mkUnaryOp, (c.And(op, index))), index)(input)
 }
 
-func divmul(input c.RollbackLexer) ([]c.Node, error) {
+func divmul(input c.RollbackLexer) ([]c.Node, *Error) {
 	op := c.OneOf(acceptToken("*"), acceptToken("/"), acceptToken("%"), acceptToken("<<"), acceptToken(">>"))
 	chain := c.Any(c.Conditional{Gate: op, OnSuccess: unary})
 	return c.Fmap(mkLeftChain, c.And(unary, chain))(input)
 }
 
-func addsub(input c.RollbackLexer) ([]c.Node, error) {
+func addsub(input c.RollbackLexer) ([]c.Node, *Error) {
 	op := c.OneOf(acceptToken("+"), acceptToken("-"))
 	chain := c.Any(c.Conditional{Gate: op, OnSuccess: divmul})
 	return c.Fmap(mkLeftChain, c.And(divmul, chain))(input)
 }
 
-func logic(input c.RollbackLexer) ([]c.Node, error) {
+func logic(input c.RollbackLexer) ([]c.Node, *Error) {
 	op := c.OneOf(acceptToken("&"), acceptToken("|"))
 	chain := c.Any(c.Conditional{Gate: op, OnSuccess: addsub})
 	return c.Fmap(mkLeftChain, c.And(addsub, chain))(input)
@@ -138,26 +139,26 @@ var relOp = c.OneOf(
 	acceptToken(">"),
 )
 
-func relational(input c.RollbackLexer) ([]c.Node, error) {
+func relational(input c.RollbackLexer) ([]c.Node, *Error) {
 	chain := c.Any(c.Conditional{Gate: relOp, OnSuccess: logic})
 	return c.Fmap(mkLeftChain, c.And(logic, chain))(input)
 }
 
-func boolOp(input c.RollbackLexer) ([]c.Node, error) {
+func boolOp(input c.RollbackLexer) ([]c.Node, *Error) {
 	op := c.OneOf(acceptToken("&&"), acceptToken("||"))
 	chain := c.Any(c.Conditional{Gate: op, OnSuccess: relational})
 	return c.Fmap(mkLeftChain, c.And(relational, chain))(input)
 }
 
-func expression(input c.RollbackLexer) ([]c.Node, error) {
+func expression(input c.RollbackLexer) ([]c.Node, *Error) {
 	return boolOp(input)
 }
 
-func assignment(input c.RollbackLexer) ([]c.Node, error) {
+func assignment(input c.RollbackLexer) ([]c.Node, *Error) {
 	return c.Fmap(mkAssign, c.Seq(varName, acceptToken("="), expression))(input)
 }
 
-func statement(input c.RollbackLexer) ([]c.Node, error) {
+func statement(input c.RollbackLexer) ([]c.Node, *Error) {
 	return c.Choose(
 		c.Conditional{Gate: c.Assert(acceptToken("if")), OnSuccess: conditional},
 		c.Conditional{Gate: c.Assert(acceptToken("while")), OnSuccess: whileLoop},
@@ -168,7 +169,7 @@ func statement(input c.RollbackLexer) ([]c.Node, error) {
 		c.Conditional{Gate: c.Ok(), OnSuccess: expression})(input)
 }
 
-func conditional(input c.RollbackLexer) ([]c.Node, error) {
+func conditional(input c.RollbackLexer) ([]c.Node, *Error) {
 	return c.Fmap(mkIf,
 		c.Seq(
 			acceptToken("if"),
@@ -180,23 +181,23 @@ func conditional(input c.RollbackLexer) ([]c.Node, error) {
 		))(input)
 }
 
-func whileLoop(input c.RollbackLexer) ([]c.Node, error) {
+func whileLoop(input c.RollbackLexer) ([]c.Node, *Error) {
 	return c.Fmap(mkWhile, c.Seq(acceptToken("while"), expression, block))(input)
 }
 
-func forLoop(input c.RollbackLexer) ([]c.Node, error) {
+func forLoop(input c.RollbackLexer) ([]c.Node, *Error) {
 	return c.Fmap(mkFor, c.Seq(acceptToken("for"), varName, acceptToken("<-"), expression, block))(input)
 }
 
-func returning(input c.RollbackLexer) ([]c.Node, error) {
+func returning(input c.RollbackLexer) ([]c.Node, *Error) {
 	return c.Fmap(mkReturn, c.And(acceptToken("return"), expression))(input)
 }
 
-func yield(input c.RollbackLexer) ([]c.Node, error) {
+func yield(input c.RollbackLexer) ([]c.Node, *Error) {
 	return c.Fmap(mkYield, c.And(acceptToken("yield"), expression))(input)
 }
 
-func function(input c.RollbackLexer) ([]c.Node, error) {
+func function(input c.RollbackLexer) ([]c.Node, *Error) {
 	return c.Fmap(mkFunction, c.Seq(parameters, acceptToken("->"), block))(input)
 }
 
@@ -206,11 +207,11 @@ var parameters = c.Fmap(mkList,
 		c.SeparatedBy(varName, acceptToken(",")),
 		acceptToken(")")))
 
-func call(input c.RollbackLexer) ([]c.Node, error) {
+func call(input c.RollbackLexer) ([]c.Node, *Error) {
 	return c.Fmap(mkFCall, c.Seq(varName, arguments))(input)
 }
 
-func arguments(input c.RollbackLexer) ([]c.Node, error) {
+func arguments(input c.RollbackLexer) ([]c.Node, *Error) {
 	return c.Fmap(mkList,
 		c.SurroundedBy(
 			acceptToken("("),
@@ -223,12 +224,12 @@ var eols = c.Any(c.Conditional{Gate: eol, OnSuccess: c.Ok()})
 var eols1 = c.And(eol, eols)
 var eof = c.Fmap(func(n []c.Node) []c.Node { return []c.Node{} }, acceptTerm(token.EOF, "end of file"))
 
-func statements(input c.RollbackLexer) ([]c.Node, error) {
+func statements(input c.RollbackLexer) ([]c.Node, *Error) {
 	pred := c.Assert(c.And(eols1, c.Not(acceptToken("}"))))
 	return c.And(statement, c.Any(c.Conditional{Gate: pred, OnSuccess: c.And(eols1, statement)}))(input)
 }
 
-func block(input c.RollbackLexer) ([]c.Node, error) {
+func block(input c.RollbackLexer) ([]c.Node, *Error) {
 	return c.Choose(
 		c.Conditional{Gate: c.Assert(acceptToken("{")),
 			OnSuccess: c.Fmap(mkBlock,

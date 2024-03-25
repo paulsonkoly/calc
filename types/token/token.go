@@ -20,8 +20,14 @@ const (
 
 // Token as produced by the lexer
 type Type struct {
+	from  int
+	to    int
 	Value string // Value is the token string contained withing the input stream
 	Type  Kind   // Type of the token
+}
+
+func WithFromTo(typ Kind, value string, from int, to int) Type {
+	return Type{from: from, to: to, Value: value, Type: typ}
 }
 
 func (t Type) String() string {
@@ -37,3 +43,9 @@ func (t Type) String() string {
 		return fmt.Sprintf("<\"%v\" %v>", t.Value, t.Type)
 	}
 }
+
+// From is the index of the start of the token in the input stream
+func (t Type) From() int { return t.from }
+
+// To is the index of the end of the token in the input stream
+func (t Type) To() int { return t.to }

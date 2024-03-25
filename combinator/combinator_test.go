@@ -162,6 +162,9 @@ var testData = []testDatum{
 
 type testToken string
 
+func (t testToken) From() int { return 0 }
+func (t testToken) To() int { return 0 }
+
 type testNode struct{ token testToken }
 
 func (t testToken) Node() combinator.Node { return testNode{token: t} }
@@ -172,6 +175,8 @@ type lexerStub struct {
 	pointers []int
 }
 
+func (l lexerStub) From() int { return 0 }
+func (l lexerStub) To() int { return 0 }
 func (l lexerStub) Token() combinator.Token { return combinator.Token(l.tokens[l.readP]) }
 func (l lexerStub) Err() error              { return nil }
 func (l *lexerStub) Next() bool             { l.readP++; return l.readP < len(l.tokens) }
@@ -193,7 +198,7 @@ func TestCombinator(t *testing.T) {
 					assert.Equal(t, tt.err, err.Error())
 				}
 			} else {
-				assert.NoError(t, err)
+        assert.Nil(t, err)
 
 				convert := []testNode{}
 				for _, a := range n {

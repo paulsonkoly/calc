@@ -6,8 +6,9 @@ import (
 )
 
 type lexerResult struct {
-	token token.Type
-	err   error
+	token    token.Type
+	err      error
+	from, to int
 }
 
 // TLexer is a lexer satisfying combinators.RollbackLexer
@@ -42,7 +43,7 @@ func (tl *TLexer) Next() bool {
 		return true
 	}
 	if tl.lexer.Next() {
-		e := lexerResult{token: tl.lexer.Token, err: tl.lexer.Err}
+		e := lexerResult{token: tl.lexer.Token, err: tl.lexer.Err, from: tl.lexer.from, to: tl.lexer.to}
 		tl.stack = append(tl.stack, e)
 		tl.readp++
 		tl.writep++
@@ -60,6 +61,16 @@ func (tl *TLexer) Token() combinator.Token {
 // Err gives the next lexer error if any
 func (tl *TLexer) Err() error {
 	return tl.stack[tl.readp].err
+}
+
+// From gives the next token starting position
+func (tl *TLexer) From() int {
+	return tl.stack[tl.readp].from
+}
+
+// To gives the next token starting position
+func (tl *TLexer) To() int {
+	return tl.stack[tl.readp].to
 }
 
 // Snapshot snapshots the lexer state
