@@ -229,10 +229,10 @@ func TestCalc(t *testing.T) {
 
 			ast, err := parser.Parse(test.input)
 			if test.parseError == nil {
-        if err != nil {
-          t.Errorf("expected no error got %s", err.Error())
-          return
-        }
+				if err != nil {
+					t.Errorf("expected no error got %s", err.Error())
+					return
+				}
 				var v value.Type
 				for _, stmnt := range ast {
 					stmnt = stmnt.STRewrite(node.SymTbl{})

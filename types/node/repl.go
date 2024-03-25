@@ -53,7 +53,7 @@ func (f FReader) read() (string, error) { return f.b.ReadString('\n') }
 
 func (f FReader) Close() error { return f.r.Close() }
 
-type ParserError = *combinator.Error 
+type ParserError = *combinator.Error
 
 type Parser interface {
 	Parse(string) ([]Type, ParserError)
@@ -127,16 +127,16 @@ func reportError(err ParserError, line string) {
 	if end == -1 {
 		end = len(line)
 	} else {
-    end += err.To()
-  }
+		end += err.To()
+	}
 	fmt.Println(line[start:end])
-  empty := ""
-  if err.From() > start {
-    empty = strings.Repeat(" ", err.From() - start - 1)
-  }
+	empty := ""
+	if err.From() > start {
+		empty = strings.Repeat(" ", err.From()-start-1)
+	}
 	squiggly := ""
 	if err.To() > err.From() {
-		squiggly = strings.Repeat("~", err.To()-err.From() - 1)
+		squiggly = strings.Repeat("~", err.To()-err.From()-1)
 	}
 	fmt.Println(empty + "^" + squiggly + "^")
 }

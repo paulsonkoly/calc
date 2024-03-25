@@ -81,9 +81,9 @@ func TestLexer(t *testing.T) {
 		for l.Next() {
 			assert.Less(t, i, len(test.dat), "%s/%s Next returns true when out of lexemes", test.title, test.input)
 			if i < len(test.dat) {
-        if test.dat[i].Type != l.Token.Type || test.dat[i].Value!= l.Token.Value {
-          t.Errorf("%s/%s returns unexpected token %v (expecting %v)", test.title, test.input, l.Token, test.dat[i])
-        }
+				if test.dat[i].Type != l.Token.Type || test.dat[i].Value != l.Token.Value {
+					t.Errorf("%s/%s returns unexpected token %v (expecting %v)", test.title, test.input, l.Token, test.dat[i])
+				}
 			}
 			i++
 		}
