@@ -28,14 +28,14 @@ type Lexer struct {
 	eof      bool
 }
 
-// NewLexer a new lexer with input string
+// NewLexer a new lexer with input string.
 func NewLexer(input string) Lexer {
 	return Lexer{input: input, rdr: *strings.NewReader(input), state: whiteSpace}
 }
 
 // Next advances the lexer to a new token.
 
-// returns false if an error happened or there are no tokens left
+// It returns false if an error happened or there are no tokens left.
 func (l *Lexer) Next() bool {
 	var st stateFunc
 

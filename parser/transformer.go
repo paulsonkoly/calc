@@ -9,7 +9,7 @@ import (
 
 // Node transformations. We receive a parsed linear sequence of nodes, arrange it in sub-trees.
 
-// mkUnaryOp is used for unary operators
+// mkUnaryOp is used for unary operators.
 //
 // It rewrites the pair of nodes putting the second under the first.
 func mkUnaryOp(nodes []c.Node) []c.Node {
@@ -21,7 +21,7 @@ func mkUnaryOp(nodes []c.Node) []c.Node {
 	return []c.Node{n}
 }
 
-// mkReturn is for return statements
+// mkReturn is for return statements.
 func mkReturn(nodes []c.Node) []c.Node {
 	if len(nodes) != 2 {
 		log.Panicf("incorrect number of sub nodes for return (%d)", len(nodes))
@@ -30,7 +30,7 @@ func mkReturn(nodes []c.Node) []c.Node {
 	return []c.Node{n}
 }
 
-// mkYield is for yield statements
+// mkYield is for yield statements.
 func mkYield(nodes []c.Node) []c.Node {
 	if len(nodes) != 2 {
 		log.Panicf("incorrect number of sub nodes for yield (%d)", len(nodes))
@@ -40,7 +40,7 @@ func mkYield(nodes []c.Node) []c.Node {
 }
 
 // mkLeftChain rewrites a sequence of binary operators applied on operands in a
-// left assictive structure
+// left assictive structure.
 //
 // In effect it arranges a+b+c sequence in:
 //
@@ -63,7 +63,7 @@ func mkLeftChain(nodes []c.Node) []c.Node {
 	return []c.Node{r}
 }
 
-// mkAssign creates an assigment to a variable
+// mkAssign creates an assigment to a variable.
 func mkAssign(nodes []c.Node) []c.Node {
 	if len(nodes) != 3 {
 		log.Panicf("incorrect number of sub nodes for assignment (%d)", len(nodes))
@@ -72,7 +72,7 @@ func mkAssign(nodes []c.Node) []c.Node {
 	return []c.Node{assign}
 }
 
-// mkIndex rewrites a sequence describing an array indexing into an Index node
+// mkIndex rewrites a sequence describing an array indexing into an Index node.
 func mkIndex(nodes []c.Node) []c.Node {
 	switch len(nodes) {
 
@@ -99,7 +99,7 @@ func mkList(nodes []c.Node) []c.Node {
 	return []c.Node{r}
 }
 
-// mkBlock wraps a sequence of nodes in a single block node
+// mkBlock wraps a sequence of nodes in a single block node.
 func mkBlock(nodes []c.Node) []c.Node {
 	if len(nodes) <= 1 {
 		return nodes
@@ -111,7 +111,7 @@ func mkBlock(nodes []c.Node) []c.Node {
 	return []c.Node{r}
 }
 
-// mkFCall creates a function call node
+// mkFCall creates a function call node.
 func mkFCall(nodes []c.Node) []c.Node {
 	r := node.Call{Name: nodes[0].(node.Type), Arguments: nodes[1].(node.List)}
 	return []c.Node{r}
@@ -126,7 +126,7 @@ func mkFunction(nodes []c.Node) []c.Node {
 	return []c.Node{r}
 }
 
-// mkIf creates a conditional structure
+// mkIf creates a conditional structure.
 func mkIf(nodes []c.Node) []c.Node {
 	var n node.Type
 	switch len(nodes) {
@@ -140,7 +140,7 @@ func mkIf(nodes []c.Node) []c.Node {
 	return []c.Node{n}
 }
 
-// mkWhile creates a while loop structure
+// mkWhile creates a while loop structure.
 func mkWhile(nodes []c.Node) []c.Node {
 	if len(nodes) != 3 {
 		log.Panicf("incorrect number of sub nodes for while (%d)", len(nodes))
@@ -149,7 +149,7 @@ func mkWhile(nodes []c.Node) []c.Node {
 	return []c.Node{n}
 }
 
-// mkFor creates a for loop structure
+// mkFor creates a for loop structure.
 func mkFor(nodes []c.Node) []c.Node {
 	if len(nodes) != 5 {
 		log.Panicf("incorrect number of sub nodes for for (%d)", len(nodes))

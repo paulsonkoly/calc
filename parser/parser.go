@@ -39,7 +39,8 @@ func acceptToken(str string) c.Parser {
 	return c.Accept(func(tok c.Token) bool { return tok.(token.Type).Value == str }, str, tokenWrap)
 }
 
-// The grammar
+// The grammar ////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 var intLit = acceptTerm(token.IntLit, "integer literal")
 var floatLit = acceptTerm(token.FloatLit, "float literal")
 var stringLit = acceptTerm(token.StringLit, "string literal")

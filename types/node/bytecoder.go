@@ -397,7 +397,7 @@ func (f For) byteCode(srcsel int, inFor bool, cs *[]bytecode.Type, ds *[]value.T
 	*cs = append(*cs, instr)
 
 	ccontAddr := len(*cs)
-	instr = bytecode.New(bytecode.CCONT) //| bytecode.EncodeSrc(0, bytecode.ADDR_IMM, contextId)
+	instr = bytecode.New(bytecode.CCONT)
 	*cs = append(*cs, instr)
 
 	instr = f.Iterator.byteCode(0, inFor, cs, ds)

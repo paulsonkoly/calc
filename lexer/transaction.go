@@ -11,7 +11,7 @@ type lexerResult struct {
 	from, to int
 }
 
-// TLexer is a lexer satisfying combinators.RollbackLexer
+// TLexer is a lexer satisfying combinators.RollbackLexer.
 //
 // It's the same as Lexer, but it's state can be snap-shotted and rolled back,
 // so if the parser backtracks, the parser can instruct the lexer to restore a
@@ -36,7 +36,7 @@ func NewTLexer(input string) TLexer {
 
 // Next advances the lexer to a new token.
 //
-// returns false if an error happened or there are no tokens left
+// It returns false if an error happened or there are no tokens left.
 func (tl *TLexer) Next() bool {
 	if tl.readp < tl.writep-1 {
 		tl.readp++
@@ -53,27 +53,27 @@ func (tl *TLexer) Next() bool {
 	return false
 }
 
-// Token gives the next token
+// Token gives the next token.
 func (tl *TLexer) Token() combinator.Token {
 	return combinator.Token(tl.stack[tl.readp].token)
 }
 
-// Err gives the next lexer error if any
+// Err gives the next lexer error if any.
 func (tl *TLexer) Err() error {
 	return tl.stack[tl.readp].err
 }
 
-// From gives the next token starting position
+// From gives the next token starting position.
 func (tl *TLexer) From() int {
 	return tl.stack[tl.readp].from
 }
 
-// To gives the next token starting position
+// To gives the next token starting position.
 func (tl *TLexer) To() int {
 	return tl.stack[tl.readp].to
 }
 
-// Snapshot snapshots the lexer state
+// Snapshot snapshots the lexer state.
 func (tl *TLexer) Snapshot() {
 	tl.pointers = append(tl.pointers, tl.readp)
 }
@@ -82,7 +82,7 @@ func (tl *TLexer) Commit() {
 	tl.pointers = tl.pointers[:len(tl.pointers)-1]
 }
 
-// Rollback rolls back to the last snapshot
+// Rollback rolls back to the last snapshot.
 func (tl *TLexer) Rollback() {
 	tl.readp = tl.pointers[len(tl.pointers)-1]
 	tl.pointers = tl.pointers[:len(tl.pointers)-1]

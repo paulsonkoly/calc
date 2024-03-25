@@ -21,19 +21,19 @@ func (f Function) STRewrite(symTbl SymTbl) Type {
 	// new lexical scope
 	scope := map[string]int{}
 
-	// asign parameters to scope
+	// assign parameters to scope
 	for i, t := range f.Parameters.Elems {
 		name := t.(Name)
 		scope[string(name)] = i
 	}
 
 	// push scope
-	slc := append(symTbl, scope)
+	symTbl = append(symTbl, scope)
 
-	parameters := f.Parameters.STRewrite(slc).(List)
-	body := f.Body.STRewrite(slc)
+	parameters := f.Parameters.STRewrite(symTbl).(List)
+	body := f.Body.STRewrite(symTbl)
 
-	localCnt := len(slc[len(slc)-1])
+	localCnt := len(symTbl[len(symTbl)-1])
 
 	// pop the lexical scope by ignoring slc
 

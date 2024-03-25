@@ -17,7 +17,7 @@ type context struct {
 	ip       int          // instruction pointer
 	m        *memory.Type // variables
 	parent   *context     // parent context
-	children []*context   //child contexts
+	children []*context   // child contexts
 }
 
 type Type struct {
@@ -30,6 +30,7 @@ func New(m *memory.Type, cs *[]bytecode.Type, ds *[]value.Type) *Type {
 	return &Type{ctx: &context{m: m, children: []*context{}}, CS: cs, DS: ds}
 }
 
+// nolint:maintidx // the only thing we care about here is making it faster
 func (vm *Type) Run(retResult bool) value.Type {
 	ctxp := vm.ctx
 	m := ctxp.m
@@ -257,12 +258,12 @@ func (vm *Type) Run(retResult bool) value.Type {
 			ctxp = &childCtx
 
 		case bytecode.RCONT:
-			ctxp.children = ctxp.children[:len(ctxp.children)-1] //make([]*context, 0)
+			ctxp.children = ctxp.children[:len(ctxp.children)-1]
 
 		case bytecode.DCONT:
 			ctxp = ctxp.parent
 			if len(ctxp.children) > 0 {
-				ctxp.children = ctxp.children[:len(ctxp.children)-1] //make([]*context, 0)
+				ctxp.children = ctxp.children[:len(ctxp.children)-1]
 			}
 			m = ctxp.m
 

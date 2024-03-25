@@ -4,7 +4,7 @@ import "fmt"
 
 type Type uint64
 
-// Instruction layout
+// Instruction layout.
 const (
 	OpcodeHi   = 63
 	OpcodeLo   = 57
@@ -27,7 +27,7 @@ const (
 	SrcChanSignExtend = 0xffffffffffff0000
 )
 
-// Source addressing
+// Source addressing.
 const (
 	AddrInv  = iota
 	AddrImm  // immediate
@@ -40,7 +40,7 @@ const (
 
 type OpCode uint64
 
-// Instruction set
+// Instruction set.
 const (
 	NOP = OpCode(iota)
 
@@ -84,14 +84,14 @@ const (
 	// CCONT jumps relative to ip + src0 in current context, saves context, and
 	// switches to a new context that continues from old ip.
 	CCONT
-	// DCONT restores previous context switches memory, but doesn't switch ip
+	// DCONT restores previous context switches memory, but doesn't switch ip.
 	DCONT
-	// RCONT removes last memory context saved
+	// RCONT removes last memory context saved.
 	RCONT
-	// SCONT swaps the current context with the last saved
+	// SCONT swaps the current context with the last saved.
 	SCONT
 	// YIELD pushes src0 in the current context, swaps the current context with
-	// the saved, and pushes src0 in the new context
+	// the saved, and pushes src0 in the new context.
 	YIELD
 
 	READ  // READ builtin

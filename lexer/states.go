@@ -13,7 +13,6 @@ const (
 	nonStrickyChars = "(){}[],:"
 )
 
-// stateFuncResult
 type str struct {
 	next   stateFunc // next state function
 	doEmit bool      // lexer emits token

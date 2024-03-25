@@ -243,10 +243,8 @@ func TestCalc(t *testing.T) {
 				if !test.value.StrictEq(v) {
 					t.Errorf("expected %v got %v", test.value, v)
 				}
-			} else {
-				if !strings.HasPrefix(err.Error(), test.parseError.Error()) {
-					t.Errorf("not the expected error: %s %s", test.parseError.Error(), err.Error())
-				}
+			} else if !strings.HasPrefix(err.Error(), test.parseError.Error()) {
+				t.Errorf("not the expected error: %s %s", test.parseError.Error(), err.Error())
 			}
 		})
 	}

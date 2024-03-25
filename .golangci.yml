@@ -1,3 +1,18 @@
 linters:
   enable:
+    - asasalint
+    - dupl
+    - errname
+    - goconst
+    - goconst
+    - gocritic
+    - godot
+    - gofmt
+    - maintidx
+    - mirror
+    - misspell
+    - nestif
+    - nilnil
+    - perfsprint
+    - prealloc
     - revive

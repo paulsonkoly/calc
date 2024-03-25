@@ -3,6 +3,7 @@ package node
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -118,7 +119,7 @@ func children(t graphvizzer) map[string]graphvizzer {
 
 			if fType, ok := field.Interface().([]Type); ok {
 				for i, g := range fType {
-					r[fmt.Sprintf("%d", i)] = g
+					r[strconv.Itoa(i)] = g
 				}
 			}
 		}

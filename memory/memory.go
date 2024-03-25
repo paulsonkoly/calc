@@ -30,7 +30,7 @@ const (
 type Frame []value.Type
 type gframe map[string]value.Type
 
-// Memory holds all variables
+// Memory holds all variables.
 type Type struct {
 	sp      int
 	fp      []int
@@ -39,15 +39,15 @@ type Type struct {
 	stack   []value.Type
 }
 
-// New creates a new memory, with an empty global frame and an empty stack
+// New creates a new memory, with an empty global frame and an empty stack.
 func New() *Type {
 	return &Type{fp: []int{}, global: gframe{}, closure: []Frame{}, stack: []value.Type{}}
 }
 
-// Clone does a memory copy for context switching
+// Clone does a memory copy for context switching.
 //
 // The clone would point to the same global, same closure, and the last frame
-// of the stack will be deep copied
+// of the stack will be deep copied.
 func (m *Type) Clone() *Type {
 	if len(m.fp) < 2 {
 		frm := slices.Clone(m.stack)
@@ -59,17 +59,17 @@ func (m *Type) Clone() *Type {
 	return &Type{sp: len(frm), fp: []int{0, le - fp}, global: m.global, closure: m.closure, stack: frm}
 }
 
-// SetGlobal sets a global variable
+// SetGlobal sets a global variable.
 func (m *Type) SetGlobal(name string, v value.Type) { m.global[name] = v }
 
-// Set sets a local variable
+// Set sets a local variable.
 func (m *Type) Set(symIdx int, v value.Type) {
 	fp := m.fp[len(m.fp)+localFP]
 	sp := fp + symIdx
 	m.stack[sp] = v
 }
 
-// LookUpLocal looks up a local variable
+// LookUpLocal looks up a local variable.
 func (m *Type) LookUpLocal(symIdx int) value.Type {
 	fp := m.fp[len(m.fp)+localFP]
 	sp := fp + symIdx
@@ -77,12 +77,12 @@ func (m *Type) LookUpLocal(symIdx int) value.Type {
 }
 
 // LookUpClosure looks up a closure variable. A variable that was local in the
-// containing lexical scope
+// containing lexical scope.
 func (m *Type) LookUpClosure(symIdx int) value.Type {
 	return m.closure[len(m.closure)-1][symIdx]
 }
 
-// LookUpGlobal looks up a global variable
+// LookUpGlobal looks up a global variable.
 func (m *Type) LookUpGlobal(name string) value.Type {
 	v, ok := m.global[name]
 	if !ok {
@@ -92,7 +92,7 @@ func (m *Type) LookUpGlobal(name string) value.Type {
 	return v
 }
 
-// PushFrame pushes a stack frame
+// PushFrame pushes a stack frame.
 func (m *Type) PushFrame(argsCnt, localCnt int) {
 	m.sp += localCnt - argsCnt
 	m.fp = append(m.fp, m.sp-localCnt, m.sp)
@@ -108,7 +108,7 @@ func (m *Type) PushClosure(f Frame) {
 	m.closure = append(m.closure, f)
 }
 
-// PopFrame pops a stack frame
+// PopFrame pops a stack frame.
 func (m *Type) PopFrame() {
 	fp := m.fp[len(m.fp)+localFP]
 	m.sp = fp
@@ -124,7 +124,7 @@ func (m *Type) PopClosure() {
 	m.closure = m.closure[:len(m.closure)-1]
 }
 
-// Top is the last stack frame pushed
+// Top is the last stack frame pushed.
 func (m *Type) Top() Frame {
 	if len(m.fp) < 1 {
 		return nil

@@ -79,40 +79,43 @@ func Loop(r lineReader, p Parser, vm *vm.Type, doOut bool) {
 		sep = "\n"
 
 		if blocksOpen == 0 && quotesOpen%2 == 0 && bracketsOpen == 0 {
-			t, err := p.Parse(input)
+			processInput(input, p, vm, doOut)
 			sep = ""
-			if err != nil {
-				reportError(err, input)
-				input = ""
-				continue
-			}
 			input = ""
+		}
+	}
+}
 
-			for _, e := range t {
-				e := e.STRewrite(SymTbl{})
+func processInput(input string, p Parser, vm *vm.Type, doOut bool) {
+	t, err := p.Parse(input)
+	if err != nil {
+		reportError(err, input)
+		return
+	}
 
-				if *flags.AstFlag {
-					Graphviz(e)
-				}
+	for _, e := range t {
+		e := e.STRewrite(SymTbl{})
 
-				ip := len(*vm.CS)
-				if doOut {
-					ByteCode(e, vm.CS, vm.DS)
-				} else {
-					ByteCodeNoStck(e, vm.CS, vm.DS)
-				}
+		if *flags.AstFlag {
+			Graphviz(e)
+		}
 
-				if *flags.ByteCodeFlag {
-					for i, c := range (*vm.CS)[ip:] {
-						fmt.Printf(" %8d | %v\n", ip+i, c)
-					}
-				}
+		ip := len(*vm.CS)
+		if doOut {
+			ByteCode(e, vm.CS, vm.DS)
+		} else {
+			ByteCodeNoStck(e, vm.CS, vm.DS)
+		}
 
-				v := vm.Run(doOut)
-				if doOut {
-					fmt.Printf("> %s\n", v.Display())
-				}
+		if *flags.ByteCodeFlag {
+			for i, c := range (*vm.CS)[ip:] {
+				fmt.Printf(" %8d | %v\n", ip+i, c)
 			}
+		}
+
+		v := vm.Run(doOut)
+		if doOut {
+			fmt.Printf("> %s\n", v.Display())
 		}
 	}
 }

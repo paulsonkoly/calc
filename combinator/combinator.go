@@ -7,24 +7,24 @@ import (
 
 // seems one can write haskell in every language
 
-// Token represents a lexeme from a lexer
+// Token represents a lexeme from a lexer.
 type Token interface {
 	From() int
 	To() int
 }
 
 // Node is an AST node, with pointers to sub-tree nodes and potentially some
-// parse information data
+// parse information data.
 type Node any
 
-// TokenWrapper wraps a token in a single AST node containing the token
+// TokenWrapper wraps a token in a single AST node containing the token.
 type TokenWrapper interface {
 	Wrap(Token) Node
 }
 
 // Lexer produces a stream of tokens. Next() advances the lexer and
 // returns true until all tokens are returned. Err() and Token() do not modify
-// the lexer and start returning values after the first Next() call
+// the lexer and start returning values after the first Next() call.
 type Lexer interface {
 	From() int
 	To() int
@@ -35,7 +35,7 @@ type Lexer interface {
 
 // Transaction adds snapshot and rollback functionality to some API.
 
-// It's expected to be stack based just like a database transaction
+// It's expected to be stack based just like a database transaction.
 type Transaction interface {
 	Snapshot() // Push current state on a stack so it can be recovered
 	Rollback() // Recover last state that was pushed
@@ -53,19 +53,19 @@ type RollbackLexer interface {
 //
 // It's the users responsibility to combine compound nodes into one, ie. the
 // sub-parser results can be combined into a Node that has tree pointers to the
-// sub expressions
+// sub expressions.
 type Parser func(input RollbackLexer) ([]Node, *Error)
 
 // Ok is a parser that doesn't do anything just returns a successful parse
-// result
+// result.
 func Ok() Parser {
 	return func(input RollbackLexer) ([]Node, *Error) {
 		return []Node{}, nil
 	}
 }
 
-// Assert asserts the given parser p would succeed without consuming input
-// It returns empty parse result
+// Assert asserts the given parser p would succeed without consuming input.
+// It returns empty parse result.
 func Assert(p Parser) Parser {
 	return func(input RollbackLexer) ([]Node, *Error) {
 		input.Snapshot()
@@ -89,7 +89,7 @@ func Not(p Parser) Parser {
 }
 
 // Conditional is a pair of parsers. Once Gate succeeds we don't roll back but
-// we are commited to parse with OnSuccess.
+// we are committed to parse with OnSuccess.
 //
 // Conditional is meant to solve the following problem.
 //
@@ -152,7 +152,7 @@ func Choose(choices ...Conditional) Parser {
 // It tries each parser in turn, rolling back the input after each failed
 // attempt It is meant to be used with terminal rules only, for complex
 // language rules prefer Choose because it gives much closer syntax errors to
-// the actual error location
+// the actual error location.
 func OneOf(args ...Parser) Parser {
 	if len(args) < 1 {
 		panic("Parser: OneOf needs at least one parser")
@@ -317,10 +317,10 @@ func Accept(p func(Token) bool, msg string, wrp TokenWrapper) Parser {
 	}
 }
 
-// Fmap maps f : []Node -> []Node function on parser p
+// Fmap maps f : []Node -> []Node function on parser p.
 //
 // Returns a modified version of p that succeeds when p succeeds but if p
-// returns r the modified version returns f(r)
+// returns r the modified version returns f(r).
 func Fmap(f func([]Node) []Node, p Parser) Parser {
 	return func(input RollbackLexer) ([]Node, *Error) {
 		r, err := p(input)

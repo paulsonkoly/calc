@@ -18,11 +18,11 @@ const (
 	NotSticky              // one of (, ), {, }, `,` a sequence of these gives a sequence of single char lexemes
 )
 
-// Token as produced by the lexer
+// Token as produced by the lexer.
 type Type struct {
 	from  int
 	to    int
-	Value string // Value is the token string contained withing the input stream
+	Value string // Value is the token string contained within the input stream
 	Type  Kind   // Type of the token
 }
 
@@ -44,8 +44,8 @@ func (t Type) String() string {
 	}
 }
 
-// From is the index of the start of the token in the input stream
+// From is the index of the start of the token in the input stream.
 func (t Type) From() int { return t.from }
 
-// To is the index of the end of the token in the input stream
+// To is the index of the end of the token in the input stream.
 func (t Type) To() int { return t.to }

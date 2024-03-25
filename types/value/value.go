@@ -4,6 +4,7 @@ package value
 import (
 	"fmt"
 	"slices"
+	"strconv"
 	"unsafe"
 )
 
@@ -30,7 +31,7 @@ type Type struct {
 	ptr   unsafe.Pointer
 }
 
-// A structure that represents a function value
+// A structure that represents a function value.
 type FunctionData struct {
 	Node     int // Pointer to the code of the function - the AST node that holds the function
 	Frame    any // Pointer to the closure stack frame
@@ -38,20 +39,20 @@ type FunctionData struct {
 	LocalCnt int // LocalCnt is the number of local variables of the function including ParamCnt
 }
 
-// unsafe (no type check) accessors
+// unsafe (no type check) accessors.
 func (t Type) i() int     { return *(*int)(unsafe.Pointer(&t.morph)) }
 func (t Type) f() float64 { return *(*float64)(unsafe.Pointer(&t.morph)) }
 func (t Type) b() bool    { return t.morph != 0 }
 func (t Type) s() string  { return *(*string)(t.ptr) }
 func (t Type) a() []Type  { return *(*[]Type)(t.ptr) }
 
-// NewInt allocates a new int value
+// NewInt allocates a new int value.
 func NewInt(i int) Type { return Type{typ: intT, morph: *(*uint64)(unsafe.Pointer(&i))} }
 
-// NewFloat allocates a new float value
+// NewFloat allocates a new float value.
 func NewFloat(f float64) Type { return Type{typ: floatT, morph: *(*uint64)(unsafe.Pointer(&f))} }
 
-// NewBool allocates a new bool value
+// NewBool allocates a new bool value.
 func NewBool(b bool) Type {
 	t := Type{typ: boolT}
 
@@ -63,24 +64,24 @@ func NewBool(b bool) Type {
 	return t
 }
 
-// NewArray allocates a new array value
+// NewArray allocates a new array value.
 func NewArray(a []Type) Type { return Type{typ: arrayT, ptr: unsafe.Pointer(&a)} }
 
-// NewString allocates a new string value
+// NewString allocates a new string value.
 func NewString(s string) Type { return Type{typ: stringT, ptr: unsafe.Pointer(&s)} }
 
-// NewError allocates a new error value
+// NewError allocates a new error value.
 func NewError(m *string) Type { return Type{typ: errorT, ptr: unsafe.Pointer(m)} }
 
-// NewFunction allocates a new function value
+// NewFunction allocates a new function value.
 func NewFunction(node int, frame any, paramCnt int, localCnt int) Type {
 	d := FunctionData{Node: node, Frame: frame, ParamCnt: paramCnt, LocalCnt: localCnt}
 	return Type{typ: functionT, ptr: unsafe.Pointer(&d)}
 }
 
-// ToFunction converts a value to FunctionData
+// ToFunction converts a value to FunctionData.
 //
-// returns ok false if not a function
+// It returns ok false if not a function.
 func (t Type) ToFunction() (FunctionData, bool) {
 	if t.typ != functionT {
 		return FunctionData{}, false
@@ -89,9 +90,9 @@ func (t Type) ToFunction() (FunctionData, bool) {
 	return *(*FunctionData)(unsafe.Pointer(t.ptr)), true
 }
 
-// ToInt converts a value to int
+// ToInt converts a value to int.
 //
-// returns ok false if not an int
+// It returns ok false if not an int.
 func (t Type) ToInt() (int, bool) {
 	if t.typ != intT {
 		return 0, false
@@ -99,9 +100,9 @@ func (t Type) ToInt() (int, bool) {
 	return *(*int)(unsafe.Pointer(&t.morph)), true
 }
 
-// ToBool converts a value to bool
+// ToBool converts a value to bool.
 //
-// returns ok false if not an bool
+// It returns ok false if not an bool.
 func (t Type) ToBool() (bool, bool) {
 	if t.typ != boolT {
 		return false, false
@@ -109,9 +110,9 @@ func (t Type) ToBool() (bool, bool) {
 	return t.morph == 1, true
 }
 
-// ToString converts a value to string
+// ToString converts a value to string.
 //
-// returns ok false if not a string
+// It returns ok false if not a string.
 func (t Type) ToString() (string, bool) {
 	if t.typ != stringT {
 		return "", false
@@ -126,19 +127,19 @@ func (t Type) ToArray() ([]Type, bool) {
 	return *(*[]Type)(unsafe.Pointer(t.ptr)), true
 }
 
-// Value of any type to string
+// String converts any value.Type to string.
 func (t Type) String() string {
 	switch t.typ {
 	case intT:
-		return fmt.Sprint(*(*int)(unsafe.Pointer(&t.morph)))
+		return strconv.Itoa(*(*int)(unsafe.Pointer(&t.morph)))
 	case floatT:
 		return fmt.Sprint(*(*float64)(unsafe.Pointer(&t.morph)))
 	case boolT:
-		return fmt.Sprint(t.morph == 1)
+		return strconv.FormatBool(t.morph == 1)
 	case stringT:
 		return *(*string)(t.ptr)
 	case errorT:
-		return fmt.Sprintf("%v", *(*string)(t.ptr))
+		return *(*string)(t.ptr)
 	case functionT:
 		return "function"
 	case arrayT:
@@ -167,7 +168,7 @@ func (t Type) Display() string {
 	return t.String()
 }
 
-// Predefined errors
+// Predefined errors.
 var (
 	typeErrorStr       = "type error"
 	invalidOpErrorStr  = "invalid operation"
@@ -186,7 +187,7 @@ var (
 	ArgumentError   = NewError(&argumentErrorStr)
 )
 
-// Arith is value arithmetics, +, -, * /
+// Arith is value arithmetics, +, -, * /.
 func (t Type) Arith(op string, b Type) Type {
 
 	switch (t.typ)<<4 | b.typ {
@@ -322,7 +323,7 @@ func (t Type) Relational(op string, b Type) Type {
 	}
 }
 
-// Logic is value logic ops &, |
+// Logic is value logic ops &, |.
 func (t Type) Logic(op string, b Type) Type {
 
 	switch (t.typ)<<4 | b.typ {
@@ -366,7 +367,7 @@ func (t Type) Logic(op string, b Type) Type {
 	}
 }
 
-// Shift is bit shift ops <<, >>
+// Shift is bit shift ops <<, >>.
 func (t Type) Shift(op string, b Type) Type {
 
 	switch (t.typ)<<4 | b.typ {
@@ -423,7 +424,7 @@ func (t Type) Not() Type {
 	}
 }
 
-// Index is value indexing, @, and @:
+// Index is value indexing, [] and [:].
 func (t Type) Index(b ...Type) Type {
 
 	if len(b) < 1 || len(b) > 2 {
@@ -499,7 +500,7 @@ func (t Type) Index(b ...Type) Type {
 	panic("unreachable code")
 }
 
-// Len is value length
+// Len is value length.
 func (t Type) Len() Type {
 
 	switch t.typ {
@@ -588,7 +589,7 @@ func (t *Type) StrictEq(b Type) bool {
 //
 //	1 == 1.0 -> true
 //
-// all functions are un-equal
+// All functions are un-equal.
 func (t *Type) WeakEq(b Type) bool {
 
 	switch (t.typ)<<4 | b.typ {
@@ -628,7 +629,7 @@ func (t *Type) WeakEq(b Type) bool {
 	}
 }
 
-// Equality check, ==, !=
+// Equality check, ==, !=.
 func (t Type) Eq(op string, b Type) Type {
 	r := t.WeakEq(b)
 	if op == "!=" {
