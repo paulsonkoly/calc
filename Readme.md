@@ -1,4 +1,3 @@
-testing github branch protection
 # Calc
 
 A simple calculator language / REPL.
