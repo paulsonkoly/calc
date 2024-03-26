@@ -2,6 +2,7 @@ package vm
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -31,7 +32,7 @@ func New(m *memory.Type, cs *[]bytecode.Type, ds *[]value.Type) *Type {
 }
 
 // nolint:maintidx // the only thing we care about here is making it faster
-func (vm *Type) Run(retResult bool) value.Type {
+func (vm *Type) Run(retResult bool) (value.Type, error) {
 	ctxp := vm.ctx
 	m := ctxp.m
 	ip := ctxp.ip
@@ -52,7 +53,10 @@ func (vm *Type) Run(retResult bool) value.Type {
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
 			op := [...]string{"+", "-", "*", "/"}[opCode-bytecode.ADD]
 
-			val := src1.Arith(op, src0)
+			val, err := src1.Arith(op, src0)
+			if err != nil {
+				return dumpStack(m, err)
+			}
 
 			m.Push(val)
 
@@ -60,7 +64,10 @@ func (vm *Type) Run(retResult bool) value.Type {
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
 
-			val := src1.Mod(src0)
+			val, err := src1.Mod(src0)
+			if err != nil {
+				return dumpStack(m, err)
+			}
 
 			m.Push(val)
 
@@ -69,7 +76,10 @@ func (vm *Type) Run(retResult bool) value.Type {
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
 			op := [...]string{"&", "|"}[opCode-bytecode.AND]
 
-			val := src1.Logic(op, src0)
+			val, err := src1.Logic(op, src0)
+			if err != nil {
+				return dumpStack(m, err)
+			}
 
 			m.Push(val)
 
@@ -78,18 +88,29 @@ func (vm *Type) Run(retResult bool) value.Type {
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
 			op := [...]string{"<<", ">>"}[opCode-bytecode.LSH]
 
-			val := src1.Shift(op, src0)
+			val, err := src1.Shift(op, src0)
+			if err != nil {
+				return dumpStack(m, err)
+			}
 
 			m.Push(val)
 
 		case bytecode.NOT:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
-			val := src0.Not()
+			val, err := src0.Not()
+			if err != nil {
+				return dumpStack(m, err)
+			}
+
 			m.Push(val)
 
 		case bytecode.FLIP:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
-			val := src0.Flip()
+			val, err := src0.Flip()
+			if err != nil {
+				return dumpStack(m, err)
+			}
+
 			m.Push(val)
 
 		case bytecode.LT, bytecode.GT, bytecode.LE, bytecode.GE:
@@ -97,7 +118,10 @@ func (vm *Type) Run(retResult bool) value.Type {
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
 			op := [...]string{"<", ">", "<=", ">="}[opCode-bytecode.LT]
 
-			val := src1.Relational(op, src0)
+			val, err := src1.Relational(op, src0)
+			if err != nil {
+				return dumpStack(m, err)
+			}
 
 			m.Push(val)
 
@@ -106,20 +130,31 @@ func (vm *Type) Run(retResult bool) value.Type {
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
 			op := [...]string{"==", "!="}[opCode-bytecode.EQ]
 
-			val := src1.Eq(op, src0)
+			val, err := src1.Eq(op, src0)
+			if err != nil {
+				return dumpStack(m, err)
+			}
 
 			m.Push(val)
 
 		case bytecode.LEN:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 
-			m.Push(src0.Len())
+			val, err := src0.Len()
+			if err != nil {
+				return dumpStack(m, err)
+			}
+
+			m.Push(val)
 
 		case bytecode.IX1:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
 
-			val := src1.Index(src0)
+			val, err := src1.Index(src0)
+			if err != nil {
+				return dumpStack(m, err)
+			}
 
 			m.Push(val)
 
@@ -128,7 +163,10 @@ func (vm *Type) Run(retResult bool) value.Type {
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
 			src2 := vm.fetch(instr.Src2(), instr.Src2Addr(), m, ds)
 
-			val := src2.Index(src1, src0)
+			val, err := src2.Index(src1, src0)
+			if err != nil {
+				return dumpStack(m, err)
+			}
 
 			m.Push(val)
 
@@ -140,13 +178,11 @@ func (vm *Type) Run(retResult bool) value.Type {
 		case bytecode.JMPF:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			src1Imm := instr.Src1Addr()
-			src2Imm := instr.Src2Addr()
 
 			b, ok := src0.ToBool()
 
 			if !ok {
-				ip += src2Imm - 1
-				break
+				return dumpStack(m, value.ErrType)
 			}
 			if !b {
 				ip += src1Imm - 1
@@ -161,6 +197,11 @@ func (vm *Type) Run(retResult bool) value.Type {
 
 		case bytecode.MOV:
 			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+
+			if val.IsNil() {
+				return dumpStack(m, value.ErrNil)
+			}
+
 			src1T := instr.Src1()
 
 			switch src1T {
@@ -205,13 +246,11 @@ func (vm *Type) Run(retResult bool) value.Type {
 			fVal, ok := f.ToFunction()
 
 			if !ok {
-				m.Push(value.TypeError)
-				break
+				return dumpStack(m, value.ErrType)
 			}
 
 			if fVal.ParamCnt != args {
-				m.Push(value.ArgumentError)
-				break
+				return dumpStack(m, errors.New("arity error"))
 			}
 
 			m.PushFrame(args, fVal.LocalCnt)
@@ -300,24 +339,21 @@ func (vm *Type) Run(retResult bool) value.Type {
 			b := bufio.NewReader(os.Stdin)
 			line, err := b.ReadString('\n')
 			if err != nil {
-				msg := fmt.Sprintf("read error %s", err)
-				m.Push(value.NewError(&msg))
-				break
+				return dumpStack(m, fmt.Errorf("read error %w", err))
 			}
 			m.Push(value.NewString(line))
 
 		case bytecode.WRITE:
 			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			fmt.Print(val)
-			m.Push(value.NoResultError)
+			m.Push(value.Nil)
 
 		case bytecode.ATON:
 			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 
 			sv, ok := val.ToString()
 			if !ok {
-				m.Push(value.TypeError)
-				break
+				return dumpStack(m, value.ErrType)
 			}
 
 			if v, err := strconv.Atoi(string(sv)); err == nil {
@@ -330,21 +366,11 @@ func (vm *Type) Run(retResult bool) value.Type {
 				break
 			}
 
-			m.Push(value.ConversionError)
+			return dumpStack(m, errors.New("conversion error"))
 
 		case bytecode.TOA:
 			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			val = value.NewString(fmt.Sprint(val))
-			m.Push(val)
-
-		case bytecode.ERROR:
-			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
-			str, ok := val.ToString()
-			if !ok {
-				m.Push(value.TypeError)
-				break
-			}
-			val = value.NewError(&str)
 			m.Push(val)
 
 		case bytecode.EXIT:
@@ -365,10 +391,10 @@ func (vm *Type) Run(retResult bool) value.Type {
 	ctxp.ip = ip
 
 	if retResult {
-		return m.Pop()
+		return m.Pop(), nil
 	}
 
-	return value.Type{}
+	return value.Type{}, nil
 }
 
 func (vm Type) fetch(src uint64, addr int, m *memory.Type, ds *[]value.Type) value.Type {
@@ -391,4 +417,9 @@ func (vm Type) fetch(src uint64, addr int, m *memory.Type, ds *[]value.Type) val
 		log.Panicf("unknown source")
 	}
 	panic("unreachable code")
+}
+
+func dumpStack(_ *memory.Type, err error) (value.Type, error) {
+  fmt.Println(err)
+	return value.Type{}, err
 }

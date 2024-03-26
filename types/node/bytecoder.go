@@ -251,10 +251,8 @@ func (i If) byteCode(srcsel int, inFor bool, cs *[]bytecode.Type, ds *[]value.Ty
 	// truecase                                  |
 	// if trucase result is not on the stack     |
 	//    PUSH truecase result                   |
-	// JMP +4                                  --|-+
+	// JMP +2                                  --|-+
 	// PUSH no result                          <-+ |
-	// JMP +2                                    | |
-	// PUSH type error                         <-+ |
 	//                                         <---+
 	//
 	instr := bytecode.New(bytecode.JMPF) | i.Condition.byteCode(0, inFor, cs, ds)
@@ -268,19 +266,11 @@ func (i If) byteCode(srcsel int, inFor bool, cs *[]bytecode.Type, ds *[]value.Ty
 		*cs = append(*cs, instr)
 	}
 
-	instr = bytecode.New(bytecode.JMP) | bytecode.EncodeSrc(0, bytecode.AddrImm, 4)
-	*cs = append(*cs, instr)
-
-	ix := len(*ds)
-	*ds = append(*ds, value.NoResultError)
-	instr = bytecode.New(bytecode.PUSH) | bytecode.EncodeSrc(0, bytecode.AddrDS, ix)
-	*cs = append(*cs, instr)
-
 	instr = bytecode.New(bytecode.JMP) | bytecode.EncodeSrc(0, bytecode.AddrImm, 2)
 	*cs = append(*cs, instr)
 
-	ix = len(*ds)
-	*ds = append(*ds, value.TypeError)
+	ix := len(*ds)
+	*ds = append(*ds, value.Nil)
 	instr = bytecode.New(bytecode.PUSH) | bytecode.EncodeSrc(0, bytecode.AddrDS, ix)
 	*cs = append(*cs, instr)
 
@@ -299,7 +289,6 @@ func (i IfElse) byteCode(srcsel int, inFor bool, cs *[]bytecode.Type, ds *[]valu
 	// if trucase result is not on the stack     |
 	//    PUSH truecase result                   |
 	// JMP                                     --|-+
-	// PUSH type error                         <-+ |
 	// falsecase                               <-+ |
 	// if falsecase result is not on the stack     |
 	//    PUSH falsecase result                    |
@@ -319,12 +308,6 @@ func (i IfElse) byteCode(srcsel int, inFor bool, cs *[]bytecode.Type, ds *[]valu
 	instr = bytecode.New(bytecode.JMP)
 	*cs = append(*cs, instr)
 
-	typErrAddr := len(*cs)
-	ix := len(*ds)
-	*ds = append(*ds, value.TypeError)
-	instr = bytecode.New(bytecode.PUSH) | bytecode.EncodeSrc(0, bytecode.AddrDS, ix)
-	*cs = append(*cs, instr)
-
 	instr = i.FalseCase.byteCode(0, inFor, cs, ds)
 	if instr.Src0() != bytecode.AddrStck {
 		instr |= bytecode.New(bytecode.PUSH)
@@ -332,9 +315,7 @@ func (i IfElse) byteCode(srcsel int, inFor bool, cs *[]bytecode.Type, ds *[]valu
 	}
 
 	// patch jmpf
-	(*cs)[jmpfAddr] |=
-		bytecode.EncodeSrc(2, bytecode.AddrImm, typErrAddr-jmpfAddr) |
-			bytecode.EncodeSrc(1, bytecode.AddrImm, jmpTAddr-jmpfAddr+1)
+	(*cs)[jmpfAddr] |= bytecode.EncodeSrc(1, bytecode.AddrImm, jmpTAddr-jmpfAddr+1)
 	// patch jmp
 	(*cs)[jmpTAddr] |= bytecode.EncodeSrc(0, bytecode.AddrImm, len(*cs)-jmpTAddr)
 
@@ -349,11 +330,10 @@ func (w While) byteCode(srcsel int, inFor bool, cs *[]bytecode.Type, ds *[]value
 	// if body didn't leave its result on the stack        |  |
 	//    PUSH body result                                 |  |
 	// JUMP                                           -----+  |
-	// PUSH type error                                <-------|
 	//                                                <-------+
 
 	ix := len(*ds)
-	*ds = append(*ds, value.NoResultError)
+	*ds = append(*ds, value.Nil)
 	instr := bytecode.New(bytecode.PUSH) | bytecode.EncodeSrc(0, bytecode.AddrDS, ix)
 	*cs = append(*cs, instr)
 
@@ -376,23 +356,15 @@ func (w While) byteCode(srcsel int, inFor bool, cs *[]bytecode.Type, ds *[]value
 	instr = bytecode.New(bytecode.JMP) | bytecode.EncodeSrc(0, bytecode.AddrImm, condAddr-len(*cs))
 	*cs = append(*cs, instr)
 
-	typErrAddr := len(*cs)
-	ix = len(*ds)
-	*ds = append(*ds, value.TypeError)
-	instr = bytecode.New(bytecode.PUSH) | bytecode.EncodeSrc(0, bytecode.AddrDS, ix)
-	*cs = append(*cs, instr)
-
 	// patch the JMPF
-	(*cs)[jmpfAddr] |=
-		bytecode.EncodeSrc(2, bytecode.AddrImm, typErrAddr-jmpfAddr) |
-			bytecode.EncodeSrc(1, bytecode.AddrImm, len(*cs)-jmpfAddr)
+	(*cs)[jmpfAddr] |= bytecode.EncodeSrc(1, bytecode.AddrImm, len(*cs)-jmpfAddr)
 
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
 }
 
 func (f For) byteCode(srcsel int, inFor bool, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type {
 	ix := len(*ds)
-	*ds = append(*ds, value.NoResultError)
+	*ds = append(*ds, value.Nil)
 	instr := bytecode.New(bytecode.PUSH) | bytecode.EncodeSrc(0, bytecode.AddrDS, ix)
 	*cs = append(*cs, instr)
 
@@ -490,13 +462,6 @@ func (a Aton) byteCode(srcsel int, inFor bool, cs *[]bytecode.Type, ds *[]value.
 
 func (t Toa) byteCode(srcsel int, inFor bool, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type {
 	instr := bytecode.New(bytecode.TOA) | t.Value.byteCode(0, inFor, cs, ds)
-	*cs = append(*cs, instr)
-
-	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
-}
-
-func (e Error) byteCode(srcsel int, inFor bool, cs *[]bytecode.Type, ds *[]value.Type) bytecode.Type {
-	instr := bytecode.New(bytecode.ERROR) | e.Value.byteCode(0, inFor, cs, ds)
 	*cs = append(*cs, instr)
 
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)

@@ -69,7 +69,7 @@ var testData = [...]TestDatum{
 
 	{"conditional/single line no else", "if true 1", nil, value.NewInt(1)},
 	{"conditional/single line else", "if false 1 else 2", nil, value.NewInt(2)},
-	{"conditional/incorrect condition", "if 1 1", nil, value.TypeError},
+	{"conditional/incorrect condition", "if 1 1", nil, value.ErrType},
 	{"conditional/no result", "if false 1", nil, value.NoResultError},
 	{"conditional/blocks no else", "if true {\n1\n}", nil, value.NewInt(1)},
 	{"conditional/blocks with else", "if false {\n1\n} else {\n2\n}", nil, value.NewInt(2)},
@@ -99,7 +99,7 @@ var testData = [...]TestDatum{
 		while 13 {
 			a = a + 1
 		}
-	}`, nil, value.TypeError},
+	}`, nil, value.ErrType},
 
 	{"iterator/elems",
 		`{
@@ -191,7 +191,7 @@ var testData = [...]TestDatum{
 	{"builtin/aton error", "aton(\"abc\")", nil, value.ConversionError},
 
 	{"builtin/error", "error(\"hi\")", nil, value.NewError(&messages[1])},
-	{"builtin/error type error", "error(1)", nil, value.TypeError},
+	{"builtin/error type error", "error(1)", nil, value.ErrType},
 	{"qsort",
 		`{
 	       filter = (pred, ary) -> {

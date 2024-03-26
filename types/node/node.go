@@ -136,6 +136,3 @@ type Toa struct{ Value Type }
 
 // Exit exits the interpreter with an os exit code.
 type Exit struct{ Value Type }
-
-// Error converts a string to an error.
-type Error struct{ Value Type }

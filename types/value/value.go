@@ -49,6 +49,9 @@ func (t Type) a() []Type  { return *(*[]Type)(t.ptr) }
 // Nil is the nil value.
 var Nil = Type{typ: nilT}
 
+// IsNil determines whether a value is nil.
+func (t Type) IsNil() bool { return t.typ == nilT }
+
 // NewInt allocates a new int value.
 func NewInt(i int) Type { return Type{typ: intT, morph: *(*uint64)(unsafe.Pointer(&i))} }
 

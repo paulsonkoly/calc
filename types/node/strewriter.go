@@ -168,4 +168,3 @@ func (w Write) STRewrite(symTbl SymTbl) Type { return Write{Value: w.Value.STRew
 func (a Aton) STRewrite(symTbl SymTbl) Type  { return Aton{Value: a.Value.STRewrite(symTbl)} }
 func (t Toa) STRewrite(symTbl SymTbl) Type   { return Toa{Value: t.Value.STRewrite(symTbl)} }
 func (e Exit) STRewrite(symTbl SymTbl) Type  { return Exit{Value: e.Value.STRewrite(symTbl)} }
-func (e Error) STRewrite(symTbl SymTbl) Type { return Error{Value: e.Value.STRewrite(symTbl)} }

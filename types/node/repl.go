@@ -113,8 +113,8 @@ func processInput(input string, p Parser, vm *vm.Type, doOut bool) {
 			}
 		}
 
-		v := vm.Run(doOut)
-		if doOut {
+		v, err := vm.Run(doOut)
+		if doOut && err == nil {
 			fmt.Printf("> %s\n", v.Display())
 		}
 	}

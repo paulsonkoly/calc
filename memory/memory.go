@@ -14,7 +14,6 @@
 package memory
 
 import (
-	"fmt"
 	"slices"
 
 	"github.com/paulsonkoly/calc/types/value"
@@ -86,8 +85,7 @@ func (m *Type) LookUpClosure(symIdx int) value.Type {
 func (m *Type) LookUpGlobal(name string) value.Type {
 	v, ok := m.global[name]
 	if !ok {
-		s := fmt.Sprintf("%s not defined", name)
-		return value.NewError(&s)
+		return value.Nil
 	}
 	return v
 }
