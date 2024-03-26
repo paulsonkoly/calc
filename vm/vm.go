@@ -14,6 +14,11 @@ import (
 	"github.com/paulsonkoly/calc/types/value"
 )
 
+var (
+	ErrConversion = errors.New("conversion error")
+	ErrArity      = errors.New("arity mismatch")
+)
+
 type context struct {
 	ip       int          // instruction pointer
 	m        *memory.Type // variables
@@ -250,7 +255,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			}
 
 			if fVal.ParamCnt != args {
-				return dumpStack(m, errors.New("arity error"))
+				return dumpStack(m, ErrArity)
 			}
 
 			m.PushFrame(args, fVal.LocalCnt)
@@ -366,7 +371,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 				break
 			}
 
-			return dumpStack(m, errors.New("conversion error"))
+			return dumpStack(m, ErrConversion)
 
 		case bytecode.TOA:
 			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
@@ -420,6 +425,6 @@ func (vm Type) fetch(src uint64, addr int, m *memory.Type, ds *[]value.Type) val
 }
 
 func dumpStack(_ *memory.Type, err error) (value.Type, error) {
-  fmt.Println(err)
+	fmt.Println(err)
 	return value.Type{}, err
 }

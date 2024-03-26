@@ -275,9 +275,7 @@ func (i If) byteCode(srcsel int, inFor bool, cs *[]bytecode.Type, ds *[]value.Ty
 	*cs = append(*cs, instr)
 
 	// patch the JMPF
-	(*cs)[jmpfAddr] |=
-		bytecode.EncodeSrc(2, bytecode.AddrImm, len(*cs)-jmpfAddr-1) |
-			bytecode.EncodeSrc(1, bytecode.AddrImm, len(*cs)-jmpfAddr-3)
+	(*cs)[jmpfAddr] |= bytecode.EncodeSrc(1, bytecode.AddrImm, len(*cs)-jmpfAddr-1)
 
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
 }
