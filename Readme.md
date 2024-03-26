@@ -87,10 +87,9 @@ Built in functions are loaded in the top level frame on the interpreter start up
 | function | arity | returns                    | description                             |
 |----------|-------|----------------------------|-----------------------------------------|
 | read     | 0     | string                     | Reads a string from the stdin           |
-| write    | 1     | no result error            | Writes the given value to the output    |
+| write    | 1     | nil                        | Writes the given value to the output    |
 | aton     | 1     | int/float/conversion error | Converts a string to an int or a float  |
 | toa      | 1     | string                     | Converts a value to a string            |
-| error    | 1     | error                      | Converts a string to an error           |
 | exit     | 1     | doesn't return/type error  | Exits the interpreter with exit code    |
 | fromto   | 2     | iterator                   | fromto(a, b) iterates from a to b-1     |
 | elems    | 1     | iterator                   | elems(ary) iterates the array elements  |
