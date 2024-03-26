@@ -121,10 +121,10 @@ There are 5 precedence groups (from lowest to highest):
 
 | Operator     | Precedence | Types                                                 | Description                                  |
 |--------------|------------|-------------------------------------------------------|----------------------------------------------|
-| &&, ||       | 0          | int/int, bool/bool                                    | bitwise, or boolean and, or - low precedence |
+| &&, \|\|     | 0          | int/int, bool/bool                                    | bitwise, or boolean and, or - low precedence |
 | <, >, <=, >= | 1          | int or float/int or float                             | relational                                   |
 | ==, !=       | 1          | any/any                                               | equality check                               |
-| &, |         | 2          | int/int, bool/bool                                    | bitwise, or boolean and or - high precedence |
+| &, \|        | 2          | int/int, bool/bool                                    | bitwise, or boolean and or - high precedence |
 | +            | 3          | int or float/int or float, array/array, string/string | addition                                     |
 | -            | 3          | int or float/int or float                             | substraction                                 |
 | *, /         | 4          | int or float/int or float                             | division/mulitplication                      |
