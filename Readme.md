@@ -96,60 +96,72 @@ Built in functions are loaded in the top level frame on the interpreter start up
 | elems    | 1     | iterator                   | elems(ary) iterates the array elements  |
 | indices  | 1     | iterator                   | indices(ary) iterates the array indices |
 
-## Type coercions
+## Types
 
-There are 7 value types: integers, floats, booleans, functions, strings, arrays and errors.
+There are 6 value types: integers, floats, booleans, functions, strings and arrays.
 
-Equality check works with any type. A function does not equal anything even itself. Arithmetic operations and relational operations work on numbers, an expression containing only integers results in integer (or error), an expression containing a float results in a float. Relational operations work both on numbers, booleans and strings. Logic operations work on booleans, and using bitwise logic on integers. Bit shifts work with integers only.
+There is no automatic type conversion between types, except in an arithmetic expression integers are converted to floats if the expression contains floats. Equality check works between any types. Function equality always result in false. Invalid operations like type errors, division by zero etc. result in runtime error.
+
+If an expression doesn't hold a value, it evaluates to nil. Calculation with nil or assigning nil results in runtime error.
+
+```
+if false 1
+> nil
+
+a
+> nil
+b = a
+nil error
+...
+```
+
+### Binary operators
+
+There are 5 precedence groups (from lowest to highest): 
+
+| Operator     | Precedence | Types                                                 | Description                                  |
+|--------------|------------|-------------------------------------------------------|----------------------------------------------|
+| &&, ||       | 0          | int/int, bool/bool                                    | bitwise, or boolean and, or - low precedence |
+| <, >, <=, >= | 1          | int or float/int or float                             | relational                                   |
+| ==, !=       | 1          | any/any                                               | equality check                               |
+| &, |         | 2          | int/int, bool/bool                                    | bitwise, or boolean and or - high precedence |
+| +            | 3          | int or float/int or float, array/array, string/string | addition                                     |
+| -            | 3          | int or float/int or float                             | substraction                                 |
+| *, /         | 4          | int or float/int or float                             | division/mulitplication                      |
+| <<, >>       | 4          | int/int                                               | bitshift                                     |
+| %            | 4          | int/int                                               | modulo                                       |
+
+### Unary operators
+
+Unary operators bind stronger than binary operators. All unary operators are prefix.
+
+| Operator | Types         | Description |
+|----------|---------------|-------------|
+| -        | int, float    | negation    |
+| #        | array, string | length      |
+| !        | bool          | not         |
+| ~        | int           | binary flip |
+
+### Arrays and strings
 
 Arrays are dynamic containers of any type.
 
     funs = [ ["+", (a, b) -> a+b ], ["-", (a, b) -> a - b ] ]
     >  [["+", function], ["-", function]]
 
-There are 6 precedence groups (from lowest to highest): 
-
-    - &&, ||
-    - <, >, <=, >=, ==, !=
-    - &, |
-    - +, -
-    - *, /, <<, >>, %
-    - unary -, #, !, ~
-
-### Length operator
-
-    #[1,2,3]
-    > 3
-
-### Indexing
-
 Array and string indexing has 2 forms: "apple"[1] results in "p"; "apple"[1:3] results in "pp". Indexing outside, or using a lower value for the upper index than the lower index results in index error.
+
+String literals can be written using double quotes ("). Within a string a double quote has to be escaped: "\\"" is a string with a single element containing a double quote. Line breaks and any other character can be inserted within a string normally. Strings can be concatenated and indexed.
 
 In an expression array indexing binds stronger than any operator, thus
 
     #[[1,1,1]][0]
     >  3
 
-### Errors
+\# is the length operator
 
-Incorrect operations result in error, any further calculation with an error results in the same error. Functions as values used in calculations result in error.
-
-    1/0.0
-    >  +Inf
-    1/0
-    >  division by zero
-    a=1/0
-    >  division by zero
-    a+a
-    >  division by zero
-    c = b+a
-    >  variable b not defined
-    c*2
-    >  variable b not defined
-
-### Strings
-
-String literals can be written using double quotes ("). Within a string a double quote has to be escaped: "\\"" is a string with a single element containing a double quote. Line breaks and any other character can be inserted within a string normally. Strings can be concatenated and indexed.
+    #[1,2,3]
+    > 3
 
 ## Iterators and generators, yield and for
 
@@ -278,7 +290,8 @@ For a closure only the immediately containing lexical scope of the function defi
     >  function
 
     second(3) 
-    >  x not defined
+    nil error
+    ...
 
 One can make this example work by making an explicit copy of x:
 
