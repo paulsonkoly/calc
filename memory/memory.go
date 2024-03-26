@@ -14,7 +14,6 @@
 package memory
 
 import (
-	"fmt"
 	"slices"
 
 	"github.com/paulsonkoly/calc/types/dbginfo"
