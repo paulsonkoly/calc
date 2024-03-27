@@ -181,11 +181,22 @@ func (m *Type) DumpStack(dbg *dbginfo.Type) {
 		args := ""
 		sep := ""
 		for i, v := range argv {
-			args += fmt.Sprintf("%sarg[%d]: %v", sep, i, v)
+			vStr := fmt.Sprintf("%v", v)
+			if len(vStr) > 20 {
+				vStr = vStr[:17] + "..."
+			}
+			args += fmt.Sprintf("%sarg[%d]: %s", sep, i, vStr)
 			sep = " "
 		}
 
 		fmt.Printf("IP: %d %s() args: %s\n", ip, name, args)
 	}
 	fmt.Println("=====================================================")
+}
+
+// Reset drops all stack local allocations.
+func (m *Type) Reset() {
+	m.sp = 0
+	m.closure = []Frame{}
+	m.fp = []int{}
 }
