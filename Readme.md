@@ -302,6 +302,63 @@ One can make this example work by making an explicit copy of x:
     }
     >  function
 
+# Errors
+
+Given incorrect source code 3 types of errors can happen: lexer errors, parser errors and runtime errors. In case of lexer or parser errors calc simply outputs the error without evaluating any code. In case of a runtime error the code is run, and the runtime error is outputted with the current state of the interpreter including the failing instruction, the arguments to the failing instruction, and the stack frame in each memory context that are active at the point of the error.
+
+```
+calc repl
+12££12
+Lexer: unexpected char £ in integer literal
+12££12
+^~^
+
+
+1+)
+Parser: variable name expected, got )
+1+)
+ ^^
+
+
+f = () -> {
+  yield 1
+  1/0
+  yield 2
+}
+> function
+
+g = () -> {
+  for i <- f() {
+    write(toa(i) + "\n")
+  }
+}
+> function
+
+h = () -> g()
+> function
+
+h()
+1
+RUNTIME ERROR : division by zero
+    72: 0X3201000000000007 : JMP 7 
+    73: 0X4406000000000010 : YIELD DS[16] 
+    74: 0X0400000000000000 : POP 
+--> 75: 0X0E36000000110012 : DIV DS[17] DS[18] ; 1, 0
+    76: 0X0400000000000000 : POP 
+    77: 0X4406000000000013 : YIELD DS[19] 
+memory context 0x140003a6d20
+= stack =============================================
+IP: 109 f() args: 
+IP: 100 g() args: 
+=====================================================
+memory context 0x1400007eab0
+= stack =============================================
+IP: 100 g() args: 
+IP: 125 h() args: 
+=====================================================
+ 
+```
+
 ## Language
 
 Comments start with ; until the end of the line.
