@@ -12,6 +12,8 @@ import (
 	"github.com/paulsonkoly/calc/memory"
 	"github.com/paulsonkoly/calc/parser"
 	"github.com/paulsonkoly/calc/types/bytecode"
+	"github.com/paulsonkoly/calc/types/compresult"
+	"github.com/paulsonkoly/calc/types/dbginfo"
 	"github.com/paulsonkoly/calc/types/node"
 	"github.com/paulsonkoly/calc/types/value"
 	"github.com/paulsonkoly/calc/vm"
@@ -24,9 +26,11 @@ func main() {
 	p := parser.Type{}
 	cs := []bytecode.Type{}
 	ds := []value.Type{}
+	dbg := make(dbginfo.Type)
+	cr := compresult.Type{CS: &cs, DS: &ds, Dbg: &dbg}
 
-	builtin.Load(&cs, &ds)
-	virtM := vm.New(m, &cs, &ds)
+	builtin.Load(cr)
+	virtM := vm.New(m, cr)
 
 	if *flags.CPUProfFlag != "" {
 		f, err := os.Create(*flags.CPUProfFlag)
@@ -49,7 +53,7 @@ func main() {
 
 		if len(t) > 0 {
 			n := t[0]
-			node.ByteCode(n, &cs, &ds)
+			node.ByteCode(n, cr)
 			if v, err := virtM.Run(true); err == nil {
 				fmt.Println(v)
 			}

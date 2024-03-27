@@ -14,8 +14,10 @@
 package memory
 
 import (
+	"fmt"
 	"slices"
 
+	"github.com/paulsonkoly/calc/types/dbginfo"
 	"github.com/paulsonkoly/calc/types/value"
 )
 
@@ -148,4 +150,27 @@ func (m *Type) growStack(size int) {
 	if m.sp+size >= len(m.stack) {
 		m.stack = append(m.stack, make([]value.Type, max(minStackSize, size))...)
 	}
+}
+
+// DumpStack is a debug dump of the stack.
+func (m *Type) DumpStack(dbg *dbginfo.Type) {
+	fmt.Println("= stack =============================================")
+	for i := len(m.fp) - 1; i >= 0; i -= 2 {
+		ipAddr := m.fp[i]
+		ipv := m.stack[ipAddr]
+		ip, ok := ipv.ToInt()
+		if !ok {
+			continue
+		}
+		name := "???"
+		argCnt := 0
+		info, ok := (*dbg)[ip]
+		if ok {
+			name = info.Name
+			argCnt = info.ArgCnt
+		}
+
+		fmt.Println("IP: ", ip, name, argCnt)
+	}
+	fmt.Println("=====================================================")
 }

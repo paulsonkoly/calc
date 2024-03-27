@@ -100,15 +100,15 @@ func processInput(input string, p Parser, vm *vm.Type, doOut bool) {
 			Graphviz(e)
 		}
 
-		ip := len(*vm.CS)
+		ip := len(*vm.CR.CS)
 		if doOut {
-			ByteCode(e, vm.CS, vm.DS)
+			ByteCode(e, vm.CR)
 		} else {
-			ByteCodeNoStck(e, vm.CS, vm.DS)
+			ByteCodeNoStck(e, vm.CR)
 		}
 
 		if *flags.ByteCodeFlag {
-			for i, c := range (*vm.CS)[ip:] {
+			for i, c := range (*vm.CR.CS)[ip:] {
 				fmt.Printf(" %8d | %v\n", ip+i, c)
 			}
 		}
