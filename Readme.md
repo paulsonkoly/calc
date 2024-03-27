@@ -312,14 +312,16 @@ calc repl
 Lexer: unexpected char £ in integer literal
 12££12
 ^~^
+```
 
-
+```
 1+)
 Parser: variable name expected, got )
 1+)
  ^^
+ ```
 
-
+```
 f = () -> {
   yield 1
   1/0
