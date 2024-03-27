@@ -98,8 +98,8 @@ func (w Write) label() string       { return fmt.Sprintf("%T", w) }
 func (a Aton) label() string        { return fmt.Sprintf("%T", a) }
 func (t Toa) label() string         { return fmt.Sprintf("%T", t) }
 func (n Name) label() string        { return string(n) }
-func (l Local) label() string       { return fmt.Sprintf("lvar:%d", int(l)) }
-func (c Closure) label() string     { return fmt.Sprintf("cvar:%d", int(c)) }
+func (l Local) label() string       { return fmt.Sprintf("lvar:%d", l.Ix) }
+func (c Closure) label() string     { return fmt.Sprintf("cvar:%d", c.Ix) }
 func (b Block) label() string       { return fmt.Sprintf("%T", b) }
 func (e Exit) label() string        { return fmt.Sprintf("%T", e) }
 

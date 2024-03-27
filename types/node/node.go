@@ -100,10 +100,16 @@ type Yield struct {
 type Name string
 
 // Local variable reference.
-type Local int
+type Local struct {
+	Ix      int    // Ix is the index in the call frame
+	VarName string // VarName is variable name
+}
 
 // Closure variable reference.
-type Closure int
+type Closure struct {
+	Ix      int    // Ix is the index in the call frame
+	VarName string // VarName is variable name
+}
 
 type Assign struct {
 	VarRef Type // VarRef is variable reference

@@ -90,7 +90,7 @@ func (f For) STRewrite(symTbl SymTbl) Type {
 		ix = l
 	}
 
-	return For{VarRef: Local(ix), Iterator: iterator, Body: f.Body.STRewrite(symTbl)}
+	return For{VarRef: Local{Ix: ix, VarName: name}, Iterator: iterator, Body: f.Body.STRewrite(symTbl)}
 }
 
 func (r Return) STRewrite(symTbl SymTbl) Type {
@@ -102,18 +102,19 @@ func (y Yield) STRewrite(symTbl SymTbl) Type {
 }
 
 func (n Name) STRewrite(symTbl SymTbl) Type {
+	name := string(n)
 
 	// look up variable at local scope
 	if len(symTbl) > 0 {
 		if ix, ok := symTbl[len(symTbl)-1][string(n)]; ok {
-			return Local(ix)
+			return Local{Ix: ix, VarName: name}
 		}
 	}
 
 	// look up variable in the enclosing lexical scope
 	if len(symTbl) > 1 {
 		if ix, ok := symTbl[len(symTbl)-2][string(n)]; ok {
-			return Closure(ix)
+			return Closure{Ix: ix, VarName: name}
 		}
 	}
 
@@ -137,7 +138,7 @@ func (a Assign) STRewrite(symTbl SymTbl) Type {
 		ix = l
 	}
 
-	return Assign{VarRef: Local(ix), Value: value}
+	return Assign{VarRef: Local{Ix: ix, VarName: name}, Value: value}
 }
 
 func (l Local) STRewrite(_ SymTbl) Type   { panic("STRewrite called on local") }

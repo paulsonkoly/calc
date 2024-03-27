@@ -84,11 +84,11 @@ func (l List) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
 }
 
 func (l Local) byteCode(srcsel int, _ bool, _ compResult) bytecode.Type {
-	return bytecode.EncodeSrc(srcsel, bytecode.AddrLcl, int(l))
+	return bytecode.EncodeSrc(srcsel, bytecode.AddrLcl, l.Ix)
 }
 
 func (c Closure) byteCode(srcsel int, _ bool, _ compResult) bytecode.Type {
-	return bytecode.EncodeSrc(srcsel, bytecode.AddrCls, int(c))
+	return bytecode.EncodeSrc(srcsel, bytecode.AddrCls, c.Ix)
 }
 
 func (n Name) byteCode(srcsel int, _ bool, cr compResult) bytecode.Type {
@@ -129,9 +129,11 @@ func (c Call) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
 		}
 	}
 
-	if name, ok := c.Name.(Name); ok {
-		(*cr.Dbg)[len(*cr.CS)] = dbginfo.Call{Name: string(name), ArgCnt: len(c.Arguments.Elems)}
+	name, ok := c.Name.(Namer)
+	if !ok {
+		panic("function name is not held by a named node")
 	}
+	(*cr.Dbg)[len(*cr.CS)] = dbginfo.Call{Name: string(name.Name()), ArgCnt: len(c.Arguments.Elems)}
 
 	// get the function
 	instr := c.Name.byteCode(0, inFor, cr)

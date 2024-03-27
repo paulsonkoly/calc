@@ -160,17 +160,32 @@ func (m *Type) DumpStack(dbg *dbginfo.Type) {
 		ipv := m.stack[ipAddr]
 		ip, ok := ipv.ToInt()
 		if !ok {
-			continue
+			fmt.Println("corrupt stack. giving up")
+			return
 		}
-		name := "???"
-		argCnt := 0
 		info, ok := (*dbg)[ip]
-		if ok {
-			name = info.Name
-			argCnt = info.ArgCnt
+		if !ok {
+			fmt.Println("No debug info found for call. giving up")
+			return
+		}
+		name := info.Name
+		argCnt := info.ArgCnt
+
+		if i < 1 {
+			fmt.Println("corrupt frame pointer. giving up")
+			return
+		}
+		fp := m.fp[i-1]
+		argv := m.stack[fp : fp+argCnt]
+
+		args := ""
+		sep := ""
+		for i, v := range argv {
+			args += fmt.Sprintf("%sarg[%d]: %v", sep, i, v)
+			sep = " "
 		}
 
-		fmt.Println("IP: ", ip, name, argCnt)
+		fmt.Printf("IP: %d %s() args: %s\n", ip, name, args)
 	}
 	fmt.Println("=====================================================")
 }
