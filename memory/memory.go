@@ -94,6 +94,11 @@ func (m *Type) LookUpGlobal(name string) value.Type {
 
 // PushFrame pushes a stack frame.
 func (m *Type) PushFrame(argsCnt, localCnt int) {
+	locals := localCnt - argsCnt
+	m.growStack(localCnt - argsCnt)
+	for i := m.sp; i < m.sp+locals; i++ {
+		m.stack[i] = value.Nil
+	}
 	m.sp += localCnt - argsCnt
 	m.fp = append(m.fp, m.sp-localCnt, m.sp)
 }

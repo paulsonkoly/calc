@@ -425,7 +425,7 @@ func (vm Type) fetch(src uint64, addr int, m *memory.Type, ds *[]value.Type) val
 }
 
 func (vm *Type) dumpStack(ctx *context, ip int, err error, values ...value.Type) (value.Type, error) {
-  fmt.Printf("RUNTIME ERROR : %v\n", err)
+	fmt.Printf("RUNTIME ERROR : %v\n", err)
 
 	args := ""
 	sep := ""
@@ -437,7 +437,7 @@ func (vm *Type) dumpStack(ctx *context, ip int, err error, values ...value.Type)
 	start, end := max(0, ip-3), min(len(*vm.CR.CS), ip+3)
 
 	for i, v := range (*vm.CR.CS)[start:end] {
-		if i + start == ip {
+		if i+start == ip {
 			fmt.Printf("--> %d: %v; %s\n", i+start, v, args)
 		} else {
 			fmt.Printf("    %d: %v\n", i+start, v)
@@ -455,5 +455,5 @@ func (vm *Type) dumpStack(ctx *context, ip int, err error, values ...value.Type)
 		vm.ctx = ctx
 	}
 
-	return value.Type{}, err
+	return value.Nil, err
 }

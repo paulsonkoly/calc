@@ -9,6 +9,8 @@ import (
 	"github.com/paulsonkoly/calc/memory"
 	"github.com/paulsonkoly/calc/parser"
 	"github.com/paulsonkoly/calc/types/bytecode"
+	"github.com/paulsonkoly/calc/types/compresult"
+	"github.com/paulsonkoly/calc/types/dbginfo"
 	"github.com/paulsonkoly/calc/types/node"
 	"github.com/paulsonkoly/calc/types/value"
 	"github.com/paulsonkoly/calc/vm"
@@ -190,6 +192,16 @@ var testData = [...]TestDatum{
 	{"builtin/aton float", "aton(\"1.2\")", nil, value.NewFloat(1.2), nil},
 	{"builtin/aton error", "aton(\"abc\")", nil, value.Nil, vm.ErrConversion},
 
+	{"uninitialised local",
+		`{
+    f = () -> {
+      if false a = 1
+      a
+    }
+    f()
+  }`, nil, value.Nil, nil,
+	},
+
 	{"qsort",
 		`{
 	       filter = (pred, ary) -> {
@@ -223,8 +235,10 @@ func TestCalc(t *testing.T) {
 			m := memory.New()
 			cs := []bytecode.Type{}
 			ds := []value.Type{}
-			builtin.Load(&cs, &ds)
-			virtM := vm.New(m, &cs, &ds)
+			dbg := make(dbginfo.Type)
+			cr := compresult.Type{CS: &cs, DS: &ds, Dbg: &dbg}
+			builtin.Load(cr)
+			virtM := vm.New(m, cr)
 
 			ast, err := parser.Parse(test.input)
 			if test.parseError == nil {
@@ -236,7 +250,7 @@ func TestCalc(t *testing.T) {
 				var err error
 				for _, stmnt := range ast {
 					stmnt = stmnt.STRewrite(node.SymTbl{})
-					node.ByteCode(stmnt, &cs, &ds)
+					node.ByteCode(stmnt, cr)
 					v, err = virtM.Run(true)
 				}
 
