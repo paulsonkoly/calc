@@ -8,7 +8,7 @@ import (
 
 // Type is the compilation result.
 type Type struct {
-	CS  *[]bytecode.Type // Data segment
-	DS  *[]value.Type    // Code segment
+	CS  *[]bytecode.Type // Code segment
+	DS  *[]value.Type    // Data segment
 	Dbg *dbginfo.Type    // Debug info
 }
