@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/paulsonkoly/calc/types/dbginfo"
 	"github.com/paulsonkoly/calc/types/value"
 )
 
@@ -86,14 +87,18 @@ func (m *Type) LookUpClosure(symIdx int) value.Type {
 func (m *Type) LookUpGlobal(name string) value.Type {
 	v, ok := m.global[name]
 	if !ok {
-		s := fmt.Sprintf("%s not defined", name)
-		return value.NewError(&s)
+		return value.Nil
 	}
 	return v
 }
 
 // PushFrame pushes a stack frame.
 func (m *Type) PushFrame(argsCnt, localCnt int) {
+	locals := localCnt - argsCnt
+	m.growStack(localCnt - argsCnt)
+	for i := m.sp; i < m.sp+locals; i++ {
+		m.stack[i] = value.Nil
+	}
 	m.sp += localCnt - argsCnt
 	m.fp = append(m.fp, m.sp-localCnt, m.sp)
 }
@@ -150,4 +155,49 @@ func (m *Type) growStack(size int) {
 	if m.sp+size >= len(m.stack) {
 		m.stack = append(m.stack, make([]value.Type, max(minStackSize, size))...)
 	}
+}
+
+// DumpStack is a debug dump of the stack.
+func (m *Type) DumpStack(dbg *dbginfo.Type) {
+	fmt.Println("= stack =============================================")
+	for i := len(m.fp) - 1; i >= 0; i -= 2 {
+		ipAddr := m.fp[i]
+		ipv := m.stack[ipAddr]
+		ip, ok := ipv.ToInt()
+		if !ok {
+			fmt.Println("corrupt stack. giving up")
+			return
+		}
+		info, ok := (*dbg)[ip]
+		if !ok {
+			fmt.Println("No debug info found for call. giving up")
+			return
+		}
+		name := info.Name
+		argCnt := info.ArgCnt
+
+		if i < 1 {
+			fmt.Println("corrupt frame pointer. giving up")
+			return
+		}
+		fp := m.fp[i-1]
+		argv := m.stack[fp : fp+argCnt]
+
+		args := ""
+		sep := ""
+		for i, v := range argv {
+			args += fmt.Sprintf("%sarg[%d]: %s", sep, i, v.Abbrev())
+			sep = " "
+		}
+
+		fmt.Printf("IP: %d %s() args: %s\n", ip, name, args)
+	}
+	fmt.Println("=====================================================")
+}
+
+// Reset drops all stack local allocations.
+func (m *Type) Reset() {
+	m.sp = 0
+	m.closure = []Frame{}
+	m.fp = []int{}
 }

@@ -72,7 +72,6 @@ func (n Name) option() opt        { return variableOpts }
 func (l Local) option() opt       { return variableOpts }
 func (c Closure) option() opt     { return variableOpts }
 func (b Block) option() opt       { return defaultOpts }
-func (e Error) option() opt       { return defaultOpts }
 func (e Exit) option() opt        { return defaultOpts }
 
 func (i Invalid) label() string     { return fmt.Sprintf("%T", i) }
@@ -99,10 +98,9 @@ func (w Write) label() string       { return fmt.Sprintf("%T", w) }
 func (a Aton) label() string        { return fmt.Sprintf("%T", a) }
 func (t Toa) label() string         { return fmt.Sprintf("%T", t) }
 func (n Name) label() string        { return string(n) }
-func (l Local) label() string       { return fmt.Sprintf("lvar:%d", int(l)) }
-func (c Closure) label() string     { return fmt.Sprintf("cvar:%d", int(c)) }
+func (l Local) label() string       { return fmt.Sprintf("lvar:%d", l.Ix) }
+func (c Closure) label() string     { return fmt.Sprintf("cvar:%d", c.Ix) }
 func (b Block) label() string       { return fmt.Sprintf("%T", b) }
-func (e Error) label() string       { return fmt.Sprintf("%T", e) }
 func (e Exit) label() string        { return fmt.Sprintf("%T", e) }
 
 func children(t graphvizzer) map[string]graphvizzer {

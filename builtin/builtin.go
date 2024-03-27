@@ -1,15 +1,14 @@
 package builtin
 
 import (
-	"github.com/paulsonkoly/calc/types/bytecode"
+	"github.com/paulsonkoly/calc/types/compresult"
 	"github.com/paulsonkoly/calc/types/node"
-	"github.com/paulsonkoly/calc/types/value"
 )
 
-func Load(cs *[]bytecode.Type, ds *[]value.Type) {
+func Load(cr compresult.Type) {
 	for _, fun := range all {
 		fNode := fun.STRewrite(node.SymTbl{})
-		node.ByteCodeNoStck(fNode, cs, ds)
+		node.ByteCodeNoStck(fNode, cr)
 	}
 }
 
@@ -18,7 +17,6 @@ var all = [...]node.Assign{
 	writeF,
 	atonF,
 	toaF,
-	errorF,
 	exitF,
 	fromToF,
 	indicesF,
@@ -32,8 +30,6 @@ var writeF = node.Assign{VarRef: node.Name("write"), Value: node.Function{Parame
 var atonF = node.Assign{VarRef: node.Name("aton"), Value: node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Aton{Value: v}}}
 
 var toaF = node.Assign{VarRef: node.Name("toa"), Value: node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Toa{Value: v}}}
-
-var errorF = node.Assign{VarRef: node.Name("error"), Value: node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Error{Value: v}}}
 
 var exitF = node.Assign{VarRef: node.Name("exit"), Value: node.Function{Parameters: node.List{Elems: []node.Type{v}}, Body: node.Exit{Value: v}}}
 

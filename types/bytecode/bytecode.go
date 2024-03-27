@@ -98,7 +98,6 @@ const (
 	WRITE // WRITE builtin
 	ATON  // ATON converts src0 to a number and pushes it
 	TOA   // TOA converts src0 to a string and pushes it
-	ERROR // ERROR pushes an error message
 	EXIT  // EXIT terminates the program
 )
 

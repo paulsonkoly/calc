@@ -9,77 +9,79 @@ import (
 	"github.com/paulsonkoly/calc/memory"
 	"github.com/paulsonkoly/calc/parser"
 	"github.com/paulsonkoly/calc/types/bytecode"
+	"github.com/paulsonkoly/calc/types/compresult"
+	"github.com/paulsonkoly/calc/types/dbginfo"
 	"github.com/paulsonkoly/calc/types/node"
 	"github.com/paulsonkoly/calc/types/value"
 	"github.com/paulsonkoly/calc/vm"
 )
 
 type TestDatum struct {
-	name       string
-	input      string
-	parseError error
-	value      value.Type
+	name         string
+	input        string
+	parseError   error
+	value        value.Type
+	runtimeError error
 }
 
-var messages = []string{"a not defined", "hi"}
 var emptyFunction = value.NewFunction(0, nil, 0, 0)
 
 var testData = [...]TestDatum{
-	{"simple literal/integer", "1", nil, value.NewInt(1)},
-	{"simple literal/float", "3.14", nil, value.NewFloat(3.14)},
-	{"simple literal/bool", "false", nil, value.NewBool(false)},
-	{"simple literal/string", "\"abc\"", nil, value.NewString("abc")},
-	{"simple literal/array empty", "[]", nil, value.NewArray([]value.Type{})},
-	{"simple literal/array", "[1, false]", nil, value.NewArray([]value.Type{value.NewInt(1), value.NewBool(false)})},
-	{"array lit with newline", "[1,2,\n3,4]", nil, value.NewArray([]value.Type{value.NewInt(1), value.NewInt(2), value.NewInt(3), value.NewInt(4)})},
-	{"array lit with leading newline", "[\n1,2,\n3,4]", nil, value.NewArray([]value.Type{value.NewInt(1), value.NewInt(2), value.NewInt(3), value.NewInt(4)})},
+	{"simple literal/integer", "1", nil, value.NewInt(1), nil},
+	{"simple literal/float", "3.14", nil, value.NewFloat(3.14), nil},
+	{"simple literal/bool", "false", nil, value.NewBool(false), nil},
+	{"simple literal/string", "\"abc\"", nil, value.NewString("abc"), nil},
+	{"simple literal/array empty", "[]", nil, value.NewArray([]value.Type{}), nil},
+	{"simple literal/array", "[1, false]", nil, value.NewArray([]value.Type{value.NewInt(1), value.NewBool(false)}), nil},
+	{"array lit with newline", "[1,2,\n3,4]", nil, value.NewArray([]value.Type{value.NewInt(1), value.NewInt(2), value.NewInt(3), value.NewInt(4)}), nil},
+	{"array lit with leading newline", "[\n1,2,\n3,4]", nil, value.NewArray([]value.Type{value.NewInt(1), value.NewInt(2), value.NewInt(3), value.NewInt(4)}), nil},
 
-	{"simple arithmetic/addition", "1+2", nil, value.NewInt(3)},
+	{"simple arithmetic/addition", "1+2", nil, value.NewInt(3), nil},
 
-	{"string indexing/simple", "\"apple\"[1]", nil, value.NewString("p")},
-	{"string indexing/complex empty", "\"apple\" [ 1 : 1]", nil, value.NewString("")},
+	{"string indexing/simple", "\"apple\"[1]", nil, value.NewString("p"), nil},
+	{"string indexing/complex empty", "\"apple\" [ 1 : 1]", nil, value.NewString(""), nil},
 
-	{"indices/all from stack", "\"apple\"[ 1+0 : 3+0 ]", nil, value.NewString("pp")},
+	{"indices/all from stack", "\"apple\"[ 1+0 : 3+0 ]", nil, value.NewString("pp"), nil},
 
-	{"string concatenation", "\"abc\" + \"def\"", nil, value.NewString("abcdef")},
+	{"string concatenation", "\"abc\" + \"def\"", nil, value.NewString("abcdef"), nil},
 
-	{"arithmetics/left assoc", "1-2+1", nil, value.NewInt(0)},
-	{"arithmetics/parenthesis", "1-(2+1)", nil, value.NewInt(-2)},
+	{"arithmetics/left assoc", "1-2+1", nil, value.NewInt(0), nil},
+	{"arithmetics/parenthesis", "1-(2+1)", nil, value.NewInt(-2), nil},
 
-	{"variable/not defined", "a", nil, value.NewError(&messages[0])},
-	{"variable/lookup", "{\na=3\na+1\n}", nil, value.NewInt(4)},
+	{"variable/not defined", "a", nil, value.Nil, nil},
+	{"variable/lookup", "{\na=3\na+1\n}", nil, value.NewInt(4), nil},
 
-	{"relop/int==int true", "1==1", nil, value.NewBool(true)},
+	{"relop/int==int true", "1==1", nil, value.NewBool(true), nil},
 
-	{"relop/int!=int false", "1!=1", nil, value.NewBool(false)},
+	{"relop/int!=int false", "1!=1", nil, value.NewBool(false), nil},
 
-	{"relop/float accuracy", "1==0.9999999", nil, value.NewBool(false)},
+	{"relop/float accuracy", "1==0.9999999", nil, value.NewBool(false), nil},
 
-	{"relop/int<int false", "1<1", nil, value.NewBool(false)},
+	{"relop/int<int false", "1<1", nil, value.NewBool(false), nil},
 
-	{"relop/int<=int true", "1<=1", nil, value.NewBool(true)},
+	{"relop/int<=int true", "1<=1", nil, value.NewBool(true), nil},
 
-	{"logicop/bool&bool true", "true&true", nil, value.NewBool(true)},
+	{"logicop/bool&bool true", "true&true", nil, value.NewBool(true), nil},
 
-	{"bool or/low precedence", "true||false == false", nil, value.NewBool(true)},
-	{"bool or/high precedence", "true|false == false", nil, value.NewBool(false)},
+	{"bool or/low precedence", "true||false == false", nil, value.NewBool(true), nil},
+	{"bool or/high precedence", "true|false == false", nil, value.NewBool(false), nil},
 
-	{"block/single line", "{\n1\n}", nil, value.NewInt(1)},
-	{"block/multi line", "{\n1\n2\n}", nil, value.NewInt(2)},
+	{"block/single line", "{\n1\n}", nil, value.NewInt(1), nil},
+	{"block/multi line", "{\n1\n2\n}", nil, value.NewInt(2), nil},
 
-	{"conditional/single line no else", "if true 1", nil, value.NewInt(1)},
-	{"conditional/single line else", "if false 1 else 2", nil, value.NewInt(2)},
-	{"conditional/incorrect condition", "if 1 1", nil, value.TypeError},
-	{"conditional/no result", "if false 1", nil, value.NoResultError},
-	{"conditional/blocks no else", "if true {\n1\n}", nil, value.NewInt(1)},
-	{"conditional/blocks with else", "if false {\n1\n} else {\n2\n}", nil, value.NewInt(2)},
+	{"conditional/single line no else", "if true 1", nil, value.NewInt(1), nil},
+	{"conditional/single line else", "if false 1 else 2", nil, value.NewInt(2), nil},
+	{"conditional/incorrect condition", "if 1 1", nil, value.Nil, value.ErrType},
+	{"conditional/no result", "if false 1", nil, value.Nil, nil},
+	{"conditional/blocks no else", "if true {\n1\n}", nil, value.NewInt(1), nil},
+	{"conditional/blocks with else", "if false {\n1\n} else {\n2\n}", nil, value.NewInt(2), nil},
 
 	{"loop/single line",
 		`{
 		a = 1
 		while a < 10 a = a + 1
 		a
-	}`, nil, value.NewInt(10)},
+	}`, nil, value.NewInt(10), nil},
 	{"loop/block",
 		`{
 		a = 1
@@ -87,27 +89,27 @@ var testData = [...]TestDatum{
 			a = a + 1
 		}
 		a
-	}`, nil, value.NewInt(10)},
+	}`, nil, value.NewInt(10), nil},
 	{"loop/false initial condition",
 		`{
 		while false {
 			a = a + 1
 		}
-	}`, nil, value.NoResultError},
+	}`, nil, value.Nil, nil},
 	{"loop/incorrect condition",
 		`{
 		while 13 {
 			a = a + 1
 		}
-	}`, nil, value.TypeError},
+	}`, nil, value.Nil, value.ErrType},
 
 	{"iterator/elems",
 		`{
       c = 0
       for i <- elems([2,5,7]) c = c+i
-   }`, nil, value.NewInt(14)},
-	{"iterator/no yield", "for i <- 1 2", nil, value.NoResultError},
-	{"iterator/return", "for i<- fromto(5, 10) if i == 8 return 3*i else 2*i", nil, value.NewInt(24)},
+   }`, nil, value.NewInt(14), nil},
+	{"iterator/no yield", "for i <- 1 2", nil, value.Nil, nil},
+	{"iterator/return", "for i<- fromto(5, 10) if i == 8 return 3*i else 2*i", nil, value.NewInt(24), nil},
 	{"iterator/yield in for",
 		`{
     f = () -> for i <- fromto(2,5) {
@@ -115,7 +117,7 @@ var testData = [...]TestDatum{
     }
     c = 0
     for i <- f() c = c+i
-    }`, nil, value.NewInt(6)},
+    }`, nil, value.NewInt(6), nil},
 
 	{"iterator/for in for",
 		`{
@@ -125,26 +127,26 @@ var testData = [...]TestDatum{
           c = c + i + j
         }
       }
-    }`, nil, value.NewInt(23)},
+    }`, nil, value.NewInt(23), nil},
 
-	{"function definition", "(n) -> 1", nil, emptyFunction},
-	{"function/no argument", "() -> 1", nil, emptyFunction},
+	{"function definition", "(n) -> 1", nil, emptyFunction, nil},
+	{"function/no argument", "() -> 1", nil, emptyFunction, nil},
 	{"function/block",
 		`(n) -> {
 			n + 1
-	  }`, nil, emptyFunction},
+	  }`, nil, emptyFunction, nil},
 
 	{"call",
 		`{
 			a = (n) -> 1
 			a(2)
-		}`, nil, value.NewInt(1),
+		}`, nil, value.NewInt(1), nil,
 	},
 	{"call/no argument",
 		`{
 			a = () -> 1
 			a()
-		}`, nil, value.NewInt(1),
+		}`, nil, value.NewInt(1), nil,
 	},
 	{"function/return",
 		`{
@@ -153,9 +155,9 @@ var testData = [...]TestDatum{
 	       2
 	     }
 			a(2)
-		}`, nil, value.NewInt(1),
+		}`, nil, value.NewInt(1), nil,
 	},
-	{"naked return", "return 1", nil, value.NewInt(1)},
+	{"naked return", "return 1", nil, value.NewInt(1), nil},
 	{"function/closure",
 		`{
 			f = (a) -> {
@@ -163,7 +165,7 @@ var testData = [...]TestDatum{
 	     }
 			x = f(1)
 	     x(2)
-		}`, nil, value.NewInt(3),
+		}`, nil, value.NewInt(3), nil,
 	},
 	{"function/closure variable updates",
 		`{
@@ -175,7 +177,7 @@ var testData = [...]TestDatum{
 	    }
 			g = f()
 	    g()
-		}`, nil, value.NewInt(2),
+		}`, nil, value.NewInt(2), nil,
 	},
 
 	{"array addition/doesn't share sub-slices",
@@ -183,15 +185,23 @@ var testData = [...]TestDatum{
     a = [1,2,3]
     b = a[1:2] + [1]
     a
-  }`, nil, value.NewArray([]value.Type{value.NewInt(1), value.NewInt(2), value.NewInt(3)}),
+  }`, nil, value.NewArray([]value.Type{value.NewInt(1), value.NewInt(2), value.NewInt(3)}), nil,
 	},
-	{"keyword violation", "true = false", errors.New("Parser: "), value.Type{}},
-	{"builtin/aton int", "aton(\"12\")", nil, value.NewInt(12)},
-	{"builtin/aton float", "aton(\"1.2\")", nil, value.NewFloat(1.2)},
-	{"builtin/aton error", "aton(\"abc\")", nil, value.ConversionError},
+	{"keyword violation", "true = false", errors.New("Parser: "), value.Nil, nil},
+	{"builtin/aton int", "aton(\"12\")", nil, value.NewInt(12), nil},
+	{"builtin/aton float", "aton(\"1.2\")", nil, value.NewFloat(1.2), nil},
+	{"builtin/aton error", "aton(\"abc\")", nil, value.Nil, vm.ErrConversion},
 
-	{"builtin/error", "error(\"hi\")", nil, value.NewError(&messages[1])},
-	{"builtin/error type error", "error(1)", nil, value.TypeError},
+	{"uninitialised local",
+		`{
+    f = () -> {
+      if false a = 1
+      a
+    }
+    f()
+  }`, nil, value.Nil, nil,
+	},
+
 	{"qsort",
 		`{
 	       filter = (pred, ary) -> {
@@ -214,6 +224,7 @@ var testData = [...]TestDatum{
 	    }`,
 		nil,
 		value.NewArray([]value.Type{value.NewInt(1), value.NewInt(2), value.NewInt(3), value.NewInt(4), value.NewInt(5), value.NewInt(8)}),
+		nil,
 	},
 }
 
@@ -224,8 +235,10 @@ func TestCalc(t *testing.T) {
 			m := memory.New()
 			cs := []bytecode.Type{}
 			ds := []value.Type{}
-			builtin.Load(&cs, &ds)
-			virtM := vm.New(m, &cs, &ds)
+			dbg := make(dbginfo.Type)
+			cr := compresult.Type{CS: &cs, DS: &ds, Dbg: &dbg}
+			builtin.Load(cr)
+			virtM := vm.New(m, cr)
 
 			ast, err := parser.Parse(test.input)
 			if test.parseError == nil {
@@ -234,14 +247,15 @@ func TestCalc(t *testing.T) {
 					return
 				}
 				var v value.Type
+				var err error
 				for _, stmnt := range ast {
 					stmnt = stmnt.STRewrite(node.SymTbl{})
-					node.ByteCode(stmnt, &cs, &ds)
-					v = virtM.Run(true)
+					node.ByteCode(stmnt, cr)
+					v, err = virtM.Run(true)
 				}
 
-				if !test.value.StrictEq(v) {
-					t.Errorf("expected %v got %v", test.value, v)
+				if !test.value.StrictEq(v) || err != test.runtimeError {
+					t.Errorf("expected (%v, %v) got (%v, %v)", test.value, test.runtimeError, v, err)
 				}
 			} else if !strings.HasPrefix(err.Error(), test.parseError.Error()) {
 				t.Errorf("not the expected error: %s %s", test.parseError.Error(), err.Error())
