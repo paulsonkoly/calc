@@ -60,7 +60,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 			val, err := src1.Arith(op, src0)
 			if err != nil {
-				return vm.dumpStack(ctxp, ip, err)
+				return vm.dumpStack(ctxp, ip, err, src1, src0)
 			}
 
 			m.Push(val)
@@ -71,7 +71,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 			val, err := src1.Mod(src0)
 			if err != nil {
-				return vm.dumpStack(ctxp, ip, err)
+				return vm.dumpStack(ctxp, ip, err, src1, src0)
 			}
 
 			m.Push(val)
@@ -83,7 +83,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 			val, err := src1.Logic(op, src0)
 			if err != nil {
-				return vm.dumpStack(ctxp, ip, err)
+				return vm.dumpStack(ctxp, ip, err, src1, src0)
 			}
 
 			m.Push(val)
@@ -95,7 +95,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 			val, err := src1.Shift(op, src0)
 			if err != nil {
-				return vm.dumpStack(ctxp, ip, err)
+				return vm.dumpStack(ctxp, ip, err, src1, src0)
 			}
 
 			m.Push(val)
@@ -104,7 +104,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			val, err := src0.Not()
 			if err != nil {
-				return vm.dumpStack(ctxp, ip, err)
+				return vm.dumpStack(ctxp, ip, err, src0)
 			}
 
 			m.Push(val)
@@ -113,7 +113,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			val, err := src0.Flip()
 			if err != nil {
-				return vm.dumpStack(ctxp, ip, err)
+				return vm.dumpStack(ctxp, ip, err, src0)
 			}
 
 			m.Push(val)
@@ -125,7 +125,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 			val, err := src1.Relational(op, src0)
 			if err != nil {
-				return vm.dumpStack(ctxp, ip, err)
+				return vm.dumpStack(ctxp, ip, err, src1, src0)
 			}
 
 			m.Push(val)
@@ -137,7 +137,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 			val, err := src1.Eq(op, src0)
 			if err != nil {
-				return vm.dumpStack(ctxp, ip, err)
+				return vm.dumpStack(ctxp, ip, err, src1, src0)
 			}
 
 			m.Push(val)
@@ -147,7 +147,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 			val, err := src0.Len()
 			if err != nil {
-				return vm.dumpStack(ctxp, ip, err)
+				return vm.dumpStack(ctxp, ip, err, src0)
 			}
 
 			m.Push(val)
@@ -158,7 +158,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 			val, err := src1.Index(src0)
 			if err != nil {
-				return vm.dumpStack(ctxp, ip, err)
+				return vm.dumpStack(ctxp, ip, err, src1, src0)
 			}
 
 			m.Push(val)
@@ -170,7 +170,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 			val, err := src2.Index(src1, src0)
 			if err != nil {
-				return vm.dumpStack(ctxp, ip, err)
+				return vm.dumpStack(ctxp, ip, err, src2, src1, src0)
 			}
 
 			m.Push(val)
@@ -187,7 +187,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			b, ok := src0.ToBool()
 
 			if !ok {
-				return vm.dumpStack(ctxp, ip, value.ErrType)
+				return vm.dumpStack(ctxp, ip, value.ErrType, src0)
 			}
 			if !b {
 				ip += src1Imm - 1
@@ -204,7 +204,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 
 			if val.IsNil() {
-				return vm.dumpStack(ctxp, ip, value.ErrNil)
+				return vm.dumpStack(ctxp, ip, value.ErrNil, val)
 			}
 
 			src1T := instr.Src1()
@@ -251,11 +251,11 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			fVal, ok := f.ToFunction()
 
 			if !ok {
-				return vm.dumpStack(ctxp, ip, value.ErrType)
+				return vm.dumpStack(ctxp, ip, value.ErrType, f)
 			}
 
 			if fVal.ParamCnt != args {
-				return vm.dumpStack(ctxp, ip, ErrArity)
+				return vm.dumpStack(ctxp, ip, ErrArity, f)
 			}
 
 			m.PushFrame(args, fVal.LocalCnt)
@@ -358,7 +358,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 			sv, ok := val.ToString()
 			if !ok {
-				return vm.dumpStack(ctxp, ip, value.ErrType)
+				return vm.dumpStack(ctxp, ip, value.ErrType, val)
 			}
 
 			if v, err := strconv.Atoi(string(sv)); err == nil {
@@ -371,7 +371,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 				break
 			}
 
-			return vm.dumpStack(ctxp, ip, ErrConversion)
+			return vm.dumpStack(ctxp, ip, ErrConversion, val)
 
 		case bytecode.TOA:
 			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
@@ -424,14 +424,24 @@ func (vm Type) fetch(src uint64, addr int, m *memory.Type, ds *[]value.Type) val
 	panic("unreachable code")
 }
 
-func (vm *Type) dumpStack(ctx *context, ip int, err error) (value.Type, error) {
-	fmt.Println("RUNTIME ERROR")
-	fmt.Printf("IP: %d, %v\n", ip, err)
+func (vm *Type) dumpStack(ctx *context, ip int, err error, values ...value.Type) (value.Type, error) {
+  fmt.Printf("RUNTIME ERROR : %v\n", err)
+
+	args := ""
+	sep := ""
+	for _, v := range values {
+		args += sep + v.Abbrev()
+		sep = ", "
+	}
 
 	start, end := max(0, ip-3), min(len(*vm.CR.CS), ip+3)
 
 	for i, v := range (*vm.CR.CS)[start:end] {
-		fmt.Printf("  %d: %v\n", i+start, v)
+		if i + start == ip {
+			fmt.Printf("--> %d: %v; %s\n", i+start, v, args)
+		} else {
+			fmt.Printf("    %d: %v\n", i+start, v)
+		}
 	}
 
 	for ; ctx != nil; ctx = ctx.parent {

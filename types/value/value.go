@@ -161,6 +161,15 @@ func (t Type) String() string {
 	panic("type not handled in String")
 }
 
+// Abbrev abbreviates string of t to 20 characters with ellipses.
+func (t Type) Abbrev() string {
+	s := t.String()
+	if len(s) > 20 {
+		return s[:17] + "..."
+	}
+	return s
+}
+
 // Display converts a value to a string for calc result printing.
 //
 // Adds extra quotes around string type.

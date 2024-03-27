@@ -2,7 +2,7 @@ binsearch = (a, b, cond) -> {
   if a >= b-1 {
     if cond(b) return b else return error("not found")
   }
-  mid = (a + "a") / 2
+  mid = (a + b) / 2
   if cond(mid) binsearch(a, mid, cond) else binsearch(mid, b, cond)
 }
 

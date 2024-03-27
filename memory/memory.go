@@ -181,11 +181,7 @@ func (m *Type) DumpStack(dbg *dbginfo.Type) {
 		args := ""
 		sep := ""
 		for i, v := range argv {
-			vStr := fmt.Sprintf("%v", v)
-			if len(vStr) > 20 {
-				vStr = vStr[:17] + "..."
-			}
-			args += fmt.Sprintf("%sarg[%d]: %s", sep, i, vStr)
+			args += fmt.Sprintf("%sarg[%d]: %s", sep, i, v.Abbrev())
 			sep = " "
 		}
 
