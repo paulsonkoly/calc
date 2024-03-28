@@ -304,7 +304,7 @@ One can make this example work by making an explicit copy of x:
 
 # Errors
 
-Given incorrect source code 3 types of errors can happen: lexer errors, parser errors and runtime errors. In case of lexer or parser errors calc simply outputs the error without evaluating any code. In case of a runtime error the code is run, and the runtime error is outputted with the current state of the interpreter including the failing instruction, the arguments to the failing instruction, and the stack frame in each memory context that are active at the point of the error.
+Given incorrect source code 3 types of errors can happen: lexer errors, parser errors and runtime errors. In case of lexer or parser errors calc simply outputs the error without evaluating any code. In case of a runtime error the code is run, and the runtime error is outputted with the current state of the interpreter including the failing instruction, the arguments to the failing instruction, and the stack backtrace in each memory context that are active at the point of the error.
 
 ```
 calc repl
