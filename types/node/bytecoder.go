@@ -371,6 +371,23 @@ func (w While) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
 }
 
 func (f For) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
+	//
+	// PUSH nil
+	// CCONT                               ------+                  ; fork iterator context
+	// Iterator byteCode                         |
+	// if iterator returned on the stack         |
+	//   POP                                     |
+	// DCONT                                     |                  ; destroy ierator context
+	// JMP                                  =====|==+
+	// SCONT                               <~~~~~|~~|~~+            ; switch to iterator from for loop body
+	// MOV lvar, STCK                      <-----+  |  |
+	// POP                                          |  |            ; previous loop result
+	// loopBody byteCode                            |  |
+	// if loopbBody didn't return on stack          |  |
+	//     PUSH loopBody result                     |  |
+	// JMP                                  ~~~~~~~~|~~+
+	//                                      <=======+
+	//
 	ix := len(*cr.DS)
 	*cr.DS = append(*cr.DS, value.Nil)
 	instr := bytecode.New(bytecode.PUSH) | bytecode.EncodeSrc(0, bytecode.AddrDS, ix)
