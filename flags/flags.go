@@ -1,3 +1,4 @@
+// Package flags defines flags for the calc command
 package flags
 
 import "flag"

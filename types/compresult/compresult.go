@@ -1,3 +1,4 @@
+// Package compresult defines the compilation result.
 package compresult
 
 import (

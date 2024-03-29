@@ -1,7 +1,12 @@
+// Package bytecode contains the bytecode instructions.
+//
+// It's not really a "byte" code atm. but a fixed size 64 bit instruction set.
+// This might be optimised in the future.
 package bytecode
 
 import "fmt"
 
+// Type is a fixed size 64 bit instruction.
 type Type uint64
 
 // Instruction layout.
@@ -38,6 +43,7 @@ const (
 	AddrDS   // data segment
 )
 
+// OpCode is the instruction code.
 type OpCode uint64
 
 // Instruction set.
@@ -101,6 +107,7 @@ const (
 	EXIT  // EXIT terminates the program
 )
 
+// New creates a new instruction.
 func New(op OpCode) Type {
 	if op < NOP || op > EXIT {
 		panic("op out of range")
@@ -110,6 +117,12 @@ func New(op OpCode) Type {
 	return Type(uint64(op) << OpcodeLo)
 }
 
+// EncodeSrc encodes an instruction operand.
+//
+// srcsel specifies which operand is encoded (0/1/2). src specifies where the
+// operand is coming from, has to be one of the source addressing values.
+// srcAddr specifies the source address, or immediate value for instruction
+// encoded integers.
 func EncodeSrc(srcsel int, src uint64, srcAddr int) Type {
 	if srcAddr <= -(1<<SrcChanWidth) || srcAddr >= (1<<SrcChanWidth) {
 		panic("srcAddr out of range")
@@ -139,6 +152,7 @@ func EncodeSrc(srcsel int, src uint64, srcAddr int) Type {
 	}
 }
 
+// String provides Stringer implementation for Type.
 func (b Type) String() string {
 	oc := b.OpCode()
 	src0 := srcString(b.Src0(), b.Src0Addr())
@@ -167,6 +181,7 @@ func srcString(src uint64, addr int) string {
 	}
 }
 
+// Src returns the part of the instruction that encodes the srcsel operand.
 func (b Type) Src(srcsel int) uint64 {
 	switch srcsel {
 	case 0:
@@ -178,30 +193,37 @@ func (b Type) Src(srcsel int) uint64 {
 	}
 }
 
+// OpCode returns the opcode of the instruction.
 func (b Type) OpCode() OpCode {
 	return OpCode(b>>OpcodeLo) & ((1 << (OpcodeHi - OpcodeLo + 1)) - 1)
 }
 
+// Src0 returns the part of the instruction that encodes the src0 operand.
 func (b Type) Src0() uint64 {
 	return uint64((b >> Src0Lo) & ((1 << (Src0Hi - Src0Lo + 1)) - 1))
 }
 
+// Src1 returns the part of the instruction that encodes the src1 operand.
 func (b Type) Src1() uint64 {
 	return uint64((b >> Src1Lo) & ((1 << (Src1Hi - Src1Lo + 1)) - 1))
 }
 
+// Src2 returns the part of the instruction that encodes the src2 operand.
 func (b Type) Src2() uint64 {
 	return uint64((b >> Src2Lo) & ((1 << (Src2Hi - Src2Lo + 1)) - 1))
 }
 
+// Src0Addr returns the src0 address or the immediate value of src0.
 func (b Type) Src0Addr() int {
 	return convImm((b >> Src0AddrLo) & ((1 << (Src0AddrHi - Src0AddrLo + 1)) - 1))
 }
 
+// Src1Addr returns the src1 address or the immediate value of src1.
 func (b Type) Src1Addr() int {
 	return convImm((b >> Src1AddrLo) & ((1 << (Src1AddrHi - Src1AddrLo + 1)) - 1))
 }
 
+// Src2Addr returns the src2 address or the immediate value of src2.
 func (b Type) Src2Addr() int {
 	return convImm((b >> Src2AddrLo) & ((1 << (Src2AddrHi - Src2AddrLo + 1)) - 1))
 }
