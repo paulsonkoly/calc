@@ -59,6 +59,7 @@ type Parser interface {
 	Parse(string) ([]Type, ParserError)
 }
 
+// Loop is the repl-loop.
 func Loop(r lineReader, p Parser, vm *vm.Type, doOut bool) {
 	blocksOpen := 0
 	quotesOpen := 0

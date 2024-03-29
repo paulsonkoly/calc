@@ -13,6 +13,9 @@ type ByteCoder interface {
 	byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type
 }
 
+// ByteCode compiles bc and appends the results in cr.
+//
+// The evaluation result is left on the stack.
 func ByteCode(bc ByteCoder, cr compResult) {
 	instr := bc.byteCode(0, false, cr)
 	if instr.Src0() != bytecode.AddrStck { // leave the final result on the stack
@@ -21,6 +24,9 @@ func ByteCode(bc ByteCoder, cr compResult) {
 	}
 }
 
+// ByteCodeNoStck compiles bc and appends the results in cr.
+//
+// The evaluation result is lost, code is expected to run for side effects.
 func ByteCodeNoStck(bc ByteCoder, cr compResult) {
 	instr := bc.byteCode(0, false, cr)
 	if instr.Src0() == bytecode.AddrStck { // don't leave the final result on the stack

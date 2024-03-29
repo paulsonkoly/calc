@@ -1,16 +1,26 @@
-// memory provides our memory model
+// Package memory provides our memory model.
+//
+// There are 3 main regions. Global, the closure stack and the normal stack.
 //
 // Local and closure variables are accessed via symbol tbl index. Global
 // variables are accessed using their name.
 //
-// The global frame is special, it's a map from variable names to values. This
+// The global region is special, it's a map from variable names to values. This
 // is because we can gradually parse more and more code that can define new
 // global variables, so the symbol table phase can't work out a symbol tbl
 // index for these variables.
 //
-// Other frames are slices on the stack. These are indexed by the fp (frame
-// pointer) offseted by symbol table index. Local variables of the frame are
-// between fp and le (frame pointer and local end).
+// The closure region is pointers to cloned slices of the normal stack. When a
+// function returns a function we save the frame of the defining function in
+// the returned function value. When a function is called apart from pushing
+// the normal frame on the normal stack we need to push the closure frame from
+// the function value  on the closure stack.
+//
+// Normal stack is an ever growing slice of values. The fp has a pair of
+// pointers into the stack per frame: fp and le the frame pointer and local
+// end. Local variables live on the normal stack. Function arguments count as
+// local variables. Local variables of the frame are between fp and le . le
+// points to the function return address. After le it's stack scratch area.
 package memory
 
 import (
@@ -103,12 +113,14 @@ func (m *Type) PushFrame(argsCnt, localCnt int) {
 	m.fp = append(m.fp, m.sp-localCnt, m.sp)
 }
 
+// Push pushes a value.
 func (m *Type) Push(v value.Type) {
 	m.growStack(1)
 	m.stack[m.sp] = v
 	m.sp++
 }
 
+// PushClosure pushes the closure frame.
 func (m *Type) PushClosure(f Frame) {
 	m.closure = append(m.closure, f)
 }
@@ -120,11 +132,13 @@ func (m *Type) PopFrame() {
 	m.fp = m.fp[:len(m.fp)-2]
 }
 
+// Pop pops the last pushed value decrementing the stack pointer.
 func (m *Type) Pop() value.Type {
 	m.sp--
 	return m.stack[m.sp]
 }
 
+// PopClosure pops a frame from the closure region.
 func (m *Type) PopClosure() {
 	m.closure = m.closure[:len(m.closure)-1]
 }
@@ -139,6 +153,7 @@ func (m *Type) Top() Frame {
 	return m.stack[fp:le]
 }
 
+// IP returns the function return address.
 func (m *Type) IP() *value.Type {
 	if len(m.fp)+localFE < 0 {
 		return nil
@@ -147,6 +162,7 @@ func (m *Type) IP() *value.Type {
 	return &m.stack[le]
 }
 
+// ResetSP resets the stack pointer to 0.
 func (m *Type) ResetSP() {
 	m.sp = 0
 }

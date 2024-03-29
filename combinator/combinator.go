@@ -1,11 +1,9 @@
-// package combinator parser combinator library
+// Package combinator is a parser combinator library.
 package combinator
 
 import (
 	"fmt"
 )
-
-// seems one can write haskell in every language
 
 // Token represents a lexeme from a lexer.
 type Token interface {

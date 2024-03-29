@@ -1,3 +1,4 @@
+// Package vm implements the virtual machine.
 package vm
 
 import (
@@ -32,10 +33,12 @@ type Type struct {
 	CR  compresult.Type // cr is the compilation result
 }
 
+// New creates a new virtual machine using memory from m and code and data from cr.
 func New(m *memory.Type, cr compresult.Type) *Type {
 	return &Type{ctx: &context{m: m, children: []*context{}}, CR: cr}
 }
 
+// Run executes the run loop.
 // nolint:maintidx // the only thing we care about here is making it faster
 func (vm *Type) Run(retResult bool) (value.Type, error) {
 	ctxp := vm.ctx

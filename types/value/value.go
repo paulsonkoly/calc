@@ -1,4 +1,4 @@
-// value defines the type that represents the evaluation result.
+// Package value defines the type that represents the evaluation result.
 package value
 
 import (

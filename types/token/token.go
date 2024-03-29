@@ -1,9 +1,11 @@
+// Package token defines the lexer tokens.
 package token
 
 import (
 	"fmt"
 )
 
+// Kind is the token kind.
 type Kind int
 
 const (
@@ -26,10 +28,12 @@ type Type struct {
 	Type  Kind   // Type of the token
 }
 
+// WithFromTo returns a Type with the given value and indices into the input stream.
 func WithFromTo(typ Kind, value string, from int, to int) Type {
 	return Type{from: from, to: to, Value: value, Type: typ}
 }
 
+// String converts a token into a string.
 func (t Type) String() string {
 	switch t.Type {
 
