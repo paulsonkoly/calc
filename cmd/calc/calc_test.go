@@ -40,8 +40,8 @@ var testData = [...]TestDatum{
 
 	{"string indexing/simple", "\"apple\"[1]", nil, value.NewString("p"), nil},
 	{"string indexing/complex empty", "\"apple\" [ 1 : 1]", nil, value.NewString(""), nil},
-
 	{"indices/all from stack", "\"apple\"[ 1+0 : 3+0 ]", nil, value.NewString("pp"), nil},
+	{"indexing/multidimensional", "[[1,2], 3, 4][0][1]", nil, value.NewInt(2), nil},
 
 	{"string concatenation", "\"abc\" + \"def\"", nil, value.NewString("abcdef"), nil},
 

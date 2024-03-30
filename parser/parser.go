@@ -92,24 +92,20 @@ func atom(input c.RollbackLexer) ([]c.Node, *Error) {
 }
 
 func index(input c.RollbackLexer) ([]c.Node, *Error) {
-	indexInner := c.SurroundedBy(
-		acceptToken("["),
-		c.And(
-			expression,
-			c.Choose(
-				c.Conditional{
-					Gate:      c.Fmap(func(_ []c.Node) []c.Node { return []c.Node{} }, acceptToken(":")),
-					OnSuccess: expression,
-				},
-				c.Conditional{Gate: c.Ok(), OnSuccess: c.Ok()},
+	indexInner := c.Fmap(mkLeftChain,
+		c.SurroundedBy(
+			acceptToken("["),
+			c.And(
+				expression,
+				c.Choose(
+					c.Conditional{Gate: acceptToken(":"), OnSuccess: expression},
+					c.Conditional{Gate: c.Ok(), OnSuccess: c.Ok()},
+				),
 			),
+			acceptToken("]"),
 		),
-		acceptToken("]"),
 	)
-	indexCond := c.Choose(
-		c.Conditional{Gate: c.Assert(acceptToken("[")), OnSuccess: indexInner},
-		c.Conditional{Gate: c.Ok(), OnSuccess: c.Ok()},
-	)
+	indexCond := c.Any(c.Conditional{Gate: c.Assert(acceptToken("[")), OnSuccess: indexInner})
 	return c.Fmap(mkIndex, c.And(atom, indexCond))(input)
 }
 
