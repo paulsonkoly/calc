@@ -2,6 +2,7 @@ package parser
 
 import (
 	"log"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -15,6 +16,8 @@ import (
 // this point we don't have a tree structure we are just creating leafs.
 
 type tokenWrapper struct{}
+
+var ops = [...]string{"+", "-", "*", "/", "<", ">", "<=", ">=", "==", "!=", "&&", "||", "&", "|", "%", "#", "~", ":", "!"}
 
 func (tokenWrapper) Wrap(t combinator.Token) combinator.Node {
 	realT := t.(token.Type)
@@ -42,8 +45,12 @@ func (tokenWrapper) Wrap(t combinator.Token) combinator.Node {
 		s = s[1 : len(s)-1]
 		return node.String(s)
 
-	case token.Sticky:
-		return node.BinOp{Op: realT.Value}
+	case token.Sticky, token.NotSticky:
+		if slices.Contains(ops[:], realT.Value) {
+			return node.BinOp{Op: realT.Value}
+		}
+
+		return node.Invalid{}
 
 	case token.Name:
 		switch realT.Value {
@@ -55,7 +62,7 @@ func (tokenWrapper) Wrap(t combinator.Token) combinator.Node {
 			return node.Name(realT.Value)
 		}
 
-	case token.NotSticky, token.EOF, token.EOL:
+	case token.EOF, token.EOL:
 		return node.Invalid{}
 
 	default:
