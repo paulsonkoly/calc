@@ -1,3 +1,4 @@
+// Package parser defines the calc language grammar.
 package parser
 
 import (
@@ -9,15 +10,19 @@ import (
 	"github.com/paulsonkoly/calc/types/token"
 )
 
+// Keywords is a list of keywords.
 var Keywords = [...]string{"if", "else", "while", "for", "return", "yield", "true", "false"}
 
+// Type is an empty struct that implements Parse. Useful to dependency inject the parser.
 type Type struct{}
 type Error = c.Error
 
+// Parse parses the input string and returns an AST or a parse error.
 func (t Type) Parse(input string) ([]node.Type, *Error) {
 	return Parse(input)
 }
 
+// Parse parses the input string and returns an AST or a parse error.
 func Parse(input string) ([]node.Type, *Error) {
 	l := lexer.NewTLexer(input)
 	rn := make([]node.Type, 0)

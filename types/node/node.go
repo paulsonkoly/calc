@@ -1,4 +1,4 @@
-// node is an abstract syntax tree (AST) node
+// Package node is defines the abstract syntax tree (AST) node.
 package node
 
 // Type is AST node type.

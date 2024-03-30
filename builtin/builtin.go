@@ -1,3 +1,4 @@
+// Package builtin contains the builtin functions.
 package builtin
 
 import (
@@ -5,6 +6,7 @@ import (
 	"github.com/paulsonkoly/calc/types/node"
 )
 
+// Load compiles the built in functions and adds them to cr.
 func Load(cr compresult.Type) {
 	for _, fun := range all {
 		fNode := fun.STRewrite(node.SymTbl{})

@@ -1,3 +1,18 @@
+// Command calc is the calc repl.
+//
+// Usage:
+//
+//	-ast
+//	  	calc outputs AST in graphviz dot format
+//	  	% ./cmd --ast ../examples/euler_35.calc > x.dot # remove any output values
+//	  	% gvpack -u x.dot > packed.dot
+//	  	% dot -Tsvg packed.dot -o x.svg
+//	-bytecode
+//	  	calc prints expression bytecode
+//	-cpuprof string
+//	  	filename for go pprof
+//	-eval string
+//	  	string to evaluate
 package main
 
 import (

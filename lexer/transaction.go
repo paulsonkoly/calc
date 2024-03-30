@@ -25,6 +25,7 @@ type TLexer struct {
 	lexer    Lexer
 }
 
+// NewTLexer returns a new TLexer.
 func NewTLexer(input string) TLexer {
 	return TLexer{
 		stack:    make([]lexerResult, 0),
@@ -78,6 +79,7 @@ func (tl *TLexer) Snapshot() {
 	tl.pointers = append(tl.pointers, tl.readp)
 }
 
+// Commit accepts the current lexer state. It removes the last snapshot.
 func (tl *TLexer) Commit() {
 	tl.pointers = tl.pointers[:len(tl.pointers)-1]
 }
