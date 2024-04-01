@@ -37,11 +37,13 @@ var testData = [...]TestDatum{
 	{"array lit with leading newline", "[\n1,2,\n3,4]", nil, value.NewArray([]value.Type{value.NewInt(1), value.NewInt(2), value.NewInt(3), value.NewInt(4)}), nil},
 
 	{"simple arithmetic/addition", "1+2", nil, value.NewInt(3), nil},
+	{"bitwise logic", "~(1<<1) & 7", nil, value.NewInt(5), nil},
 
 	{"string indexing/simple", "\"apple\"[1]", nil, value.NewString("p"), nil},
 	{"string indexing/complex empty", "\"apple\" [ 1 : 1]", nil, value.NewString(""), nil},
 	{"indices/all from stack", "\"apple\"[ 1+0 : 3+0 ]", nil, value.NewString("pp"), nil},
 	{"indexing/multidimensional", "[[1,2], 3, 4][0][1]", nil, value.NewInt(2), nil},
+	{"indexing/from stack", "[1, 2, 3][4-2]", nil, value.NewInt(3), nil},
 
 	{"string concatenation", "\"abc\" + \"def\"", nil, value.NewString("abcdef"), nil},
 

@@ -81,13 +81,11 @@ func mkIndex(nodes []c.Node) []c.Node {
 	r := nodes[0]
 
 	for _, n := range nodes[1:] {
-		switch n := n.(type) {
-		case node.BinOp:
+		if n, ok := n.(node.BinOp); ok && n.Op == ":" {
 			r = node.IndexFromTo{Ary: r.(node.Type), From: n.Left, To: n.Right}
-		default:
-			r = node.IndexAt{Ary: r.(node.Type), At: n.(node.Type)}
-
+			continue
 		}
+		r = node.IndexAt{Ary: r.(node.Type), At: n.(node.Type)}
 	}
 
 	return []c.Node{r}
