@@ -10,7 +10,7 @@ type Constanter interface {
 	Constant() (value.Type, bool) // ToValue converts a constant node to a value.
 }
 
-func (i Invalid) ToValue() (value.Type, bool)  { return value.Nil, false }
+func (i Invalid) ToValue() (value.Type, bool)   { return value.Nil, false }
 func (c Call) Constant() (value.Type, bool)     { return value.Nil, false }
 func (f Function) Constant() (value.Type, bool) { return value.Nil, false }
 func (i Int) Constant() (value.Type, bool)      { return value.NewInt(int(i)), true }
