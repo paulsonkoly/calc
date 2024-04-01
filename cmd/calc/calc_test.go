@@ -37,6 +37,7 @@ var testData = [...]TestDatum{
 	{"array lit with leading newline", "[\n1,2,\n3,4]", nil, value.NewArray([]value.Type{value.NewInt(1), value.NewInt(2), value.NewInt(3), value.NewInt(4)}), nil},
 
 	{"simple arithmetic/addition", "1+2", nil, value.NewInt(3), nil},
+	{"bitwise logic", "~(1<<1) & 7", nil, value.NewInt(5), nil},
 
 	{"string indexing/simple", "\"apple\"[1]", nil, value.NewString("p"), nil},
 	{"string indexing/complex empty", "\"apple\" [ 1 : 1]", nil, value.NewString(""), nil},

@@ -17,7 +17,7 @@ import (
 
 type tokenWrapper struct{}
 
-var ops = [...]string{"+", "-", "*", "/", "<", ">", "<=", ">=", "==", "!=", "&&", "||", "&", "|", "%", "#", "~", ":", "!"}
+var ops = [...]string{"+", "-", "*", "/", "<", ">", "<=", ">=", "==", "!=", "&&", "||", "&", "|", "<<", ">>", "%", "#", "~", ":", "!"}
 
 func (tokenWrapper) Wrap(t combinator.Token) combinator.Node {
 	realT := t.(token.Type)
