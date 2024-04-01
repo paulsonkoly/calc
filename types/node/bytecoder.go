@@ -68,19 +68,29 @@ func (s String) byteCode(srcsel int, _ bool, cr compResult) bytecode.Type {
 }
 
 func (l List) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
-	// TODO optimise at least the constant parts of array case to the ds
-	v := value.NewArray([]value.Type{})
+	ary := make([]value.Type, 0, len(l.Elems))
+	i := 0
+
+	for ; i < len(l.Elems); i++ {
+		v, ok := l.Elems[i].Constant()
+		if !ok {
+			break
+		}
+		ary = append(ary, v)
+	}
+
+	v := value.NewArray(ary)
 	ix := len(*cr.DS)
 	*cr.DS = append(*cr.DS, v)
-	if len(l.Elems) == 0 {
+	if i >= len(l.Elems) {
 		return bytecode.EncodeSrc(srcsel, bytecode.AddrDS, ix)
 	}
 
-	instr := l.Elems[0].byteCode(0, inFor, cr)
+	instr := l.Elems[i].byteCode(0, inFor, cr)
 	instr |= bytecode.New(bytecode.ARR) | bytecode.EncodeSrc(1, bytecode.AddrDS, ix)
 	*cr.CS = append(*cr.CS, instr)
 
-	for _, t := range l.Elems[1:] {
+	for _, t := range l.Elems[i+1:] {
 		instr = t.byteCode(0, inFor, cr)
 		instr |= bytecode.New(bytecode.ARR) | bytecode.EncodeSrc(1, bytecode.AddrStck, 0)
 		*cr.CS = append(*cr.CS, instr)

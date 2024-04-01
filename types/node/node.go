@@ -6,6 +6,7 @@ type Type interface {
 	STRewriter
 	graphvizzer
 	ByteCoder
+	Constanter
 }
 
 // Invalid is an invalid AST node.
