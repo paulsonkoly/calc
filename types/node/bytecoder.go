@@ -7,6 +7,9 @@ import (
 	"github.com/paulsonkoly/calc/types/value"
 )
 
+// At what depth of operator arithmetics do we start using the temp register.
+const tempifyDepth = 0
+
 type compResult = compresult.Type
 
 type bcData struct {
@@ -266,7 +269,7 @@ func (b BinOp) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 		tempified = true
 	}
 
-	if !forbidTemp && bcd.opDepth > 0 && !tempified {
+	if !forbidTemp && bcd.opDepth > tempifyDepth && !tempified {
 		instr := bytecode.New(bytecode.MOV) |
 			bytecode.EncodeSrc(1, bytecode.AddrTmp, 0) |
 			bytecode.EncodeSrc(0, left.Src1(), left.Src1Addr())
@@ -323,7 +326,7 @@ func (u UnOp) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 		tempified = true
 	}
 
-	if !bcd.forbidTemp && bcd.opDepth > 0 && !tempified {
+	if !bcd.forbidTemp && bcd.opDepth > tempifyDepth && !tempified {
 		instr := bytecode.New(bytecode.MOV) | bytecode.EncodeSrc(1, bytecode.AddrTmp, 0) | target
 		*cr.CS = append(*cr.CS, instr)
 
