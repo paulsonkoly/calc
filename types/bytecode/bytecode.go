@@ -47,54 +47,38 @@ const (
 // OpCode is the instruction code.
 type OpCode uint64
 
+const TempFlag = 1 << (OpcodeHi - OpcodeLo)
+
 // Instruction set.
 const (
 	NOP = OpCode(iota)
 
-	PUSH    // PUSH pushes src0
-	PUSHTMP // PUSHTMP pushes the temp register
-	POP     // POP pops stack, result goes nowhere
-	MOV     // MOV dst, src0
+	PUSH // PUSH pushes src0
+	POP  // POP pops stack, result goes nowhere
+	MOV  // MOV dst, src0
 
-	ADD    // ADD pushes src1+src0
-	SUB    // SUB pushes src1-src0
-	MUL    // MUL pushes src1*src0
-	DIV    // DIV pushes src1/src0
-	MOD    // MOD pushes src1%src0
-	ADDTMP // ADDTMP adds src0 to the temp register
-	SUBTMP // SUBTMP subtracts src0 from the temp register
-	MULTMP // MULTMP multiplies src0 by the temp register
-	DIVTMP // DITMP divides src0 by the temp register
-	MODTMP // MODTMP calculates temp % src0 in the temp register
+	ADD // ADD pushes src1+src0
+	SUB // SUB pushes src1-src0
+	MUL // MUL pushes src1*src0
+	DIV // DIV pushes src1/src0
+	MOD // MOD pushes src1%src0
 
 	INC // INC increments src0
 
-	NOT    // NOT pushes !src0 (or type error if not bool)
-	AND    // AND pushes src1&src0
-	OR     // OR pushes src1|src0
-	NOTTMP // NOTTMP calculates !temp in the temp register
-	ANDTMP // ANDTMP calculates temp & src0 in the temp register
-	ORTMP  // ORTMP calculates temp | src0 in the temp register
+	NOT // NOT pushes !src0 (or type error if not bool)
+	AND // AND pushes src1&src0
+	OR  // OR pushes src1|src0
 
-	LT    // LT pushes src1<src0
-	GT    // GT pushes src1>src0
-	LE    // LE pushes src1<=src0
-	GE    // GE pushes src1>=src0
-	EQ    // EQ pushes src1==src0
-	NE    // NE pushes src1!=src0
-	LTTMP // LTTMP calculates temp < src0 in the temp register
-	GTTMP // GTTMP calculates temp > src0 in the temp register
-	LETMP // LETMP calculates temp <= src0 in the temp register
-	GETMP // GETMP calculates temp >= src0 in the temp register
-	EQTMP // EQTMP calculates temp == src0 in the temp register
-	NETMP // NETMP calculates temp!= src0 in the temp register
+	LT // LT pushes src1<src0
+	GT // GT pushes src1>src0
+	LE // LE pushes src1<=src0
+	GE // GE pushes src1>=src0
+	EQ // EQ pushes src1==src0
+	NE // NE pushes src1!=src0
 
-	LSH     // LSH pushes src1<<src0
-	RSH     // RSH pushes src1>>src0
-	FLIP    // FLIP pushes ~src0
-	LSHTMP  // LSHTMP calculates temp << src0 in the temp register
-	RSHTMP  // RHSTMP calculates temp >> src0 in the temp register
-	FLIPTMP // FLIPTMP calculates ~temp in the temp register
+	LSH  // LSH pushes src1<<src0
+	RSH  // RSH pushes src1>>src0
+	FLIP // FLIP pushes ~src0
 
 	IX1 // IX1 pushes src1[src0]
 	IX2 // IX2 pushes src2[src1:src0]
@@ -126,13 +110,33 @@ const (
 	ATON  // ATON converts src0 to a number and pushes it
 	TOA   // TOA converts src0 to a string and pushes it
 	EXIT  // EXIT terminates the program
+
+	PUSHTMP = TempFlag | PUSH // PUSHTMP pushes the temp register
+
+	ADDTMP = TempFlag | ADD // ADDTMP adds src0 to the temp register
+	SUBTMP = TempFlag | SUB // SUBTMP subtracts src0 from the temp register
+	MULTMP = TempFlag | MUL // MULTMP multiplies src0 by the temp register
+	DIVTMP = TempFlag | DIV // DITMP divides src0 by the temp register
+	MODTMP = TempFlag | MOD // MODTMP calculates temp % src0 in the temp register
+
+	NOTTMP = TempFlag | NOT // NOTTMP calculates !temp in the temp register
+	ANDTMP = TempFlag | AND // ANDTMP calculates temp & src0 in the temp register
+	ORTMP  = TempFlag | OR  // ORTMP calculates temp | src0 in the temp register
+
+	LTTMP = TempFlag | LT // LTTMP calculates temp < src0 in the temp register
+	GTTMP = TempFlag | GT // GTTMP calculates temp > src0 in the temp register
+	LETMP = TempFlag | LE // LETMP calculates temp <= src0 in the temp register
+	GETMP = TempFlag | GE // GETMP calculates temp >= src0 in the temp register
+	EQTMP = TempFlag | EQ // EQTMP calculates temp == src0 in the temp register
+	NETMP = TempFlag | NE // NETMP calculates temp!= src0 in the temp register
+
+	LSHTMP  = TempFlag | LSH  // LSHTMP calculates temp << src0 in the temp register
+	RSHTMP  = TempFlag | RSH  // RHSTMP calculates temp >> src0 in the temp register
+	FLIPTMP = TempFlag | FLIP // FLIPTMP calculates ~temp in the temp register
 )
 
 // New creates a new instruction.
 func New(op OpCode) Type {
-	if op < NOP || op > EXIT {
-		panic("op out of range")
-	}
 	op &= (1 << ((OpcodeHi - OpcodeLo) + 1)) - 1
 
 	return Type(uint64(op) << OpcodeLo)

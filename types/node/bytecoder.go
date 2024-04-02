@@ -212,58 +212,6 @@ func (a Assign) byteCode(srcsel int, _ int, inFor bool, cr compResult) bytecode.
 
 func (b BinOp) byteCode(srcsel int, opDepth int, inFor bool, cr compResult) bytecode.Type {
 	var op bytecode.OpCode
-
-	if /*b.Left.Depth() > 1 ||*/ opDepth > 0 {
-		left := b.Left.byteCode(0, opDepth+1, inFor, cr)
-
-		if left.Src0() != bytecode.AddrTmp {
-			instr := bytecode.New(bytecode.MOV) | bytecode.EncodeSrc(1, bytecode.AddrTmp, 0) | left
-			*cr.CS = append(*cr.CS, instr)
-		}
-		switch b.Op {
-		case "+":
-			op = bytecode.ADDTMP
-		case "-":
-			op = bytecode.SUBTMP
-		case "*":
-			op = bytecode.MULTMP
-		case "/":
-			op = bytecode.DIVTMP
-		case "%":
-			op = bytecode.MODTMP
-		case "&", "&&":
-			op = bytecode.ANDTMP
-		case "|", "||":
-			op = bytecode.ORTMP
-		case "==":
-			op = bytecode.EQTMP
-		case "!=":
-			op = bytecode.NETMP
-		case "<":
-			op = bytecode.LTTMP
-		case "<=":
-			op = bytecode.LETMP
-		case ">":
-			op = bytecode.GTTMP
-		case ">=":
-			op = bytecode.GETMP
-		case "<<":
-			op = bytecode.LSHTMP
-		case ">>":
-			op = bytecode.RSHTMP
-		default:
-			panic("unexpected op")
-		}
-
-		right := b.Right.byteCode(0, 0, inFor, cr)
-
-		instr := bytecode.New(op) | right
-
-		*cr.CS = append(*cr.CS, instr)
-
-		return bytecode.EncodeSrc(srcsel, bytecode.AddrTmp, 0)
-	}
-
 	switch b.Op {
 	case "+":
 		op = bytecode.ADD
@@ -299,55 +247,30 @@ func (b BinOp) byteCode(srcsel int, opDepth int, inFor bool, cr compResult) byte
 		panic("unexpected op")
 	}
 
-	left := b.Left.byteCode(1, opDepth+1, inFor, cr)
+	if opDepth > 0 {
+		left := b.Left.byteCode(0, opDepth+1, inFor, cr)
 
-	if left.Src1() == bytecode.AddrTmp {
-		// if opDepth == 0 {
-		// 	instr := bytecode.New(bytecode.PUSHTMP)
-		// 	*cr.CS = append(*cr.CS, instr)
-		//
-		// 	instr = bytecode.New(op) | bytecode.EncodeSrc(1, bytecode.AddrStck, 0) | b.Right.byteCode(0, 0, inFor, cr)
-		// 	*cr.CS = append(*cr.CS, instr)
-		//
-		// 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
-		// }
-		//
-		switch b.Op {
-		case "+":
-			op = bytecode.ADDTMP
-		case "-":
-			op = bytecode.SUBTMP
-		case "*":
-			op = bytecode.MULTMP
-		case "/":
-			op = bytecode.DIVTMP
-		case "%":
-			op = bytecode.MODTMP
-		case "&", "&&":
-			op = bytecode.ANDTMP
-		case "|", "||":
-			op = bytecode.ORTMP
-		case "==":
-			op = bytecode.EQTMP
-		case "!=":
-			op = bytecode.NETMP
-		case "<":
-			op = bytecode.LTTMP
-		case "<=":
-			op = bytecode.LETMP
-		case ">":
-			op = bytecode.GTTMP
-		case ">=":
-			op = bytecode.GETMP
-		case "<<":
-			op = bytecode.LSHTMP
-		case ">>":
-			op = bytecode.RSHTMP
-		default:
-			panic("unexpected op")
+		if left.Src0() != bytecode.AddrTmp {
+			instr := bytecode.New(bytecode.MOV) | bytecode.EncodeSrc(1, bytecode.AddrTmp, 0) | left
+			*cr.CS = append(*cr.CS, instr)
 		}
 
+		op |= bytecode.TempFlag
+
 		right := b.Right.byteCode(0, 0, inFor, cr)
+
+		instr := bytecode.New(op) | right
+
+		*cr.CS = append(*cr.CS, instr)
+
+		return bytecode.EncodeSrc(srcsel, bytecode.AddrTmp, 0)
+	}
+
+	left := b.Left.byteCode(1, opDepth+1, inFor, cr)
+	right := b.Right.byteCode(0, 0, inFor, cr)
+
+	if left.Src1() == bytecode.AddrTmp {
+		op |= bytecode.TempFlag
 
 		instr := bytecode.New(op) | right
 
@@ -358,12 +281,12 @@ func (b BinOp) byteCode(srcsel int, opDepth int, inFor bool, cr compResult) byte
 			*cr.CS = append(*cr.CS, instr)
 
 			return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
-    }
+		}
 
 		return bytecode.EncodeSrc(srcsel, bytecode.AddrTmp, 0)
 	}
 
-	instr := bytecode.New(op) | left | b.Right.byteCode(0, 0, inFor, cr)
+	instr := bytecode.New(op) | left | right
 
 	*cr.CS = append(*cr.CS, instr)
 
@@ -373,34 +296,9 @@ func (b BinOp) byteCode(srcsel int, opDepth int, inFor bool, cr compResult) byte
 func (u UnOp) byteCode(srcsel int, opDepth int, inFor bool, cr compResult) bytecode.Type {
 	var op bytecode.OpCode
 
-	if u.Op == "-" {
-		return BinOp{Op: "*", Left: Int(-1), Right: u.Target}.byteCode(srcsel, opDepth+1, inFor, cr)
-	}
-
-	if opDepth > 0 && u.Op == "!" || u.Op == "~" {
-		target := u.Target.byteCode(0, opDepth+1, inFor, cr)
-		if target.Src0Addr() != bytecode.AddrTmp {
-			instr := bytecode.New(bytecode.MOV) | bytecode.EncodeSrc(1, bytecode.AddrTmp, 0) | target
-			*cr.CS = append(*cr.CS, instr)
-		}
-
-		switch u.Op {
-		case "!":
-			op = bytecode.NOTTMP
-		case "~":
-			op = bytecode.FLIPTMP
-		default:
-			panic("unexpected op")
-		}
-
-		instr := bytecode.New(op)
-
-		*cr.CS = append(*cr.CS, instr)
-
-		return bytecode.EncodeSrc(srcsel, bytecode.AddrTmp, 0)
-	}
-
 	switch u.Op {
+	case "-":
+		return BinOp{Op: "*", Left: Int(-1), Right: u.Target}.byteCode(srcsel, opDepth+1, inFor, cr)
 	case "#":
 		op = bytecode.LEN
 	case "!":
@@ -411,8 +309,42 @@ func (u UnOp) byteCode(srcsel int, opDepth int, inFor bool, cr compResult) bytec
 		panic("unexpected op")
 	}
 
-	instr := bytecode.New(op) | u.Target.byteCode(0, opDepth+1, inFor, cr)
+	if opDepth > 0 && (u.Op == "!" || u.Op == "~") {
+		target := u.Target.byteCode(0, opDepth+1, inFor, cr)
+		if target.Src0Addr() != bytecode.AddrTmp {
+			instr := bytecode.New(bytecode.MOV) | bytecode.EncodeSrc(1, bytecode.AddrTmp, 0) | target
+			*cr.CS = append(*cr.CS, instr)
+		}
 
+		op |= bytecode.TempFlag
+
+		instr := bytecode.New(op)
+
+		*cr.CS = append(*cr.CS, instr)
+
+		return bytecode.EncodeSrc(srcsel, bytecode.AddrTmp, 0)
+	}
+
+  target := u.Target.byteCode(0, opDepth+1, inFor, cr)
+
+	if target.Src0() == bytecode.AddrTmp {
+		op |= bytecode.TempFlag
+
+		instr := bytecode.New(op) | target
+
+		*cr.CS = append(*cr.CS, instr)
+
+		if opDepth == 0 {
+			instr := bytecode.New(bytecode.PUSHTMP)
+			*cr.CS = append(*cr.CS, instr)
+
+			return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
+		}
+
+		return bytecode.EncodeSrc(srcsel, bytecode.AddrTmp, 0)
+	}
+
+	instr := bytecode.New(op) | target
 	*cr.CS = append(*cr.CS, instr)
 
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
