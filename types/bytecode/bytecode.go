@@ -135,6 +135,8 @@ const (
 	LSHTMP  = OpCode(TempFlag | LSH)  // LSHTMP calculates temp << src0 in the temp register
 	RSHTMP  = OpCode(TempFlag | RSH)  // RHSTMP calculates temp >> src0 in the temp register
 	FLIPTMP = OpCode(TempFlag | FLIP) // FLIPTMP calculates ~temp in the temp register
+
+	LENTMP = OpCode(TempFlag | LEN) // LEN pushes the length of src0
 )
 
 // New creates a new instruction.

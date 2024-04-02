@@ -67,6 +67,7 @@ func _() {
 	_ = x[LSHTMP-83]
 	_ = x[RSHTMP-84]
 	_ = x[FLIPTMP-85]
+	_ = x[LENTMP-88]
 }
 
 const (
@@ -74,6 +75,7 @@ const (
 	_OpCode_name_1 = "PUSHTMP"
 	_OpCode_name_2 = "ADDTMPSUBTMPMULTMPDIVTMPMODTMP"
 	_OpCode_name_3 = "NOTTMPANDTMPORTMPLTTMPGTTMPLETMPGETMPEQTMPNETMPLSHTMPRSHTMPFLIPTMP"
+	_OpCode_name_4 = "LENTMP"
 )
 
 var (
@@ -94,6 +96,8 @@ func (i OpCode) String() string {
 	case 74 <= i && i <= 85:
 		i -= 74
 		return _OpCode_name_3[_OpCode_index_3[i]:_OpCode_index_3[i+1]]
+	case i == 88:
+		return _OpCode_name_4
 	default:
 		return "OpCode(" + strconv.FormatInt(int64(i), 10) + ")"
 	}

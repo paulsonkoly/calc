@@ -245,6 +245,12 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 			m.Push(val)
 
+		case bytecode.LENTMP:
+			tmp, err = tmp.Len()
+			if err != nil {
+				return vm.dumpStack(ctxp, ip, err)
+			}
+
 		case bytecode.IX1:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
