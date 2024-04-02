@@ -1,6 +1,6 @@
 package node
 
-// HasCaller determines whether a node contains a call or not
+// HasCaller determines whether a node contains a call or not.
 type HasCaller interface {
 	HasCall() bool
 }
