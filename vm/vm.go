@@ -68,6 +68,29 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 			m.Push(val)
 
+		case bytecode.INC:
+			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+
+			val, err := src0.Arith("+", value.NewInt(1))
+			if err != nil {
+				return vm.dumpStack(ctxp, ip, err, src0)
+			}
+			src0T := instr.Src0()
+
+			switch src0T {
+			case bytecode.AddrLcl:
+				m.Set(instr.Src0Addr(), val)
+			case bytecode.AddrGbl:
+				name, ok := (*ds)[instr.Src0Addr()].ToString()
+				if !ok {
+					log.Panicf("unknown global\n %8d | %v\n", ip, instr)
+				}
+				m.SetGlobal(name, val)
+
+			default:
+				log.Panicf("unexpected dst in INC\n %8d | %v\n", ip, instr)
+			}
+
 		case bytecode.MOD:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
