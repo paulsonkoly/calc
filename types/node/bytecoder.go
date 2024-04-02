@@ -181,8 +181,28 @@ func (y Yield) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
 }
 
 func (a Assign) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
+	vref := a.VarRef
+	if plus, ok := a.Value.(BinOp); ok && plus.Op == "+" {
+		inc := false
+
+		if one, ok := plus.Right.(Int); ok && int(one) == 1 && plus.Left == vref {
+			inc = true
+		}
+
+		if one, ok := plus.Left.(Int); ok && int(one) == 1 && plus.Right == vref {
+			inc = true
+		}
+
+		if inc {
+			instr := bytecode.New(bytecode.INC) | vref.byteCode(0, inFor, cr)
+			*cr.CS = append(*cr.CS, instr)
+
+			return bytecode.EncodeSrc(srcsel, instr.Src0(), instr.Src0Addr())
+		}
+	}
+
 	srcInstr := a.Value.byteCode(0, inFor, cr)
-	instr := srcInstr | a.VarRef.byteCode(1, inFor, cr)
+	instr := srcInstr | vref.byteCode(1, inFor, cr)
 	instr |= bytecode.New(bytecode.MOV)
 
 	*cr.CS = append(*cr.CS, instr)

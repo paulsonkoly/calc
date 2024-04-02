@@ -60,6 +60,8 @@ const (
 	DIV // DIV pushes src1/src0
 	MOD // MOD pushes src1%src0
 
+	INC // INC increments src0
+
 	NOT // NOT pushes !src0 (or type error if not bool)
 	AND // AND pushes src1&src0
 	OR  // OR pushes src1|src0
