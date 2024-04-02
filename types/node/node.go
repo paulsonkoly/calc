@@ -7,6 +7,7 @@ type Type interface {
 	graphvizzer
 	ByteCoder
 	Constanter
+  Depther
 }
 
 // Invalid is an invalid AST node.

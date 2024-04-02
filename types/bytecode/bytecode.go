@@ -40,6 +40,7 @@ const (
 	AddrLcl  // local variable
 	AddrCls  // closure variable
 	AddrStck // stack
+	AddrTmp  // temp register
 	AddrDS   // data segment
 )
 
@@ -50,32 +51,50 @@ type OpCode uint64
 const (
 	NOP = OpCode(iota)
 
-	PUSH // PUSH pushes src0
-	POP  // POP pops stack, result goes nowhere
-	MOV  // MOV dst, src0
+	PUSH    // PUSH pushes src0
+	PUSHTMP // PUSHTMP pushes the temp register
+	POP     // POP pops stack, result goes nowhere
+	MOV     // MOV dst, src0
 
-	ADD // ADD pushes src1+src0
-	SUB // SUB pushes src1-src0
-	MUL // MUL pushes src1*src0
-	DIV // DIV pushes src1/src0
-	MOD // MOD pushes src1%src0
+	ADD    // ADD pushes src1+src0
+	SUB    // SUB pushes src1-src0
+	MUL    // MUL pushes src1*src0
+	DIV    // DIV pushes src1/src0
+	MOD    // MOD pushes src1%src0
+	ADDTMP // ADDTMP adds src0 to the temp register
+	SUBTMP // SUBTMP subtracts src0 from the temp register
+	MULTMP // MULTMP multiplies src0 by the temp register
+	DIVTMP // DITMP divides src0 by the temp register
+	MODTMP // MODTMP calculates temp % src0 in the temp register
 
 	INC // INC increments src0
 
-	NOT // NOT pushes !src0 (or type error if not bool)
-	AND // AND pushes src1&src0
-	OR  // OR pushes src1|src0
+	NOT    // NOT pushes !src0 (or type error if not bool)
+	AND    // AND pushes src1&src0
+	OR     // OR pushes src1|src0
+	NOTTMP // NOTTMP calculates !temp in the temp register
+	ANDTMP // ANDTMP calculates temp & src0 in the temp register
+	ORTMP  // ORTMP calculates temp | src0 in the temp register
 
-	LT // LT pushes src1<src0
-	GT // GT pushes src1>src0
-	LE // LE pushes src1<=src0
-	GE // GE pushes src1>=src0
-	EQ // EQ pushes src1==src0
-	NE // NE pushes src1!=src0
+	LT    // LT pushes src1<src0
+	GT    // GT pushes src1>src0
+	LE    // LE pushes src1<=src0
+	GE    // GE pushes src1>=src0
+	EQ    // EQ pushes src1==src0
+	NE    // NE pushes src1!=src0
+	LTTMP // LTTMP calculates temp < src0 in the temp register
+	GTTMP // GTTMP calculates temp > src0 in the temp register
+	LETMP // LETMP calculates temp <= src0 in the temp register
+	GETMP // GETMP calculates temp >= src0 in the temp register
+	EQTMP // EQTMP calculates temp == src0 in the temp register
+	NETMP // NETMP calculates temp!= src0 in the temp register
 
-	LSH  // LSH pushes src1<<src0
-	RSH  // RSH pushes src1>>src0
-	FLIP // FLIP pushes ~src0
+	LSH     // LSH pushes src1<<src0
+	RSH     // RSH pushes src1>>src0
+	FLIP    // FLIP pushes ~src0
+	LSHTMP  // LSHTMP calculates temp << src0 in the temp register
+	RSHTMP  // RHSTMP calculates temp >> src0 in the temp register
+	FLIPTMP // FLIPTMP calculates ~temp in the temp register
 
 	IX1 // IX1 pushes src1[src0]
 	IX2 // IX2 pushes src2[src1:src0]
@@ -176,6 +195,8 @@ func srcString(src uint64, addr int) string {
 		return fmt.Sprintf("GBL[%d] ", addr)
 	case AddrStck:
 		return "STCK "
+	case AddrTmp:
+		return "TMP "
 	case AddrImm:
 		return fmt.Sprintf("%d ", addr)
 	default:
