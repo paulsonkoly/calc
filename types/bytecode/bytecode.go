@@ -40,13 +40,18 @@ const (
 	AddrLcl  // local variable
 	AddrCls  // closure variable
 	AddrStck // stack
+	AddrTmp  // temp register
 	AddrDS   // data segment
 )
 
 // OpCode is the instruction code.
 type OpCode uint64
 
+const TempFlag = 1 << (OpcodeHi - OpcodeLo)
+
 // Instruction set.
+//
+//go:generate go run github.com/dmarkham/enumer -type=OpCode
 const (
 	NOP = OpCode(iota)
 
@@ -107,13 +112,35 @@ const (
 	ATON  // ATON converts src0 to a number and pushes it
 	TOA   // TOA converts src0 to a string and pushes it
 	EXIT  // EXIT terminates the program
+
+	PUSHTMP = OpCode(TempFlag | PUSH) // PUSHTMP pushes the temp register
+
+	ADDTMP = OpCode(TempFlag | ADD) // ADDTMP adds src0 to the temp register
+	SUBTMP = OpCode(TempFlag | SUB) // SUBTMP subtracts src0 from the temp register
+	MULTMP = OpCode(TempFlag | MUL) // MULTMP multiplies src0 by the temp register
+	DIVTMP = OpCode(TempFlag | DIV) // DITMP divides src0 by the temp register
+	MODTMP = OpCode(TempFlag | MOD) // MODTMP calculates temp % src0 in the temp register
+
+	NOTTMP = OpCode(TempFlag | NOT) // NOTTMP calculates !temp in the temp register
+	ANDTMP = OpCode(TempFlag | AND) // ANDTMP calculates temp & src0 in the temp register
+	ORTMP  = OpCode(TempFlag | OR)  // ORTMP calculates temp | src0 in the temp register
+
+	LTTMP = OpCode(TempFlag | LT) // LTTMP calculates temp < src0 in the temp register
+	GTTMP = OpCode(TempFlag | GT) // GTTMP calculates temp > src0 in the temp register
+	LETMP = OpCode(TempFlag | LE) // LETMP calculates temp <= src0 in the temp register
+	GETMP = OpCode(TempFlag | GE) // GETMP calculates temp >= src0 in the temp register
+	EQTMP = OpCode(TempFlag | EQ) // EQTMP calculates temp == src0 in the temp register
+	NETMP = OpCode(TempFlag | NE) // NETMP calculates temp!= src0 in the temp register
+
+	LSHTMP  = OpCode(TempFlag | LSH)  // LSHTMP calculates temp << src0 in the temp register
+	RSHTMP  = OpCode(TempFlag | RSH)  // RHSTMP calculates temp >> src0 in the temp register
+	FLIPTMP = OpCode(TempFlag | FLIP) // FLIPTMP calculates ~temp in the temp register
+
+	LENTMP = OpCode(TempFlag | LEN) // LEN pushes the length of src0
 )
 
 // New creates a new instruction.
 func New(op OpCode) Type {
-	if op < NOP || op > EXIT {
-		panic("op out of range")
-	}
 	op &= (1 << ((OpcodeHi - OpcodeLo) + 1)) - 1
 
 	return Type(uint64(op) << OpcodeLo)
@@ -176,6 +203,8 @@ func srcString(src uint64, addr int) string {
 		return fmt.Sprintf("GBL[%d] ", addr)
 	case AddrStck:
 		return "STCK "
+	case AddrTmp:
+		return "TMP "
 	case AddrImm:
 		return fmt.Sprintf("%d ", addr)
 	default:

@@ -46,6 +46,8 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 	ip := ctxp.ip
 	ds := vm.CR.DS
 	cs := vm.CR.CS
+	tmp := value.Nil
+	var err error
 
 	for ip < len(*cs) {
 		instr := (*cs)[ip]
@@ -67,6 +69,15 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			}
 
 			m.Push(val)
+
+		case bytecode.ADDTMP, bytecode.SUBTMP, bytecode.MULTMP, bytecode.DIVTMP:
+			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+			op := [...]string{"+", "-", "*", "/"}[opCode-bytecode.ADDTMP]
+
+			tmp, err = tmp.Arith(op, src0)
+			if err != nil {
+				return vm.dumpStack(ctxp, ip, err, src0)
+			}
 
 		case bytecode.INC:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
@@ -102,6 +113,14 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 			m.Push(val)
 
+		case bytecode.MODTMP:
+			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+
+			tmp, err = tmp.Mod(src0)
+			if err != nil {
+				return vm.dumpStack(ctxp, ip, err, src0)
+			}
+
 		case bytecode.AND, bytecode.OR:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
@@ -113,6 +132,15 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			}
 
 			m.Push(val)
+
+		case bytecode.ANDTMP, bytecode.ORTMP:
+			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+			op := [...]string{"&", "|"}[opCode-bytecode.ANDTMP]
+
+			tmp, err = tmp.Logic(op, src0)
+			if err != nil {
+				return vm.dumpStack(ctxp, ip, err, src0)
+			}
 
 		case bytecode.LSH, bytecode.RSH:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
@@ -126,6 +154,15 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 			m.Push(val)
 
+		case bytecode.LSHTMP, bytecode.RSHTMP:
+			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+			op := [...]string{"<<", ">>"}[opCode-bytecode.LSHTMP]
+
+			tmp, err = tmp.Shift(op, src0)
+			if err != nil {
+				return vm.dumpStack(ctxp, ip, err, src0)
+			}
+
 		case bytecode.NOT:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			val, err := src0.Not()
@@ -135,6 +172,12 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 			m.Push(val)
 
+		case bytecode.NOTTMP:
+			tmp, err = tmp.Not()
+			if err != nil {
+				return vm.dumpStack(ctxp, ip, err)
+			}
+
 		case bytecode.FLIP:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			val, err := src0.Flip()
@@ -143,6 +186,12 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			}
 
 			m.Push(val)
+
+		case bytecode.FLIPTMP:
+			tmp, err = tmp.Flip()
+			if err != nil {
+				return vm.dumpStack(ctxp, ip, err)
+			}
 
 		case bytecode.LT, bytecode.GT, bytecode.LE, bytecode.GE:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
@@ -156,6 +205,15 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 			m.Push(val)
 
+		case bytecode.LTTMP, bytecode.GTTMP, bytecode.LETMP, bytecode.GETMP:
+			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+			op := [...]string{"<", ">", "<=", ">="}[opCode-bytecode.LTTMP]
+
+			tmp, err = tmp.Relational(op, src0)
+			if err != nil {
+				return vm.dumpStack(ctxp, ip, err, src0)
+			}
+
 		case bytecode.EQ, bytecode.NE:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
@@ -168,6 +226,15 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 			m.Push(val)
 
+		case bytecode.EQTMP, bytecode.NETMP:
+			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+			op := [...]string{"==", "!="}[opCode-bytecode.EQTMP]
+
+			tmp, err = tmp.Eq(op, src0)
+			if err != nil {
+				return vm.dumpStack(ctxp, ip, err, src0)
+			}
+
 		case bytecode.LEN:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 
@@ -177,6 +244,12 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			}
 
 			m.Push(val)
+
+		case bytecode.LENTMP:
+			tmp, err = tmp.Len()
+			if err != nil {
+				return vm.dumpStack(ctxp, ip, err)
+			}
 
 		case bytecode.IX1:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
@@ -223,11 +296,19 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			m.Push(src0)
 
+		case bytecode.PUSHTMP:
+			m.Push(tmp)
+
 		case bytecode.POP:
 			m.Pop()
 
 		case bytecode.MOV:
-			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+			var val value.Type
+			if instr.Src0() == bytecode.AddrTmp {
+				val = tmp
+			} else {
+				val = vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+			}
 
 			if val.IsNil() {
 				return vm.dumpStack(ctxp, ip, value.ErrNil, val)
@@ -244,6 +325,8 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 					log.Panicf("unknown global\n %8d | %v\n", ip, instr)
 				}
 				m.SetGlobal(name, val)
+			case bytecode.AddrTmp:
+				tmp = val
 
 			default:
 				log.Panicf("unexpected dst in MOV\n %8d | %v\n", ip, instr)

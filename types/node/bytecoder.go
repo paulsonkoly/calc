@@ -7,17 +7,28 @@ import (
 	"github.com/paulsonkoly/calc/types/value"
 )
 
+// At what depth of operator arithmetics do we start using the temp register.
+const tempifyDepth = 0
+
 type compResult = compresult.Type
 
+type bcData struct {
+	forbidTemp bool
+	opDepth    int
+	inFor      bool
+}
+
 type ByteCoder interface {
-	byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type
+	byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type
 }
 
 // ByteCode compiles bc and appends the results in cr.
 //
 // The evaluation result is left on the stack.
 func ByteCode(bc ByteCoder, cr compResult) {
-	instr := bc.byteCode(0, false, cr)
+	var bcd bcData
+
+	instr := bc.byteCode(0, bcd, cr)
 	if instr.Src0() != bytecode.AddrStck { // leave the final result on the stack
 		instr |= bytecode.New(bytecode.PUSH)
 		*cr.CS = append(*cr.CS, instr)
@@ -28,14 +39,16 @@ func ByteCode(bc ByteCoder, cr compResult) {
 //
 // The evaluation result is lost, code is expected to run for side effects.
 func ByteCodeNoStck(bc ByteCoder, cr compResult) {
-	instr := bc.byteCode(0, false, cr)
+	var bcd bcData
+
+	instr := bc.byteCode(0, bcd, cr)
 	if instr.Src0() == bytecode.AddrStck { // don't leave the final result on the stack
 		instr = bytecode.New(bytecode.POP)
 		*cr.CS = append(*cr.CS, instr)
 	}
 }
 
-func (i Int) byteCode(srcsel int, _ bool, cr compResult) bytecode.Type {
+func (i Int) byteCode(srcsel int, _ bcData, cr compResult) bytecode.Type {
 	v := value.NewInt(int(i))
 	ix := len(*cr.DS)
 	*cr.DS = append(*cr.DS, v)
@@ -43,7 +56,7 @@ func (i Int) byteCode(srcsel int, _ bool, cr compResult) bytecode.Type {
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrDS, ix)
 }
 
-func (b Bool) byteCode(srcsel int, _ bool, cr compResult) bytecode.Type {
+func (b Bool) byteCode(srcsel int, _ bcData, cr compResult) bytecode.Type {
 	v := value.NewBool(bool(b))
 	ix := len(*cr.DS)
 	*cr.DS = append(*cr.DS, v)
@@ -51,7 +64,7 @@ func (b Bool) byteCode(srcsel int, _ bool, cr compResult) bytecode.Type {
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrDS, ix)
 }
 
-func (f Float) byteCode(srcsel int, _ bool, cr compResult) bytecode.Type {
+func (f Float) byteCode(srcsel int, _ bcData, cr compResult) bytecode.Type {
 	v := value.NewFloat(float64(f))
 	ix := len(*cr.DS)
 	*cr.DS = append(*cr.DS, v)
@@ -59,7 +72,7 @@ func (f Float) byteCode(srcsel int, _ bool, cr compResult) bytecode.Type {
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrDS, ix)
 }
 
-func (s String) byteCode(srcsel int, _ bool, cr compResult) bytecode.Type {
+func (s String) byteCode(srcsel int, _ bcData, cr compResult) bytecode.Type {
 	v := value.NewString(string(s))
 	ix := len(*cr.DS)
 	*cr.DS = append(*cr.DS, v)
@@ -67,7 +80,7 @@ func (s String) byteCode(srcsel int, _ bool, cr compResult) bytecode.Type {
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrDS, ix)
 }
 
-func (l List) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
+func (l List) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 	ary := make([]value.Type, 0, len(l.Elems))
 	i := 0
 
@@ -86,12 +99,12 @@ func (l List) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
 		return bytecode.EncodeSrc(srcsel, bytecode.AddrDS, ix)
 	}
 
-	instr := l.Elems[i].byteCode(0, inFor, cr)
+	instr := l.Elems[i].byteCode(0, bcd, cr)
 	instr |= bytecode.New(bytecode.ARR) | bytecode.EncodeSrc(1, bytecode.AddrDS, ix)
 	*cr.CS = append(*cr.CS, instr)
 
 	for _, t := range l.Elems[i+1:] {
-		instr = t.byteCode(0, inFor, cr)
+		instr = t.byteCode(0, bcd, cr)
 		instr |= bytecode.New(bytecode.ARR) | bytecode.EncodeSrc(1, bytecode.AddrStck, 0)
 		*cr.CS = append(*cr.CS, instr)
 	}
@@ -99,27 +112,27 @@ func (l List) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
 }
 
-func (l Local) byteCode(srcsel int, _ bool, _ compResult) bytecode.Type {
+func (l Local) byteCode(srcsel int, _ bcData, _ compResult) bytecode.Type {
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrLcl, l.Ix)
 }
 
-func (c Closure) byteCode(srcsel int, _ bool, _ compResult) bytecode.Type {
+func (c Closure) byteCode(srcsel int, _ bcData, _ compResult) bytecode.Type {
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrCls, c.Ix)
 }
 
-func (n Name) byteCode(srcsel int, _ bool, cr compResult) bytecode.Type {
+func (n Name) byteCode(srcsel int, _ bcData, cr compResult) bytecode.Type {
 	v := value.NewString(string(n))
 	ix := len(*cr.DS)
 	*cr.DS = append(*cr.DS, v)
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrGbl, ix)
 }
 
-func (f Function) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
+func (f Function) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 	instr := bytecode.New(bytecode.JMP)
 	*cr.CS = append(*cr.CS, instr)
 	jmpAddr := len(*cr.CS) - 1
 
-	instr = f.Body.byteCode(0, inFor, cr)
+	instr = f.Body.byteCode(0, bcd, cr)
 	instr |= bytecode.New(bytecode.RET)
 	*cr.CS = append(*cr.CS, instr)
 
@@ -135,10 +148,10 @@ func (f Function) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type 
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
 }
 
-func (c Call) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
+func (c Call) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 	// push the arguments
 	for _, arg := range c.Arguments.Elems {
-		instr := arg.byteCode(0, inFor, cr)
+		instr := arg.byteCode(0, bcd, cr)
 		if instr.Src0() != bytecode.AddrStck {
 			instr |= bytecode.New(bytecode.PUSH)
 			*cr.CS = append(*cr.CS, instr)
@@ -152,7 +165,7 @@ func (c Call) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
 	(*cr.Dbg)[len(*cr.CS)] = dbginfo.Call{Name: string(name.Name()), ArgCnt: len(c.Arguments.Elems)}
 
 	// get the function
-	instr := c.Name.byteCode(0, inFor, cr)
+	instr := c.Name.byteCode(0, bcd, cr)
 
 	instr |= bytecode.New(bytecode.CALL) | bytecode.EncodeSrc(1, bytecode.AddrImm, len(c.Arguments.Elems))
 	*cr.CS = append(*cr.CS, instr)
@@ -160,27 +173,27 @@ func (c Call) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
 }
 
-func (r Return) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
-	if inFor {
+func (r Return) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
+	if bcd.inFor {
 		instr := bytecode.New(bytecode.RCONT)
 		*cr.CS = append(*cr.CS, instr)
 	}
-	instr := r.Target.byteCode(0, inFor, cr)
+	instr := r.Target.byteCode(0, bcd, cr)
 	instr |= bytecode.New(bytecode.RET)
 	*cr.CS = append(*cr.CS, instr)
 
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
 }
 
-func (y Yield) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
-	instr := y.Target.byteCode(0, inFor, cr)
+func (y Yield) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
+	instr := y.Target.byteCode(0, bcd, cr)
 	instr |= bytecode.New(bytecode.YIELD)
 	*cr.CS = append(*cr.CS, instr)
 
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
 }
 
-func (a Assign) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
+func (a Assign) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 	vref := a.VarRef
 	if plus, ok := a.Value.(BinOp); ok && plus.Op == "+" {
 		inc := false
@@ -194,15 +207,15 @@ func (a Assign) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
 		}
 
 		if inc {
-			instr := bytecode.New(bytecode.INC) | vref.byteCode(0, inFor, cr)
+			instr := bytecode.New(bytecode.INC) | vref.byteCode(0, bcd, cr)
 			*cr.CS = append(*cr.CS, instr)
 
 			return bytecode.EncodeSrc(srcsel, instr.Src0(), instr.Src0Addr())
 		}
 	}
 
-	srcInstr := a.Value.byteCode(0, inFor, cr)
-	instr := srcInstr | vref.byteCode(1, inFor, cr)
+	srcInstr := a.Value.byteCode(0, bcd, cr)
+	instr := srcInstr | vref.byteCode(1, bcd, cr)
 	instr |= bytecode.New(bytecode.MOV)
 
 	*cr.CS = append(*cr.CS, instr)
@@ -210,8 +223,9 @@ func (a Assign) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
 	return bytecode.EncodeSrc(srcsel, instr.Src1(), instr.Src1Addr())
 }
 
-func (b BinOp) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
+func (b BinOp) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 	var op bytecode.OpCode
+	var left, right bytecode.Type
 	switch b.Op {
 	case "+":
 		op = bytecode.ADD
@@ -246,20 +260,56 @@ func (b BinOp) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
 	default:
 		panic("unexpected op")
 	}
-	instr := b.Left.byteCode(1, inFor, cr)
-	instr |= b.Right.byteCode(0, inFor, cr)
-	instr |= bytecode.New(op)
 
+	forbidTemp := bcd.forbidTemp || b.Right.HasCall()
+	var tempified = false
+
+	left = b.Left.byteCode(1, bcData{inFor: bcd.inFor, forbidTemp: forbidTemp, opDepth: bcd.opDepth + 1}, cr)
+	if left.Src1() == bytecode.AddrTmp {
+		tempified = true
+	}
+
+	if !forbidTemp && bcd.opDepth > tempifyDepth && !tempified {
+		instr := bytecode.New(bytecode.MOV) |
+			bytecode.EncodeSrc(1, bytecode.AddrTmp, 0) |
+			bytecode.EncodeSrc(0, left.Src1(), left.Src1Addr())
+		*cr.CS = append(*cr.CS, instr)
+
+		tempified = true
+	}
+
+	right = b.Right.byteCode(0, bcData{inFor: bcd.inFor, forbidTemp: true}, cr)
+
+	var instr bytecode.Type
+	if tempified {
+		instr = bytecode.New(op|bytecode.TempFlag) | right
+	} else {
+		instr = bytecode.New(op) | left | right
+	}
 	*cr.CS = append(*cr.CS, instr)
+
+	if tempified && bcd.opDepth == 0 {
+		instr = bytecode.New(bytecode.PUSHTMP)
+		*cr.CS = append(*cr.CS, instr)
+
+		tempified = false
+	}
+
+	if tempified {
+		return bytecode.EncodeSrc(srcsel, bytecode.AddrTmp, 0)
+	}
 
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
 }
 
-func (u UnOp) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
+func (u UnOp) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 	var op bytecode.OpCode
+
+	nbcd := bcData{inFor: bcd.inFor, forbidTemp: bcd.forbidTemp, opDepth: bcd.opDepth + 1}
+
 	switch u.Op {
 	case "-":
-		return BinOp{Op: "*", Left: Int(-1), Right: u.Target}.byteCode(srcsel, inFor, cr)
+		return BinOp{Op: "*", Left: Int(-1), Right: u.Target}.byteCode(srcsel, bcd, cr)
 	case "#":
 		op = bytecode.LEN
 	case "!":
@@ -270,17 +320,46 @@ func (u UnOp) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
 		panic("unexpected op")
 	}
 
-	instr := bytecode.New(op) | u.Target.byteCode(0, inFor, cr)
+	tempified := false
+	target := u.Target.byteCode(0, nbcd, cr)
+	if target.Src0() == bytecode.AddrTmp {
+		tempified = true
+	}
 
+	if !bcd.forbidTemp && bcd.opDepth > tempifyDepth && !tempified {
+		instr := bytecode.New(bytecode.MOV) | bytecode.EncodeSrc(1, bytecode.AddrTmp, 0) | target
+		*cr.CS = append(*cr.CS, instr)
+
+		tempified = true
+	}
+
+	var instr bytecode.Type
+	if tempified {
+		instr = bytecode.New(op | bytecode.TempFlag)
+	} else {
+		instr = bytecode.New(op) | target
+	}
 	*cr.CS = append(*cr.CS, instr)
 
+	if tempified && bcd.opDepth == 0 {
+		instr := bytecode.New(bytecode.PUSHTMP)
+		*cr.CS = append(*cr.CS, instr)
+
+		tempified = false
+	}
+
+	if tempified {
+		return bytecode.EncodeSrc(srcsel, bytecode.AddrTmp, 0)
+	}
+
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
+
 }
 
-func (b Block) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
+func (b Block) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 	var instr bytecode.Type
 	for i, t := range b.Body {
-		instr = t.byteCode(srcsel, inFor, cr)
+		instr = t.byteCode(srcsel, bcd, cr)
 		if i != len(b.Body)-1 { // throw away mid-block results
 			if instr.Src(srcsel) == bytecode.AddrStck {
 				instr = bytecode.New(bytecode.POP)
@@ -291,7 +370,7 @@ func (b Block) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
 	return instr
 }
 
-func (i If) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
+func (i If) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 	//
 	// JMPF ..., condition                     --+
 	// truecase                                  |
@@ -301,12 +380,12 @@ func (i If) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
 	// PUSH no result                          <-+ |
 	//                                         <---+
 	//
-	instr := bytecode.New(bytecode.JMPF) | i.Condition.byteCode(0, inFor, cr)
+	instr := bytecode.New(bytecode.JMPF) | i.Condition.byteCode(0, bcd, cr)
 
 	*cr.CS = append(*cr.CS, instr)
 	jmpfAddr := len(*cr.CS) - 1
 
-	tcInstr := i.TrueCase.byteCode(0, inFor, cr)
+	tcInstr := i.TrueCase.byteCode(0, bcd, cr)
 	if tcInstr.Src0() != bytecode.AddrStck {
 		instr = bytecode.New(bytecode.PUSH) | tcInstr
 		*cr.CS = append(*cr.CS, instr)
@@ -326,7 +405,7 @@ func (i If) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
 }
 
-func (i IfElse) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
+func (i IfElse) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 	//
 	// JMPF ..., condition                     --+
 	// truecase                                  |
@@ -338,11 +417,11 @@ func (i IfElse) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
 	//    PUSH falsecase result                    |
 	//                                         <---+
 	//
-	instr := bytecode.New(bytecode.JMPF) | i.Condition.byteCode(0, inFor, cr)
+	instr := bytecode.New(bytecode.JMPF) | i.Condition.byteCode(0, bcd, cr)
 	*cr.CS = append(*cr.CS, instr)
 	jmpfAddr := len(*cr.CS) - 1
 
-	instr = i.TrueCase.byteCode(0, inFor, cr)
+	instr = i.TrueCase.byteCode(0, bcd, cr)
 	if instr.Src0() != bytecode.AddrStck {
 		instr |= bytecode.New(bytecode.PUSH)
 		*cr.CS = append(*cr.CS, instr)
@@ -352,7 +431,7 @@ func (i IfElse) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
 	instr = bytecode.New(bytecode.JMP)
 	*cr.CS = append(*cr.CS, instr)
 
-	instr = i.FalseCase.byteCode(0, inFor, cr)
+	instr = i.FalseCase.byteCode(0, bcd, cr)
 	if instr.Src0() != bytecode.AddrStck {
 		instr |= bytecode.New(bytecode.PUSH)
 		*cr.CS = append(*cr.CS, instr)
@@ -366,7 +445,7 @@ func (i IfElse) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
 }
 
-func (w While) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
+func (w While) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 	// PUSH no result
 	// JMPF condition                                <-----+ -+
 	// POP                                                 |  |
@@ -382,7 +461,7 @@ func (w While) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
 	*cr.CS = append(*cr.CS, instr)
 
 	condAddr := len(*cr.CS)
-	instr = bytecode.New(bytecode.JMPF) | w.Condition.byteCode(0, inFor, cr)
+	instr = bytecode.New(bytecode.JMPF) | w.Condition.byteCode(0, bcd, cr)
 	*cr.CS = append(*cr.CS, instr)
 
 	jmpfAddr := len(*cr.CS) - 1
@@ -390,7 +469,7 @@ func (w While) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
 	instr = bytecode.New(bytecode.POP)
 	*cr.CS = append(*cr.CS, instr)
 
-	instr = w.Body.byteCode(0, inFor, cr)
+	instr = w.Body.byteCode(0, bcd, cr)
 
 	if instr.Src0() != bytecode.AddrStck {
 		instr |= bytecode.New(bytecode.PUSH)
@@ -406,7 +485,7 @@ func (w While) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
 }
 
-func (f For) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
+func (f For) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 	//
 	// PUSH nil
 	// CCONT                               ------+                  ; fork iterator context
@@ -433,7 +512,7 @@ func (f For) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
 	instr = bytecode.New(bytecode.CCONT)
 	*cr.CS = append(*cr.CS, instr)
 
-	instr = f.Iterator.byteCode(0, inFor, cr)
+	instr = f.Iterator.byteCode(0, bcd, cr)
 	if instr.Src0() == bytecode.AddrStck {
 		instr = bytecode.New(bytecode.POP)
 		*cr.CS = append(*cr.CS, instr)
@@ -451,14 +530,15 @@ func (f For) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
 	*cr.CS = append(*cr.CS, instr)
 
 	assignAddr := len(*cr.CS)
-	vref := f.VarRef.byteCode(1, inFor, cr)
+	vref := f.VarRef.byteCode(1, bcd, cr)
 	instr = bytecode.New(bytecode.MOV) | vref | bytecode.EncodeSrc(0, bytecode.AddrStck, 0)
 	*cr.CS = append(*cr.CS, instr)
 
 	instr = bytecode.New(bytecode.POP)
 	*cr.CS = append(*cr.CS, instr)
 
-	instr = f.Body.byteCode(0, true, cr)
+	bcd.inFor = true
+	instr = f.Body.byteCode(0, bcd, cr)
 
 	if instr.Src0() != bytecode.AddrStck {
 		instr = bytecode.New(bytecode.PUSH) | instr
@@ -477,9 +557,9 @@ func (f For) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
 }
 
-func (i IndexAt) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
-	ary := i.Ary.byteCode(1, inFor, cr)
-	at := i.At.byteCode(0, inFor, cr)
+func (i IndexAt) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
+	ary := i.Ary.byteCode(1, bcd, cr)
+	at := i.At.byteCode(0, bcd, cr)
 	instr := bytecode.New(bytecode.IX1) | ary | at
 
 	*cr.CS = append(*cr.CS, instr)
@@ -487,10 +567,11 @@ func (i IndexAt) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
 }
 
-func (i IndexFromTo) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
-	ary := i.Ary.byteCode(2, inFor, cr)
-	from := i.From.byteCode(1, inFor, cr)
-	to := i.To.byteCode(0, inFor, cr)
+func (i IndexFromTo) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
+	nbcd := bcData{inFor: bcd.inFor, forbidTemp: bcd.forbidTemp, opDepth: 0}
+	ary := i.Ary.byteCode(2, nbcd, cr)
+	from := i.From.byteCode(1, nbcd, cr)
+	to := i.To.byteCode(0, nbcd, cr)
 
 	instr := bytecode.New(bytecode.IX2) | ary | from | to
 
@@ -499,7 +580,7 @@ func (i IndexFromTo) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Ty
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
 }
 
-func (r Read) byteCode(srcsel int, _ bool, cr compResult) bytecode.Type {
+func (r Read) byteCode(srcsel int, _ bcData, cr compResult) bytecode.Type {
 	instr := bytecode.New(bytecode.READ)
 
 	*cr.CS = append(*cr.CS, instr)
@@ -507,29 +588,29 @@ func (r Read) byteCode(srcsel int, _ bool, cr compResult) bytecode.Type {
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
 }
 
-func (w Write) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
-	instr := bytecode.New(bytecode.WRITE) | w.Value.byteCode(0, inFor, cr)
+func (w Write) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
+	instr := bytecode.New(bytecode.WRITE) | w.Value.byteCode(0, bcd, cr)
 	*cr.CS = append(*cr.CS, instr)
 
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
 }
 
-func (a Aton) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
-	instr := bytecode.New(bytecode.ATON) | a.Value.byteCode(0, inFor, cr)
+func (a Aton) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
+	instr := bytecode.New(bytecode.ATON) | a.Value.byteCode(0, bcd, cr)
 	*cr.CS = append(*cr.CS, instr)
 
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
 }
 
-func (t Toa) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
-	instr := bytecode.New(bytecode.TOA) | t.Value.byteCode(0, inFor, cr)
+func (t Toa) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
+	instr := bytecode.New(bytecode.TOA) | t.Value.byteCode(0, bcd, cr)
 	*cr.CS = append(*cr.CS, instr)
 
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
 }
 
-func (e Exit) byteCode(srcsel int, inFor bool, cr compResult) bytecode.Type {
-	instr := bytecode.New(bytecode.EXIT) | e.Value.byteCode(0, inFor, cr)
+func (e Exit) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
+	instr := bytecode.New(bytecode.EXIT) | e.Value.byteCode(0, bcd, cr)
 
 	*cr.CS = append(*cr.CS, instr)
 

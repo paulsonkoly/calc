@@ -49,15 +49,56 @@ func _() {
 	_ = x[ATON-38]
 	_ = x[TOA-39]
 	_ = x[EXIT-40]
+	_ = x[PUSHTMP-65]
+	_ = x[ADDTMP-68]
+	_ = x[SUBTMP-69]
+	_ = x[MULTMP-70]
+	_ = x[DIVTMP-71]
+	_ = x[MODTMP-72]
+	_ = x[NOTTMP-74]
+	_ = x[ANDTMP-75]
+	_ = x[ORTMP-76]
+	_ = x[LTTMP-77]
+	_ = x[GTTMP-78]
+	_ = x[LETMP-79]
+	_ = x[GETMP-80]
+	_ = x[EQTMP-81]
+	_ = x[NETMP-82]
+	_ = x[LSHTMP-83]
+	_ = x[RSHTMP-84]
+	_ = x[FLIPTMP-85]
+	_ = x[LENTMP-88]
 }
 
-const _OpCode_name = "NOPPUSHPOPMOVADDSUBMULDIVMODINCNOTANDORLTGTLEGEEQNELSHRSHFLIPIX1IX2LENARRJMPJMPFFUNCCALLRETCCONTDCONTRCONTSCONTYIELDREADWRITEATONTOAEXIT"
+const (
+	_OpCode_name_0 = "NOPPUSHPOPMOVADDSUBMULDIVMODINCNOTANDORLTGTLEGEEQNELSHRSHFLIPIX1IX2LENARRJMPJMPFFUNCCALLRETCCONTDCONTRCONTSCONTYIELDREADWRITEATONTOAEXIT"
+	_OpCode_name_1 = "PUSHTMP"
+	_OpCode_name_2 = "ADDTMPSUBTMPMULTMPDIVTMPMODTMP"
+	_OpCode_name_3 = "NOTTMPANDTMPORTMPLTTMPGTTMPLETMPGETMPEQTMPNETMPLSHTMPRSHTMPFLIPTMP"
+	_OpCode_name_4 = "LENTMP"
+)
 
-var _OpCode_index = [...]uint8{0, 3, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34, 37, 39, 41, 43, 45, 47, 49, 51, 54, 57, 61, 64, 67, 70, 73, 76, 80, 84, 88, 91, 96, 101, 106, 111, 116, 120, 125, 129, 132, 136}
+var (
+	_OpCode_index_0 = [...]uint8{0, 3, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34, 37, 39, 41, 43, 45, 47, 49, 51, 54, 57, 61, 64, 67, 70, 73, 76, 80, 84, 88, 91, 96, 101, 106, 111, 116, 120, 125, 129, 132, 136}
+	_OpCode_index_2 = [...]uint8{0, 6, 12, 18, 24, 30}
+	_OpCode_index_3 = [...]uint8{0, 6, 12, 17, 22, 27, 32, 37, 42, 47, 53, 59, 66}
+)
 
 func (i OpCode) String() string {
-	if i >= OpCode(len(_OpCode_index)-1) {
+	switch {
+	case i <= 40:
+		return _OpCode_name_0[_OpCode_index_0[i]:_OpCode_index_0[i+1]]
+	case i == 65:
+		return _OpCode_name_1
+	case 68 <= i && i <= 72:
+		i -= 68
+		return _OpCode_name_2[_OpCode_index_2[i]:_OpCode_index_2[i+1]]
+	case 74 <= i && i <= 85:
+		i -= 74
+		return _OpCode_name_3[_OpCode_index_3[i]:_OpCode_index_3[i+1]]
+	case i == 88:
+		return _OpCode_name_4
+	default:
 		return "OpCode(" + strconv.FormatInt(int64(i), 10) + ")"
 	}
-	return _OpCode_name[_OpCode_index[i]:_OpCode_index[i+1]]
 }
