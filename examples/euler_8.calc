@@ -48,5 +48,5 @@ slices = () -> eachcons(13, digits)
 product = (slice) -> inject((a, b) -> a * b, () ->  elems(slice))
 max = maxby(product, slices)
 
-write(toa(product(max)))
+write(toa(product(max)) + "\n")
 

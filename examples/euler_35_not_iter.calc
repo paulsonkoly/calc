@@ -49,6 +49,5 @@ while i < 1000000 {
   }
   i = i+1
 }
-write(c)
-write("\n")
+write(toa(c) + "\n")
 
