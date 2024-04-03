@@ -39,6 +39,5 @@ for i <- fromto(0, 1000000) {
     c = c + 1
   }
 }
-write(c)
-write("\n")
+write(toa(c) + "\n")
 

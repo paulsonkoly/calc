@@ -1,0 +1,43 @@
+; https://projecteuler.info/problem=2
+
+; infinite sequence of fibs
+fibs = () -> {
+  a = 1
+  b = 2
+  while true {
+    yield a
+    c = b
+    b = a + b
+    a = c
+  }
+}
+
+; filter
+filter = (f, iter) -> for e <- iter() if f(e) yield e
+
+; stop at condition
+takewhile = (f, iter) -> {
+  for e <- iter() {
+    if !f(e) return e
+    yield e
+  }
+}
+
+; inject/reduce
+inject = (f, iter) -> {
+  first = true
+  for e <- iter() {
+    if first {
+      acc = e
+      first = false
+    } else {
+      acc = f(acc, e)
+    }
+  }
+  acc
+}
+
+evens = () -> filter((n) -> n % 2 == 0, fibs)
+all = () -> takewhile((n) -> n < 4000000, evens)
+solution = inject((a, b) -> a + b, all)
+write(toa(solution) + "\n")

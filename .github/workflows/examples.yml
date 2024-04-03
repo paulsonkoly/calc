@@ -1,0 +1,30 @@
+name: Examples
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+      
+      - name: Build
+        working-directory: ./cmd/calc
+        run: go build -v ./...
+
+      - name: Run examples
+        run: ls examples/*.calc | sort | xargs -n1 cmd/calc/calc > examples.res
+
+      - name: Diff
+        run: diff examples.res examples/examples.res
