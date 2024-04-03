@@ -24,7 +24,7 @@ jobs:
         run: go build -v ./...
 
       - name: Run examples
-        run: ls examples/* | sort | xargs -n1 cmd/calc/calc > examples.res
+        run: ls examples/*.calc | sort | xargs -n1 cmd/calc/calc > examples.res
 
       - name: Diff
         run: diff examples.res examples/examples.res
