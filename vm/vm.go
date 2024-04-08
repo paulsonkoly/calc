@@ -22,26 +22,28 @@ var (
 )
 
 type context struct {
-	ip       int          // instruction pointer
-	m        *memory.Type // variables
-	parent   *context     // parent context
-	children []*context   // child contexts
+	ip     int          // instruction pointer
+	m      *memory.Type // variables
+	parent *context     // parent context
 }
 
 type Type struct {
-	ctx *context        // ctx is the context tree
+	ctx *[][]*context   // memory contexts
 	CR  compresult.Type // cr is the compilation result
 }
 
 // New creates a new virtual machine using memory from m and code and data from cr.
 func New(m *memory.Type, cr compresult.Type) *Type {
-	return &Type{ctx: &context{m: m, children: []*context{}}, CR: cr}
+	main := &context{m: m}
+	frm0 := []*context{main}
+	ctxs := [][]*context{frm0}
+	return &Type{ctx: &ctxs, CR: cr}
 }
 
 // Run executes the run loop.
 // nolint:maintidx // the only thing we care about here is making it faster
 func (vm *Type) Run(retResult bool) (value.Type, error) {
-	ctxp := vm.ctx
+	ctxp := (*vm.ctx)[0][0]
 	m := ctxp.m
 	ip := ctxp.ip
 	ds := vm.CR.DS
@@ -53,7 +55,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 		instr := (*cs)[ip]
 
 		// TODO allow tracing flag
-		fmt.Printf("%8d | %8p | %v\n", ip, m, instr)
+		// fmt.Printf("%8d | %8p | %v\n", ip, m, instr)
 
 		opCode := instr.OpCode()
 
@@ -401,24 +403,25 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 			ip = lip
 
+		case bytecode.CONTFRM:
+			*vm.ctx = append(*vm.ctx, make([]*context, 0))
+
 		case bytecode.CCONT:
 			jmp := instr.Src0Addr()
 			ctxp.ip = ip + jmp - 1
 
 			m = m.Clone()
-			childCtx := context{m: m, parent: ctxp, children: make([]*context, 0)}
-			ctxp.children = append(ctxp.children, &childCtx)
+			childCtx := context{m: m, parent: ctxp}
+			(*vm.ctx)[len(*vm.ctx)-1] = append((*vm.ctx)[len(*vm.ctx)-1], &childCtx)
 			ctxp = &childCtx
 
 		case bytecode.RCONT:
-			ctxNum := instr.Src0Addr()
-			ctxp.children = ctxp.children[:len(ctxp.children)-ctxNum]
+			*vm.ctx = (*vm.ctx)[:len(*vm.ctx)-1]
 
 		case bytecode.DCONT:
-			ctxNum := instr.Src0Addr()
 			ctxp = ctxp.parent
-			if len(ctxp.children) > 0 {
-				ctxp.children = ctxp.children[:len(ctxp.children)-ctxNum]
+			if len(*vm.ctx) > 1 {
+				*vm.ctx = (*vm.ctx)[:len(*vm.ctx)-1]
 			}
 			m = ctxp.m
 
@@ -427,7 +430,8 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			ctxp.m = m
 			ctxp.ip = ip
 
-			ctxp = ctxp.children[len(ctxp.children)-ctxID]
+			frm := (*vm.ctx)[len(*vm.ctx)-1]
+			ctxp = frm[ctxID]
 
 			m = ctxp.m
 			ip = ctxp.ip
@@ -560,12 +564,10 @@ func (vm *Type) dumpStack(ctx *context, ip int, err error, values ...value.Type)
 		fmt.Printf("memory context %08p\n", ctx)
 		m := ctx.m
 		m.DumpStack(vm.CR.Dbg)
-		// reset state for the next run
-		m.Reset()
-		ctx.children = []*context{}
-		ctx.ip = len(*vm.CR.CS)
-		vm.ctx = ctx
 	}
+	// reset state for the next run
+	(*vm.ctx)[0][0].ip = len(*vm.CR.CS)
+	*vm.ctx = (*vm.ctx)[0:1]
 
 	return value.Nil, err
 }

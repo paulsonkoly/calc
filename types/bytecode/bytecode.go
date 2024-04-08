@@ -94,17 +94,21 @@ const (
 	CALL // CALL calls src0 with argument cnt src1
 	RET  // RET returns from a function call pushing src0 after rolling back the stack
 
-	// CCONT jumps relative to ip + src0 in current context, saves context, and
-	// switches to a new context that continues from old ip.
+	// CONTFRM pushes a new frame of memory context on the context stack.
+	CONTFRM
+	// CCONT jumps relative to ip + src0 in current context, appends old context
+	// to the current context frame, and switches to a new context that continues
+	// from old ip.
 	CCONT
 	// DCONT restores previous context switches memory, but doesn't switch ip.
 	DCONT
-	// RCONT removes last memory context saved.
+	// RCONT deletes last frame of memory contexts.
 	RCONT
-	// SCONT swaps the current context with the last saved.
+	// SCONT switches to the context id src0; id is the index of the context in
+	// the current frame.
 	SCONT
 	// YIELD pushes src0 in the current context, swaps the current context with
-	// the saved, and pushes src0 in the new context.
+	// its parent, and pushes src0 in the new context.
 	YIELD
 
 	READ  // READ builtin

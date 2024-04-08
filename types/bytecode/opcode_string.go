@@ -39,16 +39,17 @@ func _() {
 	_ = x[FUNC-28]
 	_ = x[CALL-29]
 	_ = x[RET-30]
-	_ = x[CCONT-31]
-	_ = x[DCONT-32]
-	_ = x[RCONT-33]
-	_ = x[SCONT-34]
-	_ = x[YIELD-35]
-	_ = x[READ-36]
-	_ = x[WRITE-37]
-	_ = x[ATON-38]
-	_ = x[TOA-39]
-	_ = x[EXIT-40]
+	_ = x[CONTFRM-31]
+	_ = x[CCONT-32]
+	_ = x[DCONT-33]
+	_ = x[RCONT-34]
+	_ = x[SCONT-35]
+	_ = x[YIELD-36]
+	_ = x[READ-37]
+	_ = x[WRITE-38]
+	_ = x[ATON-39]
+	_ = x[TOA-40]
+	_ = x[EXIT-41]
 	_ = x[PUSHTMP-65]
 	_ = x[ADDTMP-68]
 	_ = x[SUBTMP-69]
@@ -71,7 +72,7 @@ func _() {
 }
 
 const (
-	_OpCode_name_0 = "NOPPUSHPOPMOVADDSUBMULDIVMODINCNOTANDORLTGTLEGEEQNELSHRSHFLIPIX1IX2LENARRJMPJMPFFUNCCALLRETCCONTDCONTRCONTSCONTYIELDREADWRITEATONTOAEXIT"
+	_OpCode_name_0 = "NOPPUSHPOPMOVADDSUBMULDIVMODINCNOTANDORLTGTLEGEEQNELSHRSHFLIPIX1IX2LENARRJMPJMPFFUNCCALLRETCONTFRMCCONTDCONTRCONTSCONTYIELDREADWRITEATONTOAEXIT"
 	_OpCode_name_1 = "PUSHTMP"
 	_OpCode_name_2 = "ADDTMPSUBTMPMULTMPDIVTMPMODTMP"
 	_OpCode_name_3 = "NOTTMPANDTMPORTMPLTTMPGTTMPLETMPGETMPEQTMPNETMPLSHTMPRSHTMPFLIPTMP"
@@ -79,14 +80,14 @@ const (
 )
 
 var (
-	_OpCode_index_0 = [...]uint8{0, 3, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34, 37, 39, 41, 43, 45, 47, 49, 51, 54, 57, 61, 64, 67, 70, 73, 76, 80, 84, 88, 91, 96, 101, 106, 111, 116, 120, 125, 129, 132, 136}
+	_OpCode_index_0 = [...]uint8{0, 3, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34, 37, 39, 41, 43, 45, 47, 49, 51, 54, 57, 61, 64, 67, 70, 73, 76, 80, 84, 88, 91, 98, 103, 108, 113, 118, 123, 127, 132, 136, 139, 143}
 	_OpCode_index_2 = [...]uint8{0, 6, 12, 18, 24, 30}
 	_OpCode_index_3 = [...]uint8{0, 6, 12, 17, 22, 27, 32, 37, 42, 47, 53, 59, 66}
 )
 
 func (i OpCode) String() string {
 	switch {
-	case i <= 40:
+	case i <= 41:
 		return _OpCode_name_0[_OpCode_index_0[i]:_OpCode_index_0[i+1]]
 	case i == 65:
 		return _OpCode_name_1

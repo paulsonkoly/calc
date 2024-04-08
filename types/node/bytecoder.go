@@ -517,6 +517,9 @@ func (f For) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 	instr := bytecode.New(bytecode.PUSH) | bytecode.EncodeSrc(0, bytecode.AddrDS, ix)
 	*cr.CS = append(*cr.CS, instr)
 
+	instr = bytecode.New(bytecode.CONTFRM)
+	*cr.CS = append(*cr.CS, instr)
+
 	ccontAddr := len(*cr.CS)
 	jmpAddrs := []int{}
 	for i, iter := range f.Iterators.Elems {
