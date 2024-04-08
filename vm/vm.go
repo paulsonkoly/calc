@@ -22,6 +22,7 @@ var (
 )
 
 type context struct {
+	ix     int          // context frame index
 	ip     int          // instruction pointer
 	m      *memory.Type // variables
 	parent *context     // parent context
@@ -34,7 +35,7 @@ type Type struct {
 
 // New creates a new virtual machine using memory from m and code and data from cr.
 func New(m *memory.Type, cr compresult.Type) *Type {
-	main := &context{m: m}
+	main := &context{ix: 1, m: m}
 	frm0 := []*context{main}
 	ctxs := [][]*context{frm0}
 	return &Type{ctx: &ctxs, CR: cr}
@@ -55,7 +56,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 		instr := (*cs)[ip]
 
 		// TODO allow tracing flag
-		// fmt.Printf("%8d | %8p | %v\n", ip, m, instr)
+		fmt.Printf("%8d | %8p | %v\n", ip, m, instr)
 
 		opCode := instr.OpCode()
 
@@ -411,7 +412,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			ctxp.ip = ip + jmp - 1
 
 			m = m.Clone()
-			childCtx := context{m: m, parent: ctxp}
+			childCtx := context{ix: len(*vm.ctx) - 1, m: m, parent: ctxp}
 			(*vm.ctx)[len(*vm.ctx)-1] = append((*vm.ctx)[len(*vm.ctx)-1], &childCtx)
 			ctxp = &childCtx
 
@@ -430,7 +431,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			ctxp.m = m
 			ctxp.ip = ip
 
-			frm := (*vm.ctx)[len(*vm.ctx)-1]
+			frm := (*vm.ctx)[ctxp.ix]
 			ctxp = frm[ctxID]
 
 			m = ctxp.m
