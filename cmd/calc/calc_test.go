@@ -204,6 +204,8 @@ var testData = [...]TestDatum{
   }`, nil, value.Nil, nil,
 	},
 
+	{"regression/tmp optimisation", `aton("1" + "2") + 3`, nil, value.NewInt(15), nil},
+
 	{"qsort",
 		`{
 	       filter = (pred, ary) -> {

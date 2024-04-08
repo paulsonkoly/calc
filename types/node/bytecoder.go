@@ -149,9 +149,11 @@ func (f Function) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type 
 }
 
 func (c Call) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
+	nbcd := bcData{inFor: bcd.inFor, forbidTemp: bcd.forbidTemp, opDepth: 0}
+
 	// push the arguments
 	for _, arg := range c.Arguments.Elems {
-		instr := arg.byteCode(0, bcd, cr)
+		instr := arg.byteCode(0, nbcd, cr)
 		if instr.Src0() != bytecode.AddrStck {
 			instr |= bytecode.New(bytecode.PUSH)
 			*cr.CS = append(*cr.CS, instr)
