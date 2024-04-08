@@ -188,7 +188,25 @@ func whileLoop(input c.RollbackLexer) ([]c.Node, *Error) {
 }
 
 func forLoop(input c.RollbackLexer) ([]c.Node, *Error) {
-	return c.Fmap(mkFor, c.Seq(acceptToken("for"), varName, acceptToken("<-"), expression, block))(input)
+	r, err := c.Seq(
+		acceptToken("for"),
+		c.Fmap(mkList, c.And(varName, c.Any(c.Conditional{Gate: c.Drop(acceptToken(",")), OnSuccess: varName}))),
+		acceptToken("<-"),
+		c.Fmap(mkList, c.And(expression, c.Any(c.Conditional{Gate: c.Drop(acceptToken(",")), OnSuccess: expression}))),
+		block)(input)
+	if err != nil {
+		return nil, err
+	}
+	from := input.From()
+	to := input.To()
+
+	varList := r[1].(node.List)
+	expList := r[3].(node.List)
+	if len(varList.Elems) != len(expList.Elems) {
+		return nil, c.NewError("for loop must have the same number of variables and expressions", from, to)
+	}
+
+	return mkFor(r), nil
 }
 
 func returning(input c.RollbackLexer) ([]c.Node, *Error) {

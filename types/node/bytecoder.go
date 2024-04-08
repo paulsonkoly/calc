@@ -507,36 +507,53 @@ func (f For) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 	// JMP                                  ~~~~~~~~|~~+
 	//                                      <=======+
 	//
+
+	if len(f.Iterators.Elems) != len(f.VarRefs.Elems) {
+		panic("for loop number of variables does not match number of iterators")
+	}
+
 	ix := len(*cr.DS)
 	*cr.DS = append(*cr.DS, value.Nil)
 	instr := bytecode.New(bytecode.PUSH) | bytecode.EncodeSrc(0, bytecode.AddrDS, ix)
 	*cr.CS = append(*cr.CS, instr)
 
 	ccontAddr := len(*cr.CS)
-	instr = bytecode.New(bytecode.CCONT)
-	*cr.CS = append(*cr.CS, instr)
+	jmpAddrs := []int{}
+	for i, iter := range f.Iterators.Elems {
+		// patch previous CCONT
+		if i > 0 {
+			(*cr.CS)[ccontAddr] |= bytecode.EncodeSrc(0, bytecode.AddrImm, len(*cr.CS)-ccontAddr)
+		}
+		ccontAddr = len(*cr.CS)
+		instr = bytecode.New(bytecode.CCONT)
+		*cr.CS = append(*cr.CS, instr)
 
-	instr = f.Iterator.byteCode(0, bcd, cr)
-	if instr.Src0() == bytecode.AddrStck {
-		instr = bytecode.New(bytecode.POP)
+		instr = iter.byteCode(0, bcd, cr)
+		if instr.Src0() == bytecode.AddrStck {
+			instr = bytecode.New(bytecode.POP)
+			*cr.CS = append(*cr.CS, instr)
+		}
+
+		instr = bytecode.New(bytecode.DCONT)
+		*cr.CS = append(*cr.CS, instr)
+
+		jmpAddrs = append(jmpAddrs, len(*cr.CS))
+		instr = bytecode.New(bytecode.JMP)
 		*cr.CS = append(*cr.CS, instr)
 	}
 
-	instr = bytecode.New(bytecode.DCONT)
-	*cr.CS = append(*cr.CS, instr)
-
-	jmpAddr := len(*cr.CS)
-	instr = bytecode.New(bytecode.JMP)
-	*cr.CS = append(*cr.CS, instr)
-
 	switchAddr := len(*cr.CS)
-	instr = bytecode.New(bytecode.SCONT)
-	*cr.CS = append(*cr.CS, instr)
+	for i := range f.Iterators.Elems {
+		instr = bytecode.New(bytecode.SCONT) | bytecode.EncodeSrc(0, bytecode.AddrImm, i)
+		*cr.CS = append(*cr.CS, instr)
+	}
 
 	assignAddr := len(*cr.CS)
-	vref := f.VarRef.byteCode(1, bcd, cr)
-	instr = bytecode.New(bytecode.MOV) | vref | bytecode.EncodeSrc(0, bytecode.AddrStck, 0)
-	*cr.CS = append(*cr.CS, instr)
+	for i := len(f.VarRefs.Elems) - 1; i >= 0; i-- {
+		vref := f.VarRefs.Elems[i].byteCode(1, bcd, cr)
+		instr = bytecode.New(bytecode.MOV) | vref | bytecode.EncodeSrc(0, bytecode.AddrStck, 0)
+		*cr.CS = append(*cr.CS, instr)
+	}
 
 	instr = bytecode.New(bytecode.POP)
 	*cr.CS = append(*cr.CS, instr)
@@ -552,8 +569,10 @@ func (f For) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 	instr = bytecode.New(bytecode.JMP) | bytecode.EncodeSrc(0, bytecode.AddrImm, switchAddr-len(*cr.CS))
 	*cr.CS = append(*cr.CS, instr)
 
-	// patch jump
-	(*cr.CS)[jmpAddr] |= bytecode.EncodeSrc(0, bytecode.AddrImm, len(*cr.CS)-jmpAddr)
+	// patch jumps
+	for _, jmpAddr := range jmpAddrs {
+		(*cr.CS)[jmpAddr] |= bytecode.EncodeSrc(0, bytecode.AddrImm, len(*cr.CS)-jmpAddr)
+	}
 
 	// patch ccont
 	(*cr.CS)[ccontAddr] |= bytecode.EncodeSrc(0, bytecode.AddrImm, assignAddr-ccontAddr)

@@ -53,7 +53,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 		instr := (*cs)[ip]
 
 		// TODO allow tracing flag
-		// fmt.Printf("%8d | %8p | %v\n", ip, m, instr)
+		fmt.Printf("%8d | %8p | %v\n", ip, m, instr)
 
 		opCode := instr.OpCode()
 
@@ -411,20 +411,23 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			ctxp = &childCtx
 
 		case bytecode.RCONT:
-			ctxp.children = ctxp.children[:len(ctxp.children)-1]
+			ctxNum := instr.Src0Addr()
+			ctxp.children = ctxp.children[:len(ctxp.children)-ctxNum]
 
 		case bytecode.DCONT:
+			ctxNum := instr.Src0Addr()
 			ctxp = ctxp.parent
 			if len(ctxp.children) > 0 {
-				ctxp.children = ctxp.children[:len(ctxp.children)-1]
+				ctxp.children = ctxp.children[:len(ctxp.children)-ctxNum]
 			}
 			m = ctxp.m
 
 		case bytecode.SCONT:
+			ctxID := instr.Src0Addr()
 			ctxp.m = m
 			ctxp.ip = ip
 
-			ctxp = ctxp.children[len(ctxp.children)-1]
+			ctxp = ctxp.children[len(ctxp.children)-ctxID]
 
 			m = ctxp.m
 			ip = ctxp.ip

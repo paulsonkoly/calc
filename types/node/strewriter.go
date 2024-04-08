@@ -74,23 +74,27 @@ func (w While) STRewrite(symTbl SymTbl) Type {
 }
 
 func (f For) STRewrite(symTbl SymTbl) Type {
-	iterator := f.Iterator.STRewrite(symTbl)
-
-	varRef := f.VarRef.(Name)
-	name := string(varRef)
+	iterator := f.Iterators.STRewrite(symTbl).(List)
 
 	if len(symTbl) < 1 {
-		return For{VarRef: varRef, Iterator: iterator, Body: f.Body.STRewrite(symTbl)}
+		return For{VarRefs: f.VarRefs, Iterators: iterator, Body: f.Body.STRewrite(symTbl)}
 	}
 
-	ix, ok := symTbl[len(symTbl)-1][name]
-	if !ok {
-		l := len(symTbl[len(symTbl)-1])
-		symTbl[len(symTbl)-1][name] = l
-		ix = l
+	varRefs := []Type{}
+	for _, varRef := range f.VarRefs.Elems {
+		varRef := varRef.(Name)
+		name := string(varRef)
+
+		ix, ok := symTbl[len(symTbl)-1][name]
+		if !ok {
+			l := len(symTbl[len(symTbl)-1])
+			symTbl[len(symTbl)-1][name] = l
+			ix = l
+		}
+		varRefs = append(varRefs, Local{Ix: ix, VarName: name})
 	}
 
-	return For{VarRef: Local{Ix: ix, VarName: name}, Iterator: iterator, Body: f.Body.STRewrite(symTbl)}
+	return For{VarRefs: List{Elems: varRefs}, Iterators: iterator, Body: f.Body.STRewrite(symTbl)}
 }
 
 func (r Return) STRewrite(symTbl SymTbl) Type {

@@ -29,7 +29,7 @@ func (i IfElse) HasCall() bool {
 	return i.Condition.HasCall() || i.TrueCase.HasCall() || i.FalseCase.HasCall()
 }
 func (w While) HasCall() bool   { return w.Condition.HasCall() || w.Body.HasCall() }
-func (f For) HasCall() bool     { return f.Iterator.HasCall() || f.Body.HasCall() }
+func (f For) HasCall() bool     { return f.Iterators.HasCall() || f.Body.HasCall() }
 func (r Return) HasCall() bool  { return r.Target.HasCall() }
 func (y Yield) HasCall() bool   { return y.Target.HasCall() }
 func (r Read) HasCall() bool    { return false }

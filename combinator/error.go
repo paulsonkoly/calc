@@ -7,6 +7,8 @@ type Error struct {
 	message string
 }
 
+func NewError(msg string, from, to int) *Error { return &Error{message: msg, from: from, to: to} }
+
 func (e *Error) Error() string { return e.message }
 
 // From points to the starting position of the token in the buffer.
