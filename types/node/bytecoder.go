@@ -571,7 +571,7 @@ func (f For) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 	bcd.inFor = true
 	bcd.ctxLo = ctxID
 	bcd.ctxHi = ctxID + len(f.Iterators.Elems) - 1
-  // it's important this happens here as the body might contain for loops
+	// it's important this happens here as the body might contain for loops
 	ctxID += len(f.Iterators.Elems)
 	instr = f.Body.byteCode(0, bcd, cr)
 
