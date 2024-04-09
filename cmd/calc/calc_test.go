@@ -205,6 +205,15 @@ var testData = [...]TestDatum{
 	},
 
 	{"regression/tmp optimisation", `aton("1" + "2") + 3`, nil, value.NewInt(15), nil},
+	{"regression/function in for",
+		`{
+       f = () -> for i <- fromto(1,2) {
+         yield () -> return 13
+       }
+
+       for i <- f() i()
+     }`, nil, value.NewInt(13), nil,
+	},
 
 	{"qsort",
 		`{

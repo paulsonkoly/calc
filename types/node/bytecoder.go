@@ -127,12 +127,14 @@ func (n Name) byteCode(srcsel int, _ bcData, cr compResult) bytecode.Type {
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrGbl, ix)
 }
 
-func (f Function) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
+func (f Function) byteCode(srcsel int, _ bcData, cr compResult) bytecode.Type {
 	instr := bytecode.New(bytecode.JMP)
 	*cr.CS = append(*cr.CS, instr)
 	jmpAddr := len(*cr.CS) - 1
 
-	instr = f.Body.byteCode(0, bcd, cr)
+	nbcd := bcData{inFor: false, forbidTemp: false, opDepth: 0}
+
+	instr = f.Body.byteCode(0, nbcd, cr)
 	instr |= bytecode.New(bytecode.RET)
 	*cr.CS = append(*cr.CS, instr)
 
