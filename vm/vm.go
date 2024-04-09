@@ -73,7 +73,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 		instr := (*cs)[ip]
 
 		// TODO allow tracing flag
-		fmt.Printf("%8d | %8p | %v\n", ip, ctxp, instr)
+		// fmt.Printf("%8d | %8p | %v\n", ip, ctxp, instr)
 
 		opCode := instr.OpCode()
 
@@ -430,8 +430,6 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			ctxID := /*(recLvl << 16) |*/ instr.Src1Addr()
 			ctxp.ip = ip + jmp - 1
 
-			fmt.Println("creating context", ctxID)
-
 			m = m.Clone()
 			childCtx := &context{m: m, parent: ctxp}
 			vm.ctx.Put(ctxID, childCtx)
@@ -460,8 +458,6 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			ctxID := /*  (recLvl << 16) | */ instr.Src0Addr()
 			ctxp.m = m
 			ctxp.ip = ip
-
-			fmt.Println("switching to context", ctxID)
 
 			ctxp, ok = vm.ctx.Get(ctxID)
 			if !ok {
