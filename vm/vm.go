@@ -14,6 +14,8 @@ import (
 	"github.com/paulsonkoly/calc/types/bytecode"
 	"github.com/paulsonkoly/calc/types/compresult"
 	"github.com/paulsonkoly/calc/types/value"
+
+	"github.com/kamstrup/intmap"
 )
 
 var (
@@ -21,35 +23,50 @@ var (
 	ErrArity      = errors.New("arity mismatch")
 )
 
+const (
+	mainContextID       = 0
+	contextHashCapacity = 1024
+)
+
 type context struct {
-	ix     int          // context frame index
 	ip     int          // instruction pointer
 	m      *memory.Type // variables
 	parent *context     // parent context
 }
 
 type Type struct {
-	ctx *[][]*context   // memory contexts
-	CR  compresult.Type // cr is the compilation result
+	ctx *intmap.Map[int, *context] // memory contexts
+	CR  compresult.Type            // cr is the compilation result
 }
 
 // New creates a new virtual machine using memory from m and code and data from cr.
 func New(m *memory.Type, cr compresult.Type) *Type {
-	main := &context{ix: 1, m: m}
-	frm0 := []*context{main}
-	ctxs := [][]*context{frm0}
-	return &Type{ctx: &ctxs, CR: cr}
+	main := context{m: m}
+	ctxs := intmap.New[int, *context](contextHashCapacity)
+	ctxs.Put(0, &main)
+	return &Type{ctx: ctxs, CR: cr}
 }
 
 // Run executes the run loop.
 // nolint:maintidx // the only thing we care about here is making it faster
 func (vm *Type) Run(retResult bool) (value.Type, error) {
-	ctxp := (*vm.ctx)[0][0]
+	ctxp, ok := vm.ctx.Get(mainContextID)
+	if !ok {
+		panic("main context not found")
+	}
+
 	m := ctxp.m
 	ip := ctxp.ip
 	ds := vm.CR.DS
 	cs := vm.CR.CS
+
+	// temp/accumulator "register"
 	tmp := value.Nil
+
+	// depth of function calls global across memory contexts This isn't quite the
+	// right value, but it's only used to distinguish between context ids in case
+	// a for loop is in a recursion
+	recLvl := 0
 	var err error
 
 	for ip < len(*cs) {
@@ -57,8 +74,6 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 		// TODO allow tracing flag
 		fmt.Printf("%8d | %8p | %v\n", ip, ctxp, instr)
-
-    fmt.Printf("%v\n", *vm.ctx)
 
 		opCode := instr.OpCode()
 
@@ -376,6 +391,8 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			m.PushClosure(fVal.Frame.(memory.Frame))
 			m.Push(value.NewInt(ip))
 
+			recLvl++
+
 			ip = fVal.Node - 1
 
 		case bytecode.RET:
@@ -404,37 +421,52 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 			m.Push(val)
 
-			ip = lip
+			recLvl--
 
-		case bytecode.CONTFRM:
-			*vm.ctx = append(*vm.ctx, make([]*context, 0))
+			ip = lip
 
 		case bytecode.CCONT:
 			jmp := instr.Src0Addr()
+			ctxID := /*(recLvl << 16) |*/ instr.Src1Addr()
 			ctxp.ip = ip + jmp - 1
 
+			fmt.Println("creating context", ctxID)
+
 			m = m.Clone()
-			childCtx := context{ix: len(*vm.ctx), m: m, parent: ctxp}
-			(*vm.ctx)[len(*vm.ctx)-1] = append((*vm.ctx)[len(*vm.ctx)-1], &childCtx)
-			ctxp = &childCtx
+			childCtx := &context{m: m, parent: ctxp}
+			vm.ctx.Put(ctxID, childCtx)
+			ctxp = childCtx
 
 		case bytecode.RCONT:
-			*vm.ctx = (*vm.ctx)[:len(*vm.ctx)-1]
+			lo := /*(recLvl << 16) |*/ instr.Src0Addr()
+			hi := /* (recLvl << 16) | */ instr.Src1Addr()
+			for i := lo; i < hi; i++ {
+				vm.ctx.Del(i)
+			}
 
 		case bytecode.DCONT:
-			ctxp = ctxp.parent
-			if len(*vm.ctx) > 1 {
-				*vm.ctx = (*vm.ctx)[:len(*vm.ctx)-1]
+			if ctxp.parent != nil {
+				ctxp = ctxp.parent
+				m = ctxp.m
 			}
-			m = ctxp.m
+
+			lo := /* (recLvl << 16) | */ instr.Src0Addr()
+			hi := /* (recLvl << 16) | */ instr.Src1Addr()
+			for i := lo; i < hi; i++ {
+				vm.ctx.Del(i)
+			}
 
 		case bytecode.SCONT:
-			ctxID := instr.Src0Addr()
+			ctxID := /*  (recLvl << 16) | */ instr.Src0Addr()
 			ctxp.m = m
 			ctxp.ip = ip
 
-			frm := (*vm.ctx)[ctxp.ix]
-			ctxp = frm[ctxID]
+			fmt.Println("switching to context", ctxID)
+
+			ctxp, ok = vm.ctx.Get(ctxID)
+			if !ok {
+				panic("context not found")
+			}
 
 			m = ctxp.m
 			ip = ctxp.ip
@@ -569,8 +601,12 @@ func (vm *Type) dumpStack(ctx *context, ip int, err error, values ...value.Type)
 		m.DumpStack(vm.CR.Dbg)
 	}
 	// reset state for the next run
-	(*vm.ctx)[0][0].ip = len(*vm.CR.CS)
-	*vm.ctx = (*vm.ctx)[0:1]
+	main, ok := vm.ctx.Get(mainContextID)
+	if !ok {
+		panic("main context not found")
+	}
+	vm.ctx.Clear()
+	vm.ctx.Put(mainContextID, main)
 
 	return value.Nil, err
 }

@@ -13,9 +13,10 @@ const tempifyDepth = 0
 type compResult = compresult.Type
 
 type bcData struct {
-	forbidTemp bool
-	opDepth    int
-	inFor      bool
+	forbidTemp   bool
+	opDepth      int
+	inFor        bool
+	ctxLo, ctxHi int
 }
 
 type ByteCoder interface {
@@ -179,7 +180,9 @@ func (c Call) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 
 func (r Return) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 	if bcd.inFor {
-		instr := bytecode.New(bytecode.RCONT)
+		instr := bytecode.New(bytecode.RCONT) |
+			bytecode.EncodeSrc(0, bytecode.AddrImm, bcd.ctxLo) |
+			bytecode.EncodeSrc(1, bytecode.AddrImm, bcd.ctxHi)
 		*cr.CS = append(*cr.CS, instr)
 	}
 	instr := r.Target.byteCode(0, bcd, cr)
@@ -489,6 +492,10 @@ func (w While) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
 }
 
+// ctxID is used to uniquely identify contexts. this has to start after the
+// main context, id == 0.
+var ctxID = 1
+
 func (f For) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 	//
 	// PUSH nil
@@ -517,9 +524,6 @@ func (f For) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 	instr := bytecode.New(bytecode.PUSH) | bytecode.EncodeSrc(0, bytecode.AddrDS, ix)
 	*cr.CS = append(*cr.CS, instr)
 
-	instr = bytecode.New(bytecode.CONTFRM)
-	*cr.CS = append(*cr.CS, instr)
-
 	ccontAddr := len(*cr.CS)
 	jmpAddrs := []int{}
 	for i, iter := range f.Iterators.Elems {
@@ -528,7 +532,7 @@ func (f For) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 			(*cr.CS)[ccontAddr] |= bytecode.EncodeSrc(0, bytecode.AddrImm, len(*cr.CS)-ccontAddr)
 		}
 		ccontAddr = len(*cr.CS)
-		instr = bytecode.New(bytecode.CCONT)
+		instr = bytecode.New(bytecode.CCONT) | bytecode.EncodeSrc(1, bytecode.AddrImm, i+ctxID)
 		*cr.CS = append(*cr.CS, instr)
 
 		instr = iter.byteCode(0, bcd, cr)
@@ -537,7 +541,9 @@ func (f For) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 			*cr.CS = append(*cr.CS, instr)
 		}
 
-		instr = bytecode.New(bytecode.DCONT)
+		instr = bytecode.New(bytecode.DCONT) |
+			bytecode.EncodeSrc(0, bytecode.AddrImm, ctxID) |
+			bytecode.EncodeSrc(1, bytecode.AddrImm, ctxID+len(f.Iterators.Elems)-1)
 		*cr.CS = append(*cr.CS, instr)
 
 		jmpAddrs = append(jmpAddrs, len(*cr.CS))
@@ -547,7 +553,8 @@ func (f For) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 
 	switchAddr := len(*cr.CS)
 	for i := range f.Iterators.Elems {
-		instr = bytecode.New(bytecode.SCONT) | bytecode.EncodeSrc(0, bytecode.AddrImm, i)
+		instr = bytecode.New(bytecode.SCONT) |
+			bytecode.EncodeSrc(0, bytecode.AddrImm, ctxID+i)
 		*cr.CS = append(*cr.CS, instr)
 	}
 
@@ -562,6 +569,10 @@ func (f For) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 	*cr.CS = append(*cr.CS, instr)
 
 	bcd.inFor = true
+	bcd.ctxLo = ctxID
+	bcd.ctxHi = ctxID + len(f.Iterators.Elems) - 1
+  // it's important this happens here as the body might contain for loops
+	ctxID += len(f.Iterators.Elems)
 	instr = f.Body.byteCode(0, bcd, cr)
 
 	if instr.Src0() != bytecode.AddrStck {

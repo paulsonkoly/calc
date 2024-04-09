@@ -94,8 +94,6 @@ const (
 	CALL // CALL calls src0 with argument cnt src1
 	RET  // RET returns from a function call pushing src0 after rolling back the stack
 
-	// CONTFRM pushes a new frame of memory context on the context stack.
-	CONTFRM
 	// CCONT jumps relative to ip + src0 in current context, appends old context
 	// to the current context frame, and switches to a new context that continues
 	// from old ip.
