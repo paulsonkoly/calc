@@ -1,3 +1,5 @@
+; sudoku solver
+
 ; cell indices
 cells = () -> fromto(0, 81)
 

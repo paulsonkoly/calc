@@ -1,3 +1,5 @@
+; https://projecteuler.net/problem=31
+
 ways = (target, coins) -> {
   if target == 0  return 1 
   if (target < 0) | (#coins == 0) return 0 
