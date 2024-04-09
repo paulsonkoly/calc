@@ -1,14 +1,18 @@
-leap = (year) -> ((year % 4 == 0) & (year % 100 != 0)) | (year % 400 == 0)
+; https://projecteuler.net/problem=19
 
-mdayary = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+leap = (year) -> (year % 4 == 0 && year % 100 != 0) || year % 400 == 0
 
-days = (y, m) -> if m == 1 && leap(y) 29 else mdayary[m] 
+; iterates the number of days per month in a given year
+days = (y) -> {
+  if leap(y) feb = 29 else feb = 28
+  elems([31, feb, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31])
+}
 
 dcount = 0
 sundays = 0
 for y <- fromto(1900, 2001) {
-  for m <- fromto(0, 12) {
-    dcount = dcount + days(y, m) 
+  for ds <- days(y) {
+    dcount = dcount + ds 
     if y != 1900 && dcount % 7 == 6 sundays = sundays + 1
   }
 }
