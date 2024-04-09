@@ -56,7 +56,9 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 		instr := (*cs)[ip]
 
 		// TODO allow tracing flag
-		fmt.Printf("%8d | %8p | %v\n", ip, m, instr)
+		fmt.Printf("%8d | %8p | %v\n", ip, ctxp, instr)
+
+    fmt.Printf("%v\n", *vm.ctx)
 
 		opCode := instr.OpCode()
 
@@ -412,7 +414,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			ctxp.ip = ip + jmp - 1
 
 			m = m.Clone()
-			childCtx := context{ix: len(*vm.ctx) - 1, m: m, parent: ctxp}
+			childCtx := context{ix: len(*vm.ctx), m: m, parent: ctxp}
 			(*vm.ctx)[len(*vm.ctx)-1] = append((*vm.ctx)[len(*vm.ctx)-1], &childCtx)
 			ctxp = &childCtx
 
