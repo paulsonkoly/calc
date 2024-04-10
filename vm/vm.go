@@ -14,6 +14,8 @@ import (
 	"github.com/paulsonkoly/calc/types/bytecode"
 	"github.com/paulsonkoly/calc/types/compresult"
 	"github.com/paulsonkoly/calc/types/value"
+
+	"github.com/kamstrup/intmap"
 )
 
 var (
@@ -21,31 +23,37 @@ var (
 	ErrArity      = errors.New("arity mismatch")
 )
 
-const minCtxChildren = 128
+const (
+	minAllocContexts = 1024
+	mainContextID    = 0
+)
 
 type context struct {
-	ip       int          // instruction pointer
-	m        *memory.Type // variables
-	parent   *context     // parent context
-	children []*context   // children contexts
+	ip     int          // instruction pointer
+	m      *memory.Type // variables
+	parent *context     // parent context
 }
 
 type Type struct {
-	main *context        // memory contexts
-	CR   compresult.Type // cr is the compilation result
+	ctxs *intmap.Map[int, *context] // memory contexts
+	CR   compresult.Type            // cr is the compilation result
 }
 
 // New creates a new virtual machine using memory from m and code and data from cr.
 func New(m *memory.Type, cr compresult.Type) *Type {
-	children := make([]*context, 0, minCtxChildren)
-	main := context{m: m, children: children}
-	return &Type{main: &main, CR: cr}
+	contexts := intmap.New[int, *context](minAllocContexts)
+	main := context{m: m}
+	contexts.Put(mainContextID, &main)
+	return &Type{ctxs: contexts, CR: cr}
 }
 
 // Run executes the run loop.
 // nolint:maintidx // the only thing we care about here is making it faster
 func (vm *Type) Run(retResult bool) (value.Type, error) {
-	ctxp := vm.main
+	ctxp, ok := vm.ctxs.Get(mainContextID)
+	if !ok {
+		panic("no main context")
+	}
 
 	m := ctxp.m
 	ip := ctxp.ip
@@ -411,15 +419,24 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 		case bytecode.CCONT:
 			jmp := instr.Src0Addr()
+			ctxID := instr.Src1Addr()
+			ctxHash := hashContext(m, ctxID)
 			ctxp.ip = ip + jmp - 1
 
 			m = m.Clone()
 			childCtx := &context{m: m, parent: ctxp}
-			ctxp.children = append(ctxp.children, childCtx)
+
+			vm.ctxs.Put(ctxHash, childCtx)
+			// fmt.Printf("creating context %016x\n", ctxHash)
 			ctxp = childCtx
 
 		case bytecode.RCONT:
-			ctxp.children = make([]*context, 0, minCtxChildren)
+			lo := instr.Src0Addr()
+			hi := instr.Src1Addr()
+			for i := lo; i <= hi; i++ {
+				// fmt.Printf("deleting context %016x\n", hashContext(m, i))
+				vm.ctxs.Del(hashContext(m, i))
+			}
 
 		case bytecode.DCONT:
 			if ctxp.parent != nil {
@@ -429,8 +446,9 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 			lo := instr.Src0Addr()
 			hi := instr.Src1Addr()
-			for i := lo; i < hi; i++ {
-				ctxp.children[i] = nil
+			for i := lo; i <= hi; i++ {
+				// fmt.Printf("deleting context %016x\n", hashContext(m, i))
+				vm.ctxs.Del(hashContext(m, i))
 			}
 
 		case bytecode.SCONT:
@@ -438,7 +456,11 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			ctxp.m = m
 			ctxp.ip = ip
 
-			ctxp = ctxp.children[ctxID]
+			// fmt.Printf("switching to context %016x\n", hashContext(m, ctxID))
+			ctxp, ok = vm.ctxs.Get(hashContext(m, ctxID))
+			if !ok {
+				log.Panicf("context not found %016x\n", hashContext(m, ctxID))
+			}
 
 			m = ctxp.m
 			ip = ctxp.ip
@@ -573,8 +595,16 @@ func (vm *Type) dumpStack(ctx *context, ip int, err error, values ...value.Type)
 		m.DumpStack(vm.CR.Dbg)
 	}
 	// reset state for the next run
-	main := vm.main
-	main.children = make([]*context, 0, minCtxChildren)
+	main, ok := vm.ctxs.Get(mainContextID)
+	if !ok {
+		panic("main context not found")
+	}
+	vm.ctxs.Clear()
+	vm.ctxs.Put(mainContextID, main)
 
 	return value.Nil, err
+}
+
+func hashContext(m *memory.Type, id int) int {
+	return (m.ID() << 23) ^ (m.CallDepth() << 15) ^ id
 }

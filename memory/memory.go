@@ -41,8 +41,11 @@ const (
 type Frame []value.Type
 type gframe map[string]value.Type
 
+var id int
+
 // Memory holds all variables.
 type Type struct {
+	id      int
 	sp      int
 	fp      []int
 	global  gframe
@@ -52,7 +55,13 @@ type Type struct {
 
 // New creates a new memory, with an empty global frame and an empty stack.
 func New() *Type {
-	return &Type{fp: []int{}, global: gframe{}, closure: []Frame{}, stack: []value.Type{}}
+	id = -1
+	return &Type{id: id, fp: []int{}, global: gframe{}, closure: []Frame{}, stack: []value.Type{}}
+}
+
+// ID returns a unique ID for this memory.
+func (m *Type) ID() int {
+	return m.id
 }
 
 // Clone does a memory copy for context switching.
@@ -60,14 +69,20 @@ func New() *Type {
 // The clone would point to the same global, same closure, and the last frame
 // of the stack will be deep copied.
 func (m *Type) Clone() *Type {
+	id++
 	if len(m.fp) < 2 {
 		frm := slices.Clone(m.stack)
-		return &Type{sp: m.sp, fp: []int{}, global: m.global, closure: m.closure, stack: frm}
+		return &Type{id: id, sp: m.sp, fp: []int{}, global: m.global, closure: m.closure, stack: frm}
 	}
 	fp := m.fp[len(m.fp)+localFP]
 	le := m.fp[len(m.fp)+localFE]
 	frm := slices.Clone(m.stack[fp:m.sp])
-	return &Type{sp: len(frm), fp: []int{0, le - fp}, global: m.global, closure: m.closure, stack: frm}
+	return &Type{id: id, sp: len(frm), fp: []int{0, le - fp}, global: m.global, closure: m.closure, stack: frm}
+}
+
+// CallDepth is the number of call frames.
+func (m *Type) CallDepth() int {
+	return len(m.fp) / 2
 }
 
 // SetGlobal sets a global variable.

@@ -13,10 +13,10 @@ const tempifyDepth = 0
 type compResult = compresult.Type
 
 type bcData struct {
-	forbidTemp bool
-	opDepth    int
-	inFor      bool
-	ctxID      int
+	forbidTemp          bool
+	opDepth             int
+	inFor               bool
+	ctxID, ctxLo, ctxHi int
 }
 
 type ByteCoder interface {
@@ -180,7 +180,9 @@ func (c Call) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 
 func (r Return) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 	if bcd.inFor {
-		instr := bytecode.New(bytecode.RCONT)
+		instr := bytecode.New(bytecode.RCONT) |
+			bytecode.EncodeSrc(0, bytecode.AddrImm, bcd.ctxLo) |
+			bytecode.EncodeSrc(1, bytecode.AddrImm, bcd.ctxHi)
 		*cr.CS = append(*cr.CS, instr)
 	}
 	instr := r.Target.byteCode(0, bcd, cr)
@@ -567,9 +569,8 @@ func (f For) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 	instr = bytecode.New(bytecode.POP)
 	*cr.CS = append(*cr.CS, instr)
 
-	bcd.inFor = true
-	bcd.ctxID += len(f.VarRefs.Elems)
-	instr = f.Body.byteCode(0, bcd, cr)
+	nbcd := bcData{inFor: true, ctxID: ctxID + len(f.VarRefs.Elems), ctxLo: ctxID, ctxHi: ctxID + len(f.VarRefs.Elems) - 1}
+	instr = f.Body.byteCode(0, nbcd, cr)
 
 	if instr.Src0() != bytecode.AddrStck {
 		instr = bytecode.New(bytecode.PUSH) | instr
