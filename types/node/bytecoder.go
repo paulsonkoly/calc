@@ -13,10 +13,10 @@ const tempifyDepth = 0
 type compResult = compresult.Type
 
 type bcData struct {
-	forbidTemp   bool
-	opDepth      int
-	inFor        bool
-	ctxLo, ctxHi int
+	forbidTemp bool
+	opDepth    int
+	inFor      bool
+	ctxID      int
 }
 
 type ByteCoder interface {
@@ -180,9 +180,7 @@ func (c Call) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 
 func (r Return) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 	if bcd.inFor {
-		instr := bytecode.New(bytecode.RCONT) |
-			bytecode.EncodeSrc(0, bytecode.AddrImm, bcd.ctxLo) |
-			bytecode.EncodeSrc(1, bytecode.AddrImm, bcd.ctxHi)
+		instr := bytecode.New(bytecode.RCONT)
 		*cr.CS = append(*cr.CS, instr)
 	}
 	instr := r.Target.byteCode(0, bcd, cr)
@@ -492,10 +490,6 @@ func (w While) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
 }
 
-// ctxID is used to uniquely identify contexts. this has to start after the
-// main context, id == 0.
-var ctxID = 1
-
 func (f For) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 	//
 	// PUSH nil
@@ -519,6 +513,8 @@ func (f For) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 		panic("for loop number of variables does not match number of iterators")
 	}
 
+	ctxID := bcd.ctxID
+
 	ix := len(*cr.DS)
 	*cr.DS = append(*cr.DS, value.Nil)
 	instr := bytecode.New(bytecode.PUSH) | bytecode.EncodeSrc(0, bytecode.AddrDS, ix)
@@ -535,7 +531,10 @@ func (f For) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 		instr = bytecode.New(bytecode.CCONT) | bytecode.EncodeSrc(1, bytecode.AddrImm, i+ctxID)
 		*cr.CS = append(*cr.CS, instr)
 
-		instr = iter.byteCode(0, bcd, cr)
+		// reset context
+		nbcd := bcData{forbidTemp: bcd.forbidTemp, opDepth: bcd.opDepth, inFor: bcd.inFor, ctxID: 0}
+
+		instr = iter.byteCode(0, nbcd, cr)
 		if instr.Src0() == bytecode.AddrStck {
 			instr = bytecode.New(bytecode.POP)
 			*cr.CS = append(*cr.CS, instr)
@@ -569,10 +568,7 @@ func (f For) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 	*cr.CS = append(*cr.CS, instr)
 
 	bcd.inFor = true
-	bcd.ctxLo = ctxID
-	bcd.ctxHi = ctxID + len(f.Iterators.Elems) - 1
-	// it's important this happens here as the body might contain for loops
-	ctxID += len(f.Iterators.Elems)
+	bcd.ctxID += len(f.VarRefs.Elems)
 	instr = f.Body.byteCode(0, bcd, cr)
 
 	if instr.Src0() != bytecode.AddrStck {

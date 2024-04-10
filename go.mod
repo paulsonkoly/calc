@@ -4,7 +4,6 @@ go 1.22.0
 
 require (
 	github.com/chzyer/readline v1.5.1
-	github.com/kamstrup/intmap v0.4.0
 	github.com/stretchr/testify v1.8.4
 )
 
