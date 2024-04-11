@@ -3,6 +3,7 @@ package vm
 
 import (
 	"bufio"
+	"container/list"
 	"errors"
 	"fmt"
 	"log"
@@ -29,13 +30,14 @@ type context struct {
 }
 
 type Type struct {
-	ctx *context        // ctx is the context tree
-	CR  compresult.Type // cr is the compilation result
+	freeList *list.List      // freed memory objects
+	ctx      *context        // ctx is the context tree
+	CR       compresult.Type // cr is the compilation result
 }
 
 // New creates a new virtual machine using memory from m and code and data from cr.
 func New(m *memory.Type, cr compresult.Type) *Type {
-	return &Type{ctx: &context{m: m, children: []*context{}}, CR: cr}
+	return &Type{freeList: list.New(), ctx: &context{m: m, children: []*context{}}, CR: cr}
 }
 
 // Run executes the run loop.
@@ -405,17 +407,27 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			jmp := instr.Src0Addr()
 			ctxp.ip = ip + jmp - 1
 
-			m = m.Clone()
+			var free *memory.Type
+			front := vm.freeList.Front()
+			if front != nil {
+				vm.freeList.Remove(front)
+				free = front.Value.(*context).m
+			}
+			m = m.Clone(free)
 			childCtx := context{m: m, parent: ctxp, children: make([]*context, 0)}
 			ctxp.children = append(ctxp.children, &childCtx)
 			ctxp = &childCtx
 
 		case bytecode.RCONT:
+			last := ctxp.children[len(ctxp.children)-1]
+			vm.freeList.PushFront(last)
 			ctxp.children = ctxp.children[:len(ctxp.children)-1]
 
 		case bytecode.DCONT:
 			ctxp = ctxp.parent
 			if len(ctxp.children) > 0 {
+				last := ctxp.children[len(ctxp.children)-1]
+				vm.freeList.PushFront(last)
 				ctxp.children = ctxp.children[:len(ctxp.children)-1]
 			}
 			m = ctxp.m

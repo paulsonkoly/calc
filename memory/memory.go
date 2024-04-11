@@ -57,16 +57,35 @@ func New() *Type {
 // Clone does a memory copy for context switching.
 //
 // The clone would point to the same global, same closure, and the last frame
-// of the stack will be deep copied.
-func (m *Type) Clone() *Type {
+// of the stack will be deep copied. reuse can be nil, when it's not it's
+// resources are re-used to create a new memory.
+func (m *Type) Clone(reuse *Type) *Type {
+	var newStackSize int
+	var newStack []value.Type
+
 	if len(m.fp) < 2 {
-		return &Type{sp: m.sp, fp: []int{}, global: m.global, closure: m.closure, stack: []value.Type{}}
+		newStackSize = minStackSize
+	} else {
+		newStackSize = max(m.sp-m.fp[len(m.fp)+localFP], minStackSize)
 	}
+
+	if reuse != nil {
+		if len(reuse.stack) < newStackSize {
+			reuse.growStack(newStackSize - len(reuse.stack))
+		}
+		newStack = reuse.stack
+	} else {
+		newStack = make([]value.Type, newStackSize)
+	}
+
+	if len(m.fp) < 2 {
+		return &Type{sp: 0, fp: []int{}, global: m.global, closure: m.closure, stack: newStack}
+	}
+
 	fp := m.fp[len(m.fp)+localFP]
 	le := m.fp[len(m.fp)+localFE]
-	newStackSize := max(m.sp-fp, minStackSize)
-	newStack := make([]value.Type, newStackSize)
 	copy(newStack, m.stack[fp:m.sp])
+
 	return &Type{sp: m.sp - fp, fp: []int{0, le - fp}, global: m.global, closure: m.closure, stack: newStack}
 }
 
