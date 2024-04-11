@@ -3,6 +3,7 @@ package vm
 
 import (
 	"bufio"
+	"container/list"
 	"errors"
 	"fmt"
 	"log"
@@ -64,6 +65,8 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 	tmp := value.Nil
 
 	var err error
+
+	freeList := list.New()
 
 	for ip < len(*cs) {
 		instr := (*cs)[ip]
@@ -423,7 +426,17 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			ctxHash := hashContext(m, ctxID)
 			ctxp.ip = ip + jmp - 1
 
-			m = m.Clone()
+			var free *memory.Type
+			front := freeList.Front()
+			if front != nil {
+        fmt.Println("reuse memory")
+				freeList.Remove(front)
+				free = front.Value.(*memory.Type)
+			} else {
+        fmt.Println("no freed memory")
+      }
+			m = m.Clone(free)
+
 			childCtx := &context{m: m, parent: ctxp}
 
 			vm.ctxs.Put(ctxHash, childCtx)
@@ -435,7 +448,13 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			hi := instr.Src1Addr()
 			for i := lo; i <= hi; i++ {
 				// fmt.Printf("deleting context %016x\n", hashContext(m, i))
-				vm.ctxs.Del(hashContext(m, i))
+				hsh := hashContext(m, i)
+				if child, ok := vm.ctxs.Get(hsh); ok {
+					freeList.PushFront(child.m)
+				} else {
+          fmt.Println("memory leaked")
+        }
+				vm.ctxs.Del(hsh)
 			}
 
 		case bytecode.DCONT:
@@ -447,8 +466,13 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			lo := instr.Src0Addr()
 			hi := instr.Src1Addr()
 			for i := lo; i <= hi; i++ {
-				// fmt.Printf("deleting context %016x\n", hashContext(m, i))
-				vm.ctxs.Del(hashContext(m, i))
+				hsh := hashContext(m, i)
+				if child, ok := vm.ctxs.Get(hsh); ok {
+					freeList.PushFront(child.m)
+				} else {
+          fmt.Println("memory leaked")
+        }
+				vm.ctxs.Del(hsh)
 			}
 
 		case bytecode.SCONT:
