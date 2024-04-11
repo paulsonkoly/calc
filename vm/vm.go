@@ -3,6 +3,7 @@ package vm
 
 import (
 	"bufio"
+	"container/list"
 	"errors"
 	"fmt"
 	"log"
@@ -48,6 +49,8 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 	cs := vm.CR.CS
 	tmp := value.Nil
 	var err error
+
+	freeList := list.New()
 
 	for ip < len(*cs) {
 		instr := (*cs)[ip]
@@ -405,17 +408,27 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			jmp := instr.Src0Addr()
 			ctxp.ip = ip + jmp - 1
 
-			m = m.Clone()
+			var free *memory.Type
+			front := freeList.Front()
+			if front != nil {
+				freeList.Remove(front)
+				free = front.Value.(*context).m
+			}
+			m = m.Clone(free)
 			childCtx := context{m: m, parent: ctxp, children: make([]*context, 0)}
 			ctxp.children = append(ctxp.children, &childCtx)
 			ctxp = &childCtx
 
 		case bytecode.RCONT:
+			last := ctxp.children[len(ctxp.children)-1]
+			freeList.PushFront(last)
 			ctxp.children = ctxp.children[:len(ctxp.children)-1]
 
 		case bytecode.DCONT:
 			ctxp = ctxp.parent
 			if len(ctxp.children) > 0 {
+				last := ctxp.children[len(ctxp.children)-1]
+				freeList.PushFront(last)
 				ctxp.children = ctxp.children[:len(ctxp.children)-1]
 			}
 			m = ctxp.m
