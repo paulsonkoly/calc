@@ -517,6 +517,8 @@ func (f For) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 
 	ctxID := bcd.ctxID
 
+	var assignAddr int
+
 	ix := len(*cr.DS)
 	*cr.DS = append(*cr.DS, value.Nil)
 	instr := bytecode.New(bytecode.PUSH) | bytecode.EncodeSrc(0, bytecode.AddrDS, ix)
@@ -552,18 +554,41 @@ func (f For) byteCode(srcsel int, bcd bcData, cr compResult) bytecode.Type {
 		*cr.CS = append(*cr.CS, instr)
 	}
 
-	switchAddr := len(*cr.CS)
-	for i := range f.Iterators.Elems {
-		instr = bytecode.New(bytecode.SCONT) |
-			bytecode.EncodeSrc(0, bytecode.AddrImm, ctxID+i)
+	var assignBlobJmp int
+	if len(f.VarRefs.Elems) > 1 {
+		// assign all iterated values after the CCONTs in one blob
+		assignAddr = len(*cr.CS)
+		for i := len(f.VarRefs.Elems) - 1; i >= 0; i-- {
+			vref := f.VarRefs.Elems[i].byteCode(1, bcd, cr)
+			instr = bytecode.New(bytecode.MOV) | vref | bytecode.EncodeSrc(0, bytecode.AddrStck, 0)
+			*cr.CS = append(*cr.CS, instr)
+		}
+
+		assignBlobJmp = len(*cr.CS)
+		instr = bytecode.New(bytecode.JMP)
 		*cr.CS = append(*cr.CS, instr)
 	}
 
-	assignAddr := len(*cr.CS)
-	for i := len(f.VarRefs.Elems) - 1; i >= 0; i-- {
-		vref := f.VarRefs.Elems[i].byteCode(1, bcd, cr)
-		instr = bytecode.New(bytecode.MOV) | vref | bytecode.EncodeSrc(0, bytecode.AddrStck, 0)
+	// interleave SCONTs with assigns because otherwise if one iterator finishes
+	// early we would have the wrong thing on the stack for the loop result
+	switchAddr := len(*cr.CS)
+	for i, vRef := range f.VarRefs.Elems {
+		instr = bytecode.New(bytecode.SCONT) |
+			bytecode.EncodeSrc(0, bytecode.AddrImm, ctxID+i)
 		*cr.CS = append(*cr.CS, instr)
+
+		if len(f.VarRefs.Elems) <= 1 {
+			assignAddr = len(*cr.CS)
+		}
+
+		assignee := vRef.byteCode(1, bcd, cr)
+		instr = bytecode.New(bytecode.MOV) | assignee | bytecode.EncodeSrc(0, bytecode.AddrStck, 0)
+		*cr.CS = append(*cr.CS, instr)
+	}
+
+	if len(f.VarRefs.Elems) > 1 {
+		// patch the assign blob jump to jump here
+		(*cr.CS)[assignBlobJmp] |= bytecode.EncodeSrc(0, bytecode.AddrImm, len(*cr.CS)-assignBlobJmp)
 	}
 
 	instr = bytecode.New(bytecode.POP)
