@@ -2,8 +2,8 @@
 
 Calc is an interpreted language / REPL. It has dynamic typing, generally strict evaluation semantics with pass by value calls, and lazy iterator semantics. It supports closures, first class functions, composable iterators as functions. It only violates referential transparency due to IO. A function always returns the same value for the same input, and always behaves the same way, except if it does input/output. The syntax allows mixing procedural and functional programming.
 
-```red
-; all asserts that a predicate f is true for all iterated values
+```scheme
+; all asserts that a pschemeicate f is true for all iterated values
 all = (iter, f) -> {
   for e <- iter() if !f(e) return false
   true
@@ -12,7 +12,7 @@ all = (iter, f) -> {
 
 _> function_
 
-```red
+```scheme
 isprime = (n) -> {
   if n < 2 return false
   all(() -> fromto(2, n/2+1), (i) -> n % i != 0)
@@ -21,7 +21,7 @@ isprime = (n) -> {
 
 _> function_
 
-```red
+```scheme
 isprime(13)
 ```
 
@@ -39,7 +39,7 @@ If an expression doesn't hold a value, it evaluates to nil. Calculation with nil
 
 Arrays are dynamic containers of any type.
 
-```red
+```scheme
 funs = [ ["+", (a, b) -> a+b ], ["-", (a, b) -> a - b ] ]
 ```
 
@@ -51,7 +51,7 @@ String literals can be written using double quotes ("). Within a string a double
 
 In an expression array indexing binds stronger than any operator, thus
 
-```red
+```scheme
 #[[1,1,1]][0]
 ```
 
@@ -59,7 +59,7 @@ _>  3_
 
 \# is the length operator
 
-```red
+```scheme
 #[1,2,3]
 ```
 
@@ -69,7 +69,7 @@ _> 3_
 
 Assuming we have the following definition of `fromto` (available as a builtin function):
 
-```red
+```scheme
 fromto = (n, m) -> {
     while n < m {
         yield n
@@ -80,7 +80,7 @@ fromto = (n, m) -> {
 
 One can replace the following while loop
 
-```red
+```scheme
 i = 0
 while i < 10 {
    write(i)
@@ -90,7 +90,7 @@ while i < 10 {
 
 with the more concise
 
-```red
+```scheme
 for i <- fromto(0, 10) write(i)
 ```
 
@@ -106,13 +106,13 @@ yield is a keyword that is used to give flow control back to the for loop across
 
 Iterators can be used in the definition of a new iterator:
 
-```red
+```scheme
 map (f, iter) = for e <- iter() yield f(e)
 ```
 
 Embedding for loops iterate the cross product of the iterators:
 
-```red
+```scheme
 for i <- fromto(1,3) {
   for j <- elems("ab") {
     write(toa(i) + " " + j + "\n")
@@ -130,7 +130,7 @@ for i <- fromto(1,3) {
 
 Listing multiple iterators in a for loop zips iterations. The iteration stops when any of the iterators terminate.
 
-```red
+```scheme
 for i, j <- fromto(1, 3), elems("ab") write(toa(i) + " " + j + "\n")
 ```
 
@@ -184,7 +184,7 @@ When a function is not a top level function but defined within a function, it be
 
 In this example, the function returned from f holds reference to the frame that was pushed on the call of f. This frame contains both a=1 and n=2. The anonymous function is assigned to foo later, and at the call of foo, we push this frame, and a second frame containing b=3.
 
-Closure variables are shared with the defining function until the defining function returns. Updates to these variables are visible in the closure, but the closure cannot write these variables, as they are not local.
+Closure variables are shascheme with the defining function until the defining function returns. Updates to these variables are visible in the closure, but the closure cannot write these variables, as they are not local.
 
     f = () -> {
       x = 1
@@ -251,7 +251,7 @@ Calc doesn't prefix the answer with '> ' in this case.
 
 ### File evaluation
 
-If a single file name is provided on the command line the input is redirected from this file, in this case calc doesn't output evaluation results at all, for any output the program has to use the write function.
+If a single file name is provided on the command line the input is schemeirected from this file, in this case calc doesn't output evaluation results at all, for any output the program has to use the write function.
 
     % cat x.calc
     write(3)
