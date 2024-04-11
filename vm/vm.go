@@ -68,7 +68,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 		instr := (*cs)[ip]
 
 		// TODO allow tracing flag
-		fmt.Printf("%8d | %8p | %v\n", ip, ctxp, instr)
+		// fmt.Printf("%8d | %8p | %v\n", ip, ctxp, instr)
 
 		opCode := instr.OpCode()
 
@@ -425,18 +425,14 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			var free *memory.Type
 			front := freeList.Front()
 			if front != nil {
-				fmt.Println("reuse memory")
 				freeList.Remove(front)
 				free = front.Value.(*memory.Type)
-			} else {
-				fmt.Println("no freed memory")
 			}
 			m = m.Clone(free)
 
 			childCtx := &context{m: m, parent: ctxp, children: intmap.New[uint64, *context](minAllocContexts)}
 
 			ctxp.children.Put(ctxHash, childCtx)
-			fmt.Printf("creating context %016x\n", ctxHash)
 			ctxp = childCtx
 
 		case bytecode.RCONT:
@@ -444,11 +440,9 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			hi := instr.Src1Addr()
 			for i := lo; i <= hi; i++ {
 				hsh := hashContext(m, i)
-				fmt.Printf("deleting context %016x\n", hsh)
 				if child, ok := ctxp.children.Get(hsh); ok {
 					deleteContext(child, freeList)
-				} else {
-					fmt.Println("memory leaked")
+					ctxp.children.Del(hsh)
 				}
 			}
 
@@ -462,12 +456,9 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			hi := instr.Src1Addr()
 			for i := lo; i <= hi; i++ {
 				hsh := hashContext(m, i)
-				fmt.Printf("deleting context %016x\n", hsh)
 				if child, ok := ctxp.children.Get(hsh); ok {
 					deleteContext(child, freeList)
-					freeList.PushFront(child.m)
-				} else {
-					fmt.Println("memory leaked")
+					ctxp.children.Del(hsh)
 				}
 			}
 
@@ -477,7 +468,6 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			ctxp.ip = ip
 			var ok bool
 
-			// fmt.Printf("switching to context %016x\n", hashContext(m, ctxID))
 			ctxp, ok = ctxp.children.Get(hashContext(m, ctxID))
 			if !ok {
 				log.Panicf("context not found %016x\n", hashContext(m, ctxID))
@@ -561,8 +551,6 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 	ctxp.ip = ip
 
-	fmt.Printf("total: %d alloc: %d\n", memory.TotalCnt, memory.AllocCnt)
-
 	if retResult {
 		return m.Pop(), nil
 	}
@@ -624,12 +612,11 @@ func (vm *Type) dumpStack(ctx *context, ip int, err error, values ...value.Type)
 }
 
 func hashContext(m *memory.Type, id int) uint64 {
-	return (uint64(m.ID()) << 23) ^ (uint64(m.CallDepth()) << 15) ^ uint64(id)
+	return (uint64(m.CallDepth()) << 15) ^ uint64(id)
 }
 
 func deleteContext(ctxp *context, freeList *list.List) {
-	ctxp.children.ForEach(func(k uint64, child *context) bool {
-		fmt.Printf("deleting context %016x\n", k)
+	ctxp.children.ForEach(func(_ uint64, child *context) bool {
 		deleteContext(child, freeList)
 		return true
 	})

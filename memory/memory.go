@@ -40,11 +40,8 @@ const (
 type Frame []value.Type
 type gframe map[string]value.Type
 
-var id int
-
 // Memory holds all variables.
 type Type struct {
-	id      int
 	sp      int
 	fp      []int
 	global  gframe
@@ -54,13 +51,7 @@ type Type struct {
 
 // New creates a new memory, with an empty global frame and an empty stack.
 func New() *Type {
-	id = -1
-	return &Type{id: id, fp: []int{}, global: gframe{}, closure: []Frame{}, stack: []value.Type{}}
-}
-
-// ID returns a unique ID for this memory.
-func (m *Type) ID() int {
-	return m.id
+	return &Type{fp: []int{}, global: gframe{}, closure: []Frame{}, stack: []value.Type{}}
 }
 
 // Clone does a memory copy for context switching.
@@ -68,15 +59,9 @@ func (m *Type) ID() int {
 // The clone would point to the same global, same closure, and the last frame
 // of the stack will be deep copied. reuse can be nil, when it's not it's
 // resources are re-used to create a new memory.
-var TotalCnt = 0
-var AllocCnt = 0
-
 func (m *Type) Clone(reuse *Type) *Type {
 	var newStackSize int
 	var newStack []value.Type
-
-	id++
-	TotalCnt++
 
 	if len(m.fp) < 2 {
 		newStackSize = minStackSize
@@ -91,11 +76,10 @@ func (m *Type) Clone(reuse *Type) *Type {
 		newStack = reuse.stack
 	} else {
 		newStack = make([]value.Type, newStackSize)
-		AllocCnt++
 	}
 
 	if len(m.fp) < 2 {
-		return &Type{id: id, sp: 0, fp: []int{}, global: m.global, closure: m.closure, stack: newStack}
+		return &Type{sp: 0, fp: []int{}, global: m.global, closure: m.closure, stack: newStack}
 	}
 
 	fp := m.fp[len(m.fp)+localFP]
@@ -103,7 +87,7 @@ func (m *Type) Clone(reuse *Type) *Type {
 
 	copy(newStack, m.stack[fp:m.sp])
 
-	return &Type{id: id, sp: m.sp - fp, fp: []int{0, le - fp}, global: m.global, closure: m.closure, stack: newStack}
+	return &Type{sp: m.sp - fp, fp: []int{0, le - fp}, global: m.global, closure: m.closure, stack: newStack}
 }
 
 // CallDepth is the number of call frames.
