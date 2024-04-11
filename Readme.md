@@ -10,7 +10,7 @@ all = (iter, f) -> {
 }
 ```
 
-_> function_
+> function
 
 ```scheme
 isprime = (n) -> {
@@ -19,13 +19,13 @@ isprime = (n) -> {
 }
 ```
 
-_> function_
+> function
 
 ```scheme
 isprime(13)
 ```
 
-_> true_
+> true
 
 ## Types
 
