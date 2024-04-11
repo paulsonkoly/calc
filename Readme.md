@@ -9,7 +9,6 @@ all = (iter, f) -> {
   true
 }
 ```
-
 > function
 
 ```scheme
@@ -18,14 +17,15 @@ isprime = (n) -> {
   all(() -> fromto(2, n/2+1), (i) -> n % i != 0)
 }
 ```
-
 > function
 
 ```scheme
 isprime(13)
 ```
-
 > true
+
+Further code examples can be found in the [examples directory](https://github.com/paulsonkoly/calc/tree/main/examples).
+
 
 ## Types
 
