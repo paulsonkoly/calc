@@ -405,11 +405,15 @@ Any value type can be assigned to a variable. The variable name is not defined i
 
 Recursive call to a function using the variable name the function is assigned to works, however; because the function body is only evaluated when the function is called.
 
-    f = (n) -> if n <= 0 0 else n + f(n-1)
-    > function
+```scheme
+f = (n) -> if n <= 0 0 else n + f(n-1)
+```
+> function
 
-    f(5)
-    > 15
+```scheme
+f(5)
+```
+> 15
 
 ### Loop and Conditionals
 
