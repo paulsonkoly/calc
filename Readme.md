@@ -1,99 +1,37 @@
 # Calc
 
-A simple calculator language / REPL.
+Calc is an interpreted language / REPL. It has dynamic typing, generally strict evaluation semantics with pass by value calls, and lazy iterator semantics. It supports closures, first class functions, composable iterators as functions. It only violates referential transparency due to IO. A function always returns the same value for the same input, and always behaves the same way, except if it does input/output. The syntax allows mixing procedural and functional programming.
 
-The language can be used in a REPL or instructions can be read from a file. The REPL outputs its answer after the '>' character.
+```lisp
+; all asserts that a predicate f is true for all iterated values
+all = (iter, f) -> {
+  for e <- iter() if !f(e) return false
+  true
+}
+```
 
-    isprime = (n) -> {
-      if n < 2 return false
-      for i <- fromto(2, n/2+1) {
-        if n % i == 0 return false
-      }
-      true
-    }
-    > function
-  
-    isprime(13)
-    > true
+```
+> function
+```
 
-Functional programming / Currying
+```lisp
+isprime = (n) -> {
+  if n < 2 return false
+  all(() -> fromto(2, n/2+1), (i) -> n % i != 0)
+}
+```
 
-    curry = (f, a) -> (b) -> f(a, b)
-    >  function
+```
+> function
+```
 
-    sum = (a, b) -> a + b
-    >  function
+```lisp
+isprime(13)
+```
 
-    plusthree = curry(sum, 3)
-    >  function
-
-    plusthree(5)
-    >  8
-
-Iterators / generators
-
-    evens = () -> {
-      yield 0
-      yield 2
-      yield 4
-    }
-    > function
-
-    for i <- evens() {
-      write(i)
-      i+3
-    }
-    0
-    2
-    4
-    > 7 
-
-Further code examples: [here](https://github.com/paulsonkoly/calc/tree/main/examples)
-
-## Editor support
-
-There is syntax highlighting based on tree-sitter, and a small nvim plugin that enables neovim to download the treesitter parser and adds file type detection (assuming .calc extension). Add [paulsonkoly/calc.nvim](https://github.com/paulsonkoly/calc.nvim) to your neovim package manager and require("calc") to add language support.
-
-## Running calc
-
-The language is meant to be a calculator REPL, and as such takes care of input/output automatically, but given it can also read source from a file it also supports some basic input output primitives. The calc program can run in 3 modes: reading a single line expression from its command line argument, running code from a REPL or reading code from a file.
-
-### REPL
-
-If there is no input file given and no command line argument to evaluate then the input is assumed to come from a terminal and we assume REPL mode. In this mode, readline library is used to ease line editing. The token { defines a multi-line block, until the corresponding } is found. The REPL doesn't evaluate until multi line blocks are closed, and it automatically outputs the result after each evaluation.
-
-### Command line argument
-
-A single line statement can be passed as a command line argument:
-
-    % ./calc -eval "1+2"
-    3
-
-Calc doesn't prefix the answer with '> ' in this case.
-
-### File evaluation
-
-If a single file name is provided on the command line the input is redirected from this file, in this case calc doesn't output evaluation results at all, for any output the program has to use the write function.
-
-    % cat x.calc
-    write(3)
-    % ./calc x.calc
-    3
-
-## Builtin functions
-
-Built in functions are loaded in the top level frame on the interpreter start up. They provide functionality that cannot be implemented in calc itself, or convenience functions. These are just regular function values defined in the global lexical scope.
-
-| function | arity | returns                    | description                             |
-|----------|-------|----------------------------|-----------------------------------------|
-| read     | 0     | string                     | Reads a string from the stdin           |
-| write    | 1     | nil                        | Writes the given value to the output    |
-| aton     | 1     | int/float/conversion error | Converts a string to an int or a float  |
-| toa      | 1     | string                     | Converts a value to a string            |
-| exit     | 1     | doesn't return/type error  | Exits the interpreter with exit code    |
-| fromto   | 2     | iterator                   | fromto(a, b) iterates from a to b-1     |
-| elems    | 1     | iterator                   | elems(ary) iterates the array elements  |
-| indices  | 1     | iterator                   | indices(ary) iterates the array indices |
+```
+> true  
+```
 
 ## Types
 
@@ -103,50 +41,17 @@ There is no automatic type conversion between types, except in an arithmetic exp
 
 If an expression doesn't hold a value, it evaluates to nil. Calculation with nil or assigning nil results in runtime error.
 
-```
-if false 1
-> nil
-
-a
-> nil
-b = a
-nil error
-...
-```
-
-### Binary operators
-
-There are 5 precedence groups (from lowest to highest): 
-
-| Operator     | Precedence | Types                                                 | Description                                  |
-|--------------|------------|-------------------------------------------------------|----------------------------------------------|
-| &&, \|\|     | 0          | int/int, bool/bool                                    | bitwise, or boolean and, or - low precedence |
-| <, >, <=, >= | 1          | int or float/int or float                             | relational                                   |
-| ==, !=       | 1          | any/any                                               | equality check                               |
-| &, \|        | 2          | int/int, bool/bool                                    | bitwise, or boolean and or - high precedence |
-| +            | 3          | int or float/int or float, array/array, string/string | addition                                     |
-| -            | 3          | int or float/int or float                             | substraction                                 |
-| *, /         | 4          | int or float/int or float                             | division/mulitplication                      |
-| <<, >>       | 4          | int/int                                               | bitshift                                     |
-| %            | 4          | int/int                                               | modulo                                       |
-
-### Unary operators
-
-Unary operators bind stronger than binary operators. All unary operators are prefix.
-
-| Operator | Types         | Description |
-|----------|---------------|-------------|
-| -        | int, float    | negation    |
-| #        | array, string | length      |
-| !        | bool          | not         |
-| ~        | int           | binary flip |
-
 ### Arrays and strings
 
 Arrays are dynamic containers of any type.
 
-    funs = [ ["+", (a, b) -> a+b ], ["-", (a, b) -> a - b ] ]
-    >  [["+", function], ["-", function]]
+```lisp
+funs = [ ["+", (a, b) -> a+b ], ["-", (a, b) -> a - b ] ]
+```
+
+```
+>  [["+", function], ["-", function]]
+```
 
 Array and string indexing has 2 forms: "apple"[1] results in "p"; "apple"[1:3] results in "pp". Indexing outside, or using a lower value for the upper index than the lower index results in index error.
 
@@ -154,36 +59,52 @@ String literals can be written using double quotes ("). Within a string a double
 
 In an expression array indexing binds stronger than any operator, thus
 
-    #[[1,1,1]][0]
-    >  3
+```lisp
+#[[1,1,1]][0]
+```
+
+```
+>  3
+```
 
 \# is the length operator
 
-    #[1,2,3]
-    > 3
+```lisp
+#[1,2,3]
+```
+
+```
+> 3
+```
 
 ## Iterators and generators, yield and for
 
 Assuming we have the following definition of `fromto` (available as a builtin function):
 
-    fromto = (n, m) -> {
-        while n < m {
-            yield n
-            n = n + 1
-        }
+```lisp
+fromto = (n, m) -> {
+    while n < m {
+        yield n
+        n = n + 1
     }
+}
+```
 
 One can replace the following while loop
 
-    i = 0
-    while i < 10 {
-       write(i)
-       i = i + 1
-    }
+```lisp
+i = 0
+while i < 10 {
+   write(i)
+   i = i + 1
+}
+```
 
 with the more concise
 
-    for i <- fromto(0, 10) write(i)
+```lisp
+for i <- fromto(0, 10) write(i)
+```
 
 `elems` and `indices` can also be implemented in a similar fashion but also provided as builtin functions. One can write number generators or other iterators using yield.
 
@@ -193,28 +114,43 @@ An iterator or generator is an expression that when evaluated calls the yield ke
 
 yield is a keyword that is used to give flow control back to the for loop across function calls given the yield was invoked in the iterator part of the for construct. When yield yields a value the for loop resumes and when the loop body finishes the execution continues from the point the yield happened. This is until there are no more items to yield or the for loop body executes a return statement. Yielding in a call stack that doesn't have a containing for loop would have no effect, yield itself evaluates to the yielded value.
 
-If one wants to observe side effects from the iterator it can lead to confusing results, all instructions will be executed in the iterator to the point when it returns to the for loop, unless the for loop body returns early.
+### Composing iterators
 
-    strangeiter = () -> {
-        yield 1
-        write("in iteration")
-        yield 2
-        yield 3
-        yield 4
-        write("end of the iterator")
-    }
-    > function
+Iterators can be used in the definition of a new iterator:
 
-    for i <- strangeiter() {
-       write(i)
-       if i == 2 {
-           return "done"
-       }
-    }
-    1
-    "in iteration"
-    2
-    > "done"
+```lisp
+map (f, iter) = for e <- iter() yield f(e)
+```
+
+Embedding for loops iterate the cross product of the iterators:
+
+```lisp
+for i <- fromto(1,3) {
+  for j <- elems("ab") {
+    write(toa(i) + " " + j + "\n")
+  }
+}
+```
+
+```
+1 a
+1 b
+2 a
+2 b
+> nil
+```
+
+Listing multiple iterators in a for loop zips iterations. The iteration stops when any of the iterators terminate.
+
+```lisp
+for i, j <- fromto(1, 3), elems("ab") write(toa(i) + " " + j + "\n")
+```
+
+```
+1 a
+2 b
+> nil
+```
 
 ## Variable lookup, shadowing, closures
 
@@ -301,6 +237,82 @@ One can make this example work by making an explicit copy of x:
       }
     }
     >  function
+
+
+
+## Editor support
+
+There is syntax highlighting based on tree-sitter, and a small nvim plugin that enables neovim to download the treesitter parser and adds file type detection (assuming .calc extension). Add [paulsonkoly/calc.nvim](https://github.com/paulsonkoly/calc.nvim) to your neovim package manager and require("calc") to add language support.
+
+## Running calc
+
+The language is meant to be a calculator REPL, and as such takes care of input/output automatically, but given it can also read source from a file it also supports some basic input output primitives. The calc program can run in 3 modes: reading a single line expression from its command line argument, running code from a REPL or reading code from a file.
+
+### REPL
+
+If there is no input file given and no command line argument to evaluate then the input is assumed to come from a terminal and we assume REPL mode. In this mode, readline library is used to ease line editing. The token { defines a multi-line block, until the corresponding } is found. The REPL doesn't evaluate until multi line blocks are closed, and it automatically outputs the result after each evaluation.
+
+### Command line argument
+
+A single line statement can be passed as a command line argument:
+
+    % ./calc -eval "1+2"
+    3
+
+Calc doesn't prefix the answer with '> ' in this case.
+
+### File evaluation
+
+If a single file name is provided on the command line the input is redirected from this file, in this case calc doesn't output evaluation results at all, for any output the program has to use the write function.
+
+    % cat x.calc
+    write(3)
+    % ./calc x.calc
+    3
+
+## Builtin functions
+
+Built in functions are loaded in the top level frame on the interpreter start up. They provide functionality that cannot be implemented in calc itself, or convenience functions. These are just regular function values defined in the global lexical scope.
+
+| function | arity | returns                    | description                             |
+|----------|-------|----------------------------|-----------------------------------------|
+| read     | 0     | string                     | Reads a string from the stdin           |
+| write    | 1     | nil                        | Writes the given value to the output    |
+| aton     | 1     | int/float/conversion error | Converts a string to an int or a float  |
+| toa      | 1     | string                     | Converts a value to a string            |
+| exit     | 1     | doesn't return/type error  | Exits the interpreter with exit code    |
+| fromto   | 2     | iterator                   | fromto(a, b) iterates from a to b-1     |
+| elems    | 1     | iterator                   | elems(ary) iterates the array elements  |
+| indices  | 1     | iterator                   | indices(ary) iterates the array indices |
+
+
+### Binary operators
+
+There are 5 precedence groups (from lowest to highest): 
+
+| Operator     | Precedence | Types                                                 | Description                                  |
+|--------------|------------|-------------------------------------------------------|----------------------------------------------|
+| &&, \|\|     | 0          | int/int, bool/bool                                    | bitwise, or boolean and, or - low precedence |
+| <, >, <=, >= | 1          | int or float/int or float                             | relational                                   |
+| ==, !=       | 1          | any/any                                               | equality check                               |
+| &, \|        | 2          | int/int, bool/bool                                    | bitwise, or boolean and or - high precedence |
+| +            | 3          | int or float/int or float, array/array, string/string | addition                                     |
+| -            | 3          | int or float/int or float                             | substraction                                 |
+| *, /         | 4          | int or float/int or float                             | division/mulitplication                      |
+| <<, >>       | 4          | int/int                                               | bitshift                                     |
+| %            | 4          | int/int                                               | modulo                                       |
+
+### Unary operators
+
+Unary operators bind stronger than binary operators. All unary operators are prefix.
+
+| Operator | Types         | Description |
+|----------|---------------|-------------|
+| -        | int, float    | negation    |
+| #        | array, string | length      |
+| !        | bool          | not         |
+| ~        | int           | binary flip |
+
 
 # Errors
 
