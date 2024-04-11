@@ -3,7 +3,7 @@
 Calc is an interpreted language / REPL. It has dynamic typing, generally strict evaluation semantics with pass by value calls, and lazy iterator semantics. It supports closures, first class functions, composable iterators as functions. It only violates referential transparency due to IO. A function always returns the same value for the same input, and always behaves the same way, except if it does input/output. The syntax allows mixing procedural and functional programming.
 
 ```scheme
-; all asserts that a pschemeicate f is true for all iterated values
+; all asserts that a predicate f is true for all iterated values
 all = (iter, f) -> {
   for e <- iter() if !f(e) return false
   true
@@ -42,8 +42,7 @@ Arrays are dynamic containers of any type.
 ```scheme
 funs = [ ["+", (a, b) -> a+b ], ["-", (a, b) -> a - b ] ]
 ```
-
-_> [["+", function], ["-", function]]_
+> [["+", function], ["-", function]]
 
 Array and string indexing has 2 forms: "apple"[1] results in "p"; "apple"[1:3] results in "pp". Indexing outside, or using a lower value for the upper index than the lower index results in index error.
 
@@ -54,16 +53,14 @@ In an expression array indexing binds stronger than any operator, thus
 ```scheme
 #[[1,1,1]][0]
 ```
-
-_>  3_
+>  3
 
 \# is the length operator
 
 ```scheme
 #[1,2,3]
 ```
-
-_> 3_
+> 3
 
 ## Iterators and generators, yield and for
 
@@ -120,12 +117,11 @@ for i <- fromto(1,3) {
 }
 ```
 
-```
-1 a
-1 b
-2 a
-2 b
-> nil
+> 1 a  
+> 1 b  
+> 2 a  
+> 2 b  
+> > nil  
 ```
 
 Listing multiple iterators in a for loop zips iterations. The iteration stops when any of the iterators terminate.
@@ -134,11 +130,9 @@ Listing multiple iterators in a for loop zips iterations. The iteration stops wh
 for i, j <- fromto(1, 3), elems("ab") write(toa(i) + " " + j + "\n")
 ```
 
-```
-1 a
-2 b
-> nil
-```
+> 1 a  
+> 2 b  
+> > nil  
 
 ## Variable lookup, shadowing, closures
 
@@ -152,81 +146,106 @@ A variable that's a local variable in some function f that defines function g, b
 
 Variable reads look up variables in the order of local, closure and global. Variable writes write variables as local, shadowing previously visible variables by the same name.
 
-    a = 13
-    >  13
+```scheme
+a = 13
+```
+>  13
 
-    f = (n) -> {
-        a = a+1
-    }
-    >  function
+```scheme
+f = (n) -> {
+    a = a+1
+}
+```
+>  function
 
-    f(1)
-    >  14
+```scheme
+f(1)
+```
+>  14
 
-    a
-    >  13
+```scheme
+a
+```
+>  13
 
 `a` is a global variable shadowed in the function `f`.
 
 When a function is not a top level function but defined within a function, it becomes a closure. This is done by holding a reference to the stack frame that belonged to the function call that defined it.
 
-    f = (n) -> {
-      a = 1
-      (b) -> a + b + n
-    }
-    >  function
+```scheme
+f = (n) -> {
+  a = 1
+  (b) -> a + b + n
+}
+```
+>  function
 
-    foo = f(2)
-    >  function
+```scheme
+foo = f(2)
+```
+>  function
 
-    foo(3)
-    >  6
+
+```scheme
+foo(3)
+```
+>  6
 
 In this example, the function returned from f holds reference to the frame that was pushed on the call of f. This frame contains both a=1 and n=2. The anonymous function is assigned to foo later, and at the call of foo, we push this frame, and a second frame containing b=3.
 
-Closure variables are shascheme with the defining function until the defining function returns. Updates to these variables are visible in the closure, but the closure cannot write these variables, as they are not local.
+Closure variables are shared with the defining function until the defining function returns. Updates to these variables are visible in the closure, but the closure cannot write these variables, as they are not local.
 
+```scheme
     f = () -> {
       x = 1
       g = () -> x
       x = 2
       g
     }
-    > function
+```
+> function
 
-    g()
-    > 2
+```scheme
+g()
+```
+> 2
 
 For a closure only the immediately containing lexical scope of the function definition is retained, thus the following results in error:
 
-    f = (x) -> {
-      (y) -> {
-        (z) -> x + y + z
-      }
-    }
-    >  function
+```scheme
+f = (x) -> {
+  (y) -> {
+    (z) -> x + y + z
+  }
+}
+```
+>  function
 
+```scheme
     first = f(1)
-    >  function
+```
+>  function
 
+```scheme
     second = first(2)
-    >  function
+```
+>  function
 
+```scheme
     second(3) 
-    nil error
-    ...
+```
+> nil error
 
 One can make this example work by making an explicit copy of x:
 
-    f = (x) -> {
-      (y) -> {
-        x = x
-        (z) -> x + y + z
-      }
-    }
-    >  function
-
-
+```scheme
+f = (x) -> {
+  (y) -> {
+    x = x
+    (z) -> x + y + z
+  }
+}
+```
 
 ## Editor support
 
@@ -397,20 +416,29 @@ Recursive call to a function using the variable name the function is assigned to
 
 while loops are a simple construct of a loop condition and a loop body. for loops have to be used with iterators. Conditional code can be written with the if or the if .. else .. structures. As these are statements they end at the first newline, but one can use blocks to write multi line body loops and conditionals. This should explain why the first two examples are valid, but the third one is not.
 
-    if true 1 else 2
-    >  1
+```scheme
+if true 1 else 2
+```
+>  1
 
-    if true {
-    1
-    } else {
-    2
-    }
-    >  1
+```scheme
+if true {
+   1
+} else {
+   2
+}
+```
+>  1
 
-    if true 1
-    >  1
-    else 2
-    Parser: end of file expected, got <"2" IntLit>
+```scheme
+if true 1
+```
+>  1
+
+```scheme
+else 2
+```
+> Parser: end of file expected, got <"2" IntLit>
 
 ### Return
 
