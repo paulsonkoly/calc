@@ -10,9 +10,7 @@ all = (iter, f) -> {
 }
 ```
 
-```
-> function
-```
+_> function_
 
 ```lisp
 isprime = (n) -> {
