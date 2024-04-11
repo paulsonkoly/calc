@@ -1,58 +1,254 @@
 # Calc
 
-A simple calculator language / REPL.
+Calc is an interpreted language / REPL. It has dynamic typing, generally strict evaluation semantics with pass by value calls, and lazy iterator semantics. Calc supports closures, first class functions, composable iterators as functions, it only violates referential transparency due to IO. A function always returns the same value for the same input, and always behaves the same way, except if it does input/output. The syntax allows mixing procedural and functional programming.
 
-The language can be used in a REPL or instructions can be read from a file. The REPL outputs its answer after the '>' character.
+```scheme
+; all asserts that a predicate f is true for all iterated values
+all = (iter, f) -> {
+  for e <- iter() if !f(e) return false
+  true
+}
+```
+> function
 
-    isprime = (n) -> {
-      if n < 2 return false
-      for i <- fromto(2, n/2+1) {
-        if n % i == 0 return false
-      }
-      true
+```scheme
+isprime = (n) -> {
+  if n < 2 return false
+  all(() -> fromto(2, n/2+1), (i) -> n % i != 0)
+}
+```
+> function
+
+```scheme
+isprime(13)
+```
+> true
+
+Further code examples can be found in the [examples directory](https://github.com/paulsonkoly/calc/tree/main/examples).
+
+
+## Types
+
+There are 6 value types: integers, floats, booleans, functions, strings and arrays.
+
+There is no automatic type conversion between types, except in an arithmetic expression integers are converted to floats if the expression contains floats. Equality check works between any types. Function equality always result in false. Invalid operations like type errors, division by zero etc. result in runtime error.
+
+If an expression doesn't hold a value, it evaluates to nil. Calculation with nil or assigning nil results in runtime error.
+
+### Arrays and strings
+
+Arrays are dynamic containers of any type.
+
+```scheme
+funs = [ ["+", (a, b) -> a+b ], ["-", (a, b) -> a - b ] ]
+```
+> [["+", function], ["-", function]]
+
+Array and string indexing has 2 forms: "apple"[1] results in "p"; "apple"[1:3] results in "pp". Indexing outside, or using a lower value for the upper index than the lower index, results in index error.
+
+String literals can be written using double quotes ("). Within a string, a double quote has to be escaped: "\\"" is a string with a single element containing a double quote. Line breaks and any other character can be inserted within a string normally. Strings can be concatenated and indexed.
+
+In an expression array indexing binds stronger than any operator, thus
+
+```scheme
+#[[1,1,1]][0]
+```
+>  3
+
+\# is the length operator
+
+```scheme
+#[1,2,3]
+```
+> 3
+
+## Iterators and generators, yield and for
+
+Assuming we have the following definition of `fromto` (available as a built-in function):
+
+```scheme
+fromto = (n, m) -> {
+    while n < m {
+        yield n
+        n = n + 1
     }
-    > function
-  
-    isprime(13)
-    > true
+}
+```
 
-Functional programming / Currying
+One can replace the following while loop
 
-    curry = (f, a) -> (b) -> f(a, b)
-    >  function
+```scheme
+i = 0
+while i < 10 {
+   write(i)
+   i = i + 1
+}
+```
 
-    sum = (a, b) -> a + b
-    >  function
+with the more concise
 
-    plusthree = curry(sum, 3)
-    >  function
+```scheme
+for i <- fromto(0, 10) write(i)
+```
 
-    plusthree(5)
-    >  8
+`elems` and `indices` can also be implemented in a similar fashion but also provided as built-in functions. One can write number generators or other iterators using yield.
 
-Iterators / generators
+An iterator or generator is an expression that when evaluated calls the yield keyword with some value. The syntax for a for loop is
 
-    evens = () -> {
-      yield 0
-      yield 2
-      yield 4
-    }
-    > function
+    for <variable> <- <iterator> <for_loop_body>
 
-    for i <- evens() {
-      write(i)
-      i+3
-    }
-    0
-    2
-    4
-    > 7 
+`yield` is a keyword that is used to give flow control back to the for loop across function calls given the yield was invoked in the iterator part of the for construct. When yield yields a value the for loop resumes and when the loop body finishes the execution continues from the point the yield happened. This is until there are no more items to yield or the for loop body executes a return statement. Yielding in a call stack that doesn't have a containing for loop would have no effect, yield itself evaluates to the yielded value.
 
-Further code examples: [here](https://github.com/paulsonkoly/calc/tree/main/examples)
+### Composing iterators
+
+Iterators can be used in the definition of a new iterator:
+
+```scheme
+map = (f, iter) -> for e <- iter() yield f(e)
+```
+
+Embedding for loops iterate the cross product of the iterators:
+
+```scheme
+for i <- fromto(1,3) {
+  for j <- elems("ab") {
+    write(toa(i) + " " + j + "\n")
+  }
+}
+```
+
+> 1 a  
+> 1 b  
+> 2 a  
+> 2 b  
+> > nil  
+
+Listing multiple iterators in a for loop zips iterations. The iteration stops when any of the iterators terminate.
+
+```scheme
+for i, j <- fromto(1, 3), elems("ab") write(toa(i) + " " + j + "\n")
+```
+
+> 1 a  
+> 2 b  
+> > nil  
+
+## Variable lookup, shadowing, closures
+
+There are 3 types of variables, depending on the lexical scope, but their syntax is identical.
+
+A variable at the global lexical scope is a global variable and visible in every scope where it's not shadowed but is only writable from the global lexical scope.
+
+A variable defined within a function or a parameter to a function is a local variable in the function.
+
+A variable that's a local variable in some function f that defines function g, becomes a closure variable within the call of g.
+
+Variable reads look up variables in the order of local, closure and global. Variable writes write variables as local, shadowing previously visible variables by the same name.
+
+```scheme
+a = 13
+```
+>  13
+
+```scheme
+f = (n) -> {
+    a = a+1
+}
+```
+>  function
+
+```scheme
+f(1)
+```
+>  14
+
+```scheme
+a
+```
+>  13
+
+`a` is a global variable shadowed in the function `f`.
+
+When a function is not a top level function but defined within a function, it becomes a closure. This is done by holding a reference to the stack frame that belonged to the function call that defined it.
+
+```scheme
+f = (n) -> {
+  a = 1
+  (b) -> a + b + n
+}
+```
+>  function
+
+```scheme
+foo = f(2)
+```
+>  function
+
+
+```scheme
+foo(3)
+```
+>  6
+
+In this example, the function returned from f holds reference to the frame that was pushed on the call of f. This frame contains both a=1 and n=2. The anonymous function is assigned to foo later, and at the call of foo, we push this frame, and a second frame containing b=3.
+
+Closure variables are shared with the defining function until the defining function returns. Updates to these variables are visible in the closure, but the closure cannot write these variables, as they are not local.
+
+```scheme
+f = () -> {
+  x = 1
+  g = () -> x
+  x = 2
+  g
+}
+```
+> function
+
+```scheme
+g()
+```
+> 2
+
+For a closure only the immediately containing lexical scope of the function definition is retained, thus the following results in error:
+
+```scheme
+f = (x) -> {
+  (y) -> {
+    (z) -> x + y + z
+  }
+}
+```
+>  function
+
+```scheme
+first = f(1)
+```
+>  function
+
+```scheme
+second = first(2)
+```
+>  function
+
+```scheme
+second(3) 
+```
+> nil error
+
+One can make this example work by making an explicit copy of x:
+
+```scheme
+f = (x) -> {
+  (y) -> {
+    x = x
+    (z) -> x + y + z
+  }
+}
+```
 
 ## Editor support
 
-There is syntax highlighting based on tree-sitter, and a small nvim plugin that enables neovim to download the treesitter parser and adds file type detection (assuming .calc extension). Add [paulsonkoly/calc.nvim](https://github.com/paulsonkoly/calc.nvim) to your neovim package manager and require("calc") to add language support.
+There is syntax highlighting based on tree-sitter, and a small Neovim plugin that enables Neovim to download the treesitter parser and adds file type detection (assuming .calc extension). Add [paulsonkoly/calc.nvim](https://github.com/paulsonkoly/calc.nvim) to your Neovim package manager and require("calc") to add language support.
 
 ## Running calc
 
@@ -60,7 +256,7 @@ The language is meant to be a calculator REPL, and as such takes care of input/o
 
 ### REPL
 
-If there is no input file given and no command line argument to evaluate then the input is assumed to come from a terminal and we assume REPL mode. In this mode, readline library is used to ease line editing. The token { defines a multi-line block, until the corresponding } is found. The REPL doesn't evaluate until multi line blocks are closed, and it automatically outputs the result after each evaluation.
+If there is no input file given and no command line argument to evaluate, then the input is assumed to come from a terminal and we assume REPL mode. In this mode, readline library is used to ease line editing. The token { defines a multi-line block, until the corresponding } is found. The REPL doesn't evaluate until multi line blocks are closed, and it automatically outputs the result after each evaluation.
 
 ### Command line argument
 
@@ -73,7 +269,7 @@ Calc doesn't prefix the answer with '> ' in this case.
 
 ### File evaluation
 
-If a single file name is provided on the command line the input is redirected from this file, in this case calc doesn't output evaluation results at all, for any output the program has to use the write function.
+If a single file name is provided on the command line the input is schemeirected from this file, in this case calc doesn't output evaluation results at all, for any output the program has to use the write function.
 
     % cat x.calc
     write(3)
@@ -95,24 +291,6 @@ Built in functions are loaded in the top level frame on the interpreter start up
 | elems    | 1     | iterator                   | elems(ary) iterates the array elements  |
 | indices  | 1     | iterator                   | indices(ary) iterates the array indices |
 
-## Types
-
-There are 6 value types: integers, floats, booleans, functions, strings and arrays.
-
-There is no automatic type conversion between types, except in an arithmetic expression integers are converted to floats if the expression contains floats. Equality check works between any types. Function equality always result in false. Invalid operations like type errors, division by zero etc. result in runtime error.
-
-If an expression doesn't hold a value, it evaluates to nil. Calculation with nil or assigning nil results in runtime error.
-
-```
-if false 1
-> nil
-
-a
-> nil
-b = a
-nil error
-...
-```
 
 ### Binary operators
 
@@ -141,166 +319,6 @@ Unary operators bind stronger than binary operators. All unary operators are pre
 | !        | bool          | not         |
 | ~        | int           | binary flip |
 
-### Arrays and strings
-
-Arrays are dynamic containers of any type.
-
-    funs = [ ["+", (a, b) -> a+b ], ["-", (a, b) -> a - b ] ]
-    >  [["+", function], ["-", function]]
-
-Array and string indexing has 2 forms: "apple"[1] results in "p"; "apple"[1:3] results in "pp". Indexing outside, or using a lower value for the upper index than the lower index results in index error.
-
-String literals can be written using double quotes ("). Within a string a double quote has to be escaped: "\\"" is a string with a single element containing a double quote. Line breaks and any other character can be inserted within a string normally. Strings can be concatenated and indexed.
-
-In an expression array indexing binds stronger than any operator, thus
-
-    #[[1,1,1]][0]
-    >  3
-
-\# is the length operator
-
-    #[1,2,3]
-    > 3
-
-## Iterators and generators, yield and for
-
-Assuming we have the following definition of `fromto` (available as a builtin function):
-
-    fromto = (n, m) -> {
-        while n < m {
-            yield n
-            n = n + 1
-        }
-    }
-
-One can replace the following while loop
-
-    i = 0
-    while i < 10 {
-       write(i)
-       i = i + 1
-    }
-
-with the more concise
-
-    for i <- fromto(0, 10) write(i)
-
-`elems` and `indices` can also be implemented in a similar fashion but also provided as builtin functions. One can write number generators or other iterators using yield.
-
-An iterator or generator is an expression that when evaluated calls the yield keyword with some value. The syntax for a for loop is
-
-    for <variable> <- <iterator> <for_loop_body>
-
-yield is a keyword that is used to give flow control back to the for loop across function calls given the yield was invoked in the iterator part of the for construct. When yield yields a value the for loop resumes and when the loop body finishes the execution continues from the point the yield happened. This is until there are no more items to yield or the for loop body executes a return statement. Yielding in a call stack that doesn't have a containing for loop would have no effect, yield itself evaluates to the yielded value.
-
-If one wants to observe side effects from the iterator it can lead to confusing results, all instructions will be executed in the iterator to the point when it returns to the for loop, unless the for loop body returns early.
-
-    strangeiter = () -> {
-        yield 1
-        write("in iteration")
-        yield 2
-        yield 3
-        yield 4
-        write("end of the iterator")
-    }
-    > function
-
-    for i <- strangeiter() {
-       write(i)
-       if i == 2 {
-           return "done"
-       }
-    }
-    1
-    "in iteration"
-    2
-    > "done"
-
-## Variable lookup, shadowing, closures
-
-There are 3 types of variables, depending on the lexical scope, but their syntax is identical.
-
-A variable at the global lexical scope is a global variable and visible in every scope where it's not shadowed but is only writable from the global lexical scope.
-
-A variable defined within a function or a parameter to a function is a local variable in the function.
-
-A variable that's a local variable in some function f that defines function g, becomes a closure variable within the call of g.
-
-Variable reads look up variables in the order of local, closure and global. Variable writes write variables as local, shadowing previously visible variables by the same name.
-
-    a = 13
-    >  13
-
-    f = (n) -> {
-        a = a+1
-    }
-    >  function
-
-    f(1)
-    >  14
-
-    a
-    >  13
-
-`a` is a global variable shadowed in the function `f`.
-
-When a function is not a top level function but defined within a function, it becomes a closure. This is done by holding a reference to the stack frame that belonged to the function call that defined it.
-
-    f = (n) -> {
-      a = 1
-      (b) -> a + b + n
-    }
-    >  function
-
-    foo = f(2)
-    >  function
-
-    foo(3)
-    >  6
-
-In this example, the function returned from f holds reference to the frame that was pushed on the call of f. This frame contains both a=1 and n=2. The anonymous function is assigned to foo later, and at the call of foo, we push this frame, and a second frame containing b=3.
-
-Closure variables are shared with the defining function until the defining function returns. Updates to these variables are visible in the closure, but the closure cannot write these variables, as they are not local.
-
-    f = () -> {
-      x = 1
-      g = () -> x
-      x = 2
-      g
-    }
-    > function
-
-    g()
-    > 2
-
-For a closure only the immediately containing lexical scope of the function definition is retained, thus the following results in error:
-
-    f = (x) -> {
-      (y) -> {
-        (z) -> x + y + z
-      }
-    }
-    >  function
-
-    first = f(1)
-    >  function
-
-    second = first(2)
-    >  function
-
-    second(3) 
-    nil error
-    ...
-
-One can make this example work by making an explicit copy of x:
-
-    f = (x) -> {
-      (y) -> {
-        x = x
-        (z) -> x + y + z
-      }
-    }
-    >  function
 
 # Errors
 
@@ -387,30 +405,43 @@ Any value type can be assigned to a variable. The variable name is not defined i
 
 Recursive call to a function using the variable name the function is assigned to works, however; because the function body is only evaluated when the function is called.
 
-    f = (n) -> if n <= 0 0 else n + f(n-1)
-    > function
+```scheme
+f = (n) -> if n <= 0 0 else n + f(n-1)
+```
+> function
 
-    f(5)
-    > 15
+```scheme
+f(5)
+```
+> 15
 
 ### Loop and Conditionals
 
 while loops are a simple construct of a loop condition and a loop body. for loops have to be used with iterators. Conditional code can be written with the if or the if .. else .. structures. As these are statements they end at the first newline, but one can use blocks to write multi line body loops and conditionals. This should explain why the first two examples are valid, but the third one is not.
 
-    if true 1 else 2
-    >  1
+```scheme
+if true 1 else 2
+```
+>  1
 
-    if true {
-    1
-    } else {
-    2
-    }
-    >  1
+```scheme
+if true {
+   1
+} else {
+   2
+}
+```
+>  1
 
-    if true 1
-    >  1
-    else 2
-    Parser: end of file expected, got <"2" IntLit>
+```scheme
+if true 1
+```
+>  1
+
+```scheme
+else 2
+```
+> Parser: end of file expected, got <"2" IntLit>
 
 ### Return
 

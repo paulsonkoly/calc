@@ -83,9 +83,9 @@ type While struct {
 
 // For is a loop for iterators ans generators.
 type For struct {
-	VarRef   Type // VarRef is variable reference
-	Iterator Type // Value is assigned value
-	Body     Type // Body is the loop body
+	VarRefs   List // VarRef is the variable references list
+	Iterators List // Iterator is the iterator list
+	Body      Type // Body is the loop body
 }
 
 // Return is a return statement.

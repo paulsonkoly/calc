@@ -130,6 +130,29 @@ var testData = [...]TestDatum{
         }
       }
     }`, nil, value.NewInt(23), nil},
+	{"iterator/parallel for",
+		`{
+      c = ""
+      for i, j <- fromto(1,3), elems("ab") {
+        c = c + toa(i) + " " + j + " "
+      }
+    }`, nil, value.NewString("1 a 2 b "), nil},
+	{"iterator/parallel for mismatching finish",
+		`{
+      c = ""
+      for i, j <- fromto(1,5), elems("ab") {
+        c = c + toa(i) + " " + j + " "
+      }
+    }`, nil, value.NewString("1 a 2 b "), nil},
+	{"iterator/parallel for in recursion",
+		`{
+       f = (n) -> {
+         c = 0
+         if n == 0 return 1
+         for i, j <- fromto(1, 3), fromto(10, 13) c = c + i + j + f(n - 1) 
+       }
+       f(2)
+    }`, nil, value.NewInt(76), nil},
 
 	{"function definition", "(n) -> 1", nil, emptyFunction, nil},
 	{"function/no argument", "() -> 1", nil, emptyFunction, nil},

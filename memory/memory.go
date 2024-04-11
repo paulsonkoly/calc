@@ -84,9 +84,15 @@ func (m *Type) Clone(reuse *Type) *Type {
 
 	fp := m.fp[len(m.fp)+localFP]
 	le := m.fp[len(m.fp)+localFE]
+
 	copy(newStack, m.stack[fp:m.sp])
 
 	return &Type{sp: m.sp - fp, fp: []int{0, le - fp}, global: m.global, closure: m.closure, stack: newStack}
+}
+
+// CallDepth is the number of call frames.
+func (m *Type) CallDepth() int {
+	return len(m.fp) / 2
 }
 
 // SetGlobal sets a global variable.

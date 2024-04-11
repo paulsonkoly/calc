@@ -15,6 +15,8 @@ import (
 	"github.com/paulsonkoly/calc/types/bytecode"
 	"github.com/paulsonkoly/calc/types/compresult"
 	"github.com/paulsonkoly/calc/types/value"
+
+	"github.com/kamstrup/intmap"
 )
 
 var (
@@ -22,32 +24,42 @@ var (
 	ErrArity      = errors.New("arity mismatch")
 )
 
+const (
+	minAllocContexts = 16
+)
+
 type context struct {
-	ip       int          // instruction pointer
-	m        *memory.Type // variables
-	parent   *context     // parent context
-	children []*context   // child contexts
+	ip       int                           // instruction pointer
+	m        *memory.Type                  // variables
+	parent   *context                      // parent context
+	children *intmap.Map[uint64, *context] // child contexts
 }
 
 type Type struct {
-	ctx *context        // ctx is the context tree
-	CR  compresult.Type // cr is the compilation result
+	main *context        // main context
+	CR   compresult.Type // cr is the compilation result
 }
 
 // New creates a new virtual machine using memory from m and code and data from cr.
 func New(m *memory.Type, cr compresult.Type) *Type {
-	return &Type{ctx: &context{m: m, children: []*context{}}, CR: cr}
+	contexts := intmap.New[uint64, *context](minAllocContexts)
+	main := context{m: m, children: contexts}
+	return &Type{main: &main, CR: cr}
 }
 
 // Run executes the run loop.
 // nolint:maintidx // the only thing we care about here is making it faster
 func (vm *Type) Run(retResult bool) (value.Type, error) {
-	ctxp := vm.ctx
+	ctxp := vm.main
+
 	m := ctxp.m
 	ip := ctxp.ip
 	ds := vm.CR.DS
 	cs := vm.CR.CS
+
+	// temp/accumulator "register"
 	tmp := value.Nil
+
 	var err error
 
 	freeList := list.New()
@@ -56,7 +68,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 		instr := (*cs)[ip]
 
 		// TODO allow tracing flag
-		// fmt.Printf("%8d | %8p | %v\n", ip, m, instr)
+		// fmt.Printf("%8d | %8p | %v\n", ip, ctxp, instr)
 
 		opCode := instr.OpCode()
 
@@ -406,38 +418,60 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 		case bytecode.CCONT:
 			jmp := instr.Src0Addr()
+			ctxID := instr.Src1Addr()
+			ctxHash := hashContext(m, ctxID)
 			ctxp.ip = ip + jmp - 1
 
 			var free *memory.Type
 			front := freeList.Front()
 			if front != nil {
 				freeList.Remove(front)
-				free = front.Value.(*context).m
+				free = front.Value.(*memory.Type)
 			}
 			m = m.Clone(free)
-			childCtx := context{m: m, parent: ctxp, children: make([]*context, 0)}
-			ctxp.children = append(ctxp.children, &childCtx)
-			ctxp = &childCtx
+
+			childCtx := &context{m: m, parent: ctxp, children: intmap.New[uint64, *context](minAllocContexts)}
+
+			ctxp.children.Put(ctxHash, childCtx)
+			ctxp = childCtx
 
 		case bytecode.RCONT:
-			last := ctxp.children[len(ctxp.children)-1]
-			freeList.PushFront(last)
-			ctxp.children = ctxp.children[:len(ctxp.children)-1]
+			lo := instr.Src0Addr()
+			hi := instr.Src1Addr()
+			for i := lo; i <= hi; i++ {
+				hsh := hashContext(m, i)
+				if child, ok := ctxp.children.Get(hsh); ok {
+					deleteContext(child, freeList)
+					ctxp.children.Del(hsh)
+				}
+			}
 
 		case bytecode.DCONT:
-			ctxp = ctxp.parent
-			if len(ctxp.children) > 0 {
-				last := ctxp.children[len(ctxp.children)-1]
-				freeList.PushFront(last)
-				ctxp.children = ctxp.children[:len(ctxp.children)-1]
+			if ctxp.parent != nil {
+				ctxp = ctxp.parent
+				m = ctxp.m
 			}
-			m = ctxp.m
+
+			lo := instr.Src0Addr()
+			hi := instr.Src1Addr()
+			for i := lo; i <= hi; i++ {
+				hsh := hashContext(m, i)
+				if child, ok := ctxp.children.Get(hsh); ok {
+					deleteContext(child, freeList)
+					ctxp.children.Del(hsh)
+				}
+			}
 
 		case bytecode.SCONT:
+			ctxID := instr.Src0Addr()
 			ctxp.m = m
 			ctxp.ip = ip
+			var ok bool
 
-			ctxp = ctxp.children[len(ctxp.children)-1]
+			ctxp, ok = ctxp.children.Get(hashContext(m, ctxID))
+			if !ok {
+				log.Panicf("context not found %016x\n", hashContext(m, ctxID))
+			}
 
 			m = ctxp.m
 			ip = ctxp.ip
@@ -570,12 +604,22 @@ func (vm *Type) dumpStack(ctx *context, ip int, err error, values ...value.Type)
 		fmt.Printf("memory context %08p\n", ctx)
 		m := ctx.m
 		m.DumpStack(vm.CR.Dbg)
-		// reset state for the next run
-		m.Reset()
-		ctx.children = []*context{}
-		ctx.ip = len(*vm.CR.CS)
-		vm.ctx = ctx
 	}
+	// reset state for the next run
+	vm.main.children.Clear()
 
 	return value.Nil, err
+}
+
+func hashContext(m *memory.Type, id int) uint64 {
+	return (uint64(m.CallDepth()) << 15) ^ uint64(id)
+}
+
+func deleteContext(ctxp *context, freeList *list.List) {
+	ctxp.children.ForEach(func(_ uint64, child *context) bool {
+		deleteContext(child, freeList)
+		return true
+	})
+
+	freeList.PushFront(ctxp.m)
 }

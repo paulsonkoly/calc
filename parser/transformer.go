@@ -154,6 +154,6 @@ func mkFor(nodes []c.Node) []c.Node {
 	if len(nodes) != 5 {
 		log.Panicf("incorrect number of sub nodes for for (%d)", len(nodes))
 	}
-	n := node.For{VarRef: nodes[1].(node.Type), Iterator: nodes[3].(node.Type), Body: nodes[4].(node.Type)}
+	n := node.For{VarRefs: nodes[1].(node.List), Iterators: nodes[3].(node.List), Body: nodes[4].(node.Type)}
 	return []c.Node{n}
 }

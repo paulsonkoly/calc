@@ -86,6 +86,14 @@ func Not(p Parser) Parser {
 	}
 }
 
+// Drop drops the result of p.
+func Drop(p Parser) Parser {
+	return func(input RollbackLexer) ([]Node, *Error) {
+		_, err := p(input)
+		return []Node{}, err
+	}
+}
+
 // Conditional is a pair of parsers. Once Gate succeeds we don't roll back but
 // we are committed to parse with OnSuccess.
 //
