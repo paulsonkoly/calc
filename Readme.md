@@ -1,6 +1,6 @@
 # Calc
 
-Calc is an interpreted language / REPL. It has dynamic typing, generally strict evaluation semantics with pass by value calls, and lazy iterator semantics. It supports closures, first class functions, composable iterators as functions. It only violates referential transparency due to IO. A function always returns the same value for the same input, and always behaves the same way, except if it does input/output. The syntax allows mixing procedural and functional programming.
+Calc is an interpreted language / REPL. It has dynamic typing, generally strict evaluation semantics with pass by value calls, and lazy iterator semantics. Calc supports closures, first class functions, composable iterators as functions, it only violates referential transparency due to IO. A function always returns the same value for the same input, and always behaves the same way, except if it does input/output. The syntax allows mixing procedural and functional programming.
 
 ```scheme
 ; all asserts that a predicate f is true for all iterated values
@@ -44,9 +44,9 @@ funs = [ ["+", (a, b) -> a+b ], ["-", (a, b) -> a - b ] ]
 ```
 > [["+", function], ["-", function]]
 
-Array and string indexing has 2 forms: "apple"[1] results in "p"; "apple"[1:3] results in "pp". Indexing outside, or using a lower value for the upper index than the lower index results in index error.
+Array and string indexing has 2 forms: "apple"[1] results in "p"; "apple"[1:3] results in "pp". Indexing outside, or using a lower value for the upper index than the lower index, results in index error.
 
-String literals can be written using double quotes ("). Within a string a double quote has to be escaped: "\\"" is a string with a single element containing a double quote. Line breaks and any other character can be inserted within a string normally. Strings can be concatenated and indexed.
+String literals can be written using double quotes ("). Within a string, a double quote has to be escaped: "\\"" is a string with a single element containing a double quote. Line breaks and any other character can be inserted within a string normally. Strings can be concatenated and indexed.
 
 In an expression array indexing binds stronger than any operator, thus
 
@@ -64,7 +64,7 @@ In an expression array indexing binds stronger than any operator, thus
 
 ## Iterators and generators, yield and for
 
-Assuming we have the following definition of `fromto` (available as a builtin function):
+Assuming we have the following definition of `fromto` (available as a built-in function):
 
 ```scheme
 fromto = (n, m) -> {
@@ -91,13 +91,13 @@ with the more concise
 for i <- fromto(0, 10) write(i)
 ```
 
-`elems` and `indices` can also be implemented in a similar fashion but also provided as builtin functions. One can write number generators or other iterators using yield.
+`elems` and `indices` can also be implemented in a similar fashion but also provided as built-in functions. One can write number generators or other iterators using yield.
 
 An iterator or generator is an expression that when evaluated calls the yield keyword with some value. The syntax for a for loop is
 
     for <variable> <- <iterator> <for_loop_body>
 
-yield is a keyword that is used to give flow control back to the for loop across function calls given the yield was invoked in the iterator part of the for construct. When yield yields a value the for loop resumes and when the loop body finishes the execution continues from the point the yield happened. This is until there are no more items to yield or the for loop body executes a return statement. Yielding in a call stack that doesn't have a containing for loop would have no effect, yield itself evaluates to the yielded value.
+`yield` is a keyword that is used to give flow control back to the for loop across function calls given the yield was invoked in the iterator part of the for construct. When yield yields a value the for loop resumes and when the loop body finishes the execution continues from the point the yield happened. This is until there are no more items to yield or the for loop body executes a return statement. Yielding in a call stack that doesn't have a containing for loop would have no effect, yield itself evaluates to the yielded value.
 
 ### Composing iterators
 
@@ -248,7 +248,7 @@ f = (x) -> {
 
 ## Editor support
 
-There is syntax highlighting based on tree-sitter, and a small nvim plugin that enables neovim to download the treesitter parser and adds file type detection (assuming .calc extension). Add [paulsonkoly/calc.nvim](https://github.com/paulsonkoly/calc.nvim) to your neovim package manager and require("calc") to add language support.
+There is syntax highlighting based on tree-sitter, and a small Neovim plugin that enables Neovim to download the treesitter parser and adds file type detection (assuming .calc extension). Add [paulsonkoly/calc.nvim](https://github.com/paulsonkoly/calc.nvim) to your Neovim package manager and require("calc") to add language support.
 
 ## Running calc
 
@@ -256,7 +256,7 @@ The language is meant to be a calculator REPL, and as such takes care of input/o
 
 ### REPL
 
-If there is no input file given and no command line argument to evaluate then the input is assumed to come from a terminal and we assume REPL mode. In this mode, readline library is used to ease line editing. The token { defines a multi-line block, until the corresponding } is found. The REPL doesn't evaluate until multi line blocks are closed, and it automatically outputs the result after each evaluation.
+If there is no input file given and no command line argument to evaluate, then the input is assumed to come from a terminal and we assume REPL mode. In this mode, readline library is used to ease line editing. The token { defines a multi-line block, until the corresponding } is found. The REPL doesn't evaluate until multi line blocks are closed, and it automatically outputs the result after each evaluation.
 
 ### Command line argument
 
