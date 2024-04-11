@@ -2,7 +2,7 @@
 
 Calc is an interpreted language / REPL. It has dynamic typing, generally strict evaluation semantics with pass by value calls, and lazy iterator semantics. It supports closures, first class functions, composable iterators as functions. It only violates referential transparency due to IO. A function always returns the same value for the same input, and always behaves the same way, except if it does input/output. The syntax allows mixing procedural and functional programming.
 
-```lisp
+```red
 ; all asserts that a predicate f is true for all iterated values
 all = (iter, f) -> {
   for e <- iter() if !f(e) return false
@@ -12,24 +12,20 @@ all = (iter, f) -> {
 
 _> function_
 
-```lisp
+```red
 isprime = (n) -> {
   if n < 2 return false
   all(() -> fromto(2, n/2+1), (i) -> n % i != 0)
 }
 ```
 
-```
-> function
-```
+_> function_
 
-```lisp
+```red
 isprime(13)
 ```
 
-```
-> true  
-```
+_> true_
 
 ## Types
 
@@ -43,13 +39,11 @@ If an expression doesn't hold a value, it evaluates to nil. Calculation with nil
 
 Arrays are dynamic containers of any type.
 
-```lisp
+```red
 funs = [ ["+", (a, b) -> a+b ], ["-", (a, b) -> a - b ] ]
 ```
 
-```
->  [["+", function], ["-", function]]
-```
+_> [["+", function], ["-", function]]_
 
 Array and string indexing has 2 forms: "apple"[1] results in "p"; "apple"[1:3] results in "pp". Indexing outside, or using a lower value for the upper index than the lower index results in index error.
 
@@ -57,29 +51,25 @@ String literals can be written using double quotes ("). Within a string a double
 
 In an expression array indexing binds stronger than any operator, thus
 
-```lisp
+```red
 #[[1,1,1]][0]
 ```
 
-```
->  3
-```
+_>  3_
 
 \# is the length operator
 
-```lisp
+```red
 #[1,2,3]
 ```
 
-```
-> 3
-```
+_> 3_
 
 ## Iterators and generators, yield and for
 
 Assuming we have the following definition of `fromto` (available as a builtin function):
 
-```lisp
+```red
 fromto = (n, m) -> {
     while n < m {
         yield n
@@ -90,7 +80,7 @@ fromto = (n, m) -> {
 
 One can replace the following while loop
 
-```lisp
+```red
 i = 0
 while i < 10 {
    write(i)
@@ -100,7 +90,7 @@ while i < 10 {
 
 with the more concise
 
-```lisp
+```red
 for i <- fromto(0, 10) write(i)
 ```
 
@@ -116,13 +106,13 @@ yield is a keyword that is used to give flow control back to the for loop across
 
 Iterators can be used in the definition of a new iterator:
 
-```lisp
+```red
 map (f, iter) = for e <- iter() yield f(e)
 ```
 
 Embedding for loops iterate the cross product of the iterators:
 
-```lisp
+```red
 for i <- fromto(1,3) {
   for j <- elems("ab") {
     write(toa(i) + " " + j + "\n")
@@ -140,7 +130,7 @@ for i <- fromto(1,3) {
 
 Listing multiple iterators in a for loop zips iterations. The iteration stops when any of the iterators terminate.
 
-```lisp
+```red
 for i, j <- fromto(1, 3), elems("ab") write(toa(i) + " " + j + "\n")
 ```
 
