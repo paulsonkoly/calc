@@ -68,11 +68,15 @@ func (m *Type) ID() int {
 // The clone would point to the same global, same closure, and the last frame
 // of the stack will be deep copied. reuse can be nil, when it's not it's
 // resources are re-used to create a new memory.
+var TotalCnt = 0
+var AllocCnt = 0
+
 func (m *Type) Clone(reuse *Type) *Type {
 	var newStackSize int
 	var newStack []value.Type
 
 	id++
+	TotalCnt++
 
 	if len(m.fp) < 2 {
 		newStackSize = minStackSize
@@ -87,6 +91,7 @@ func (m *Type) Clone(reuse *Type) *Type {
 		newStack = reuse.stack
 	} else {
 		newStack = make([]value.Type, newStackSize)
+		AllocCnt++
 	}
 
 	if len(m.fp) < 2 {
