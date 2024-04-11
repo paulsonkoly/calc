@@ -104,7 +104,7 @@ yield is a keyword that is used to give flow control back to the for loop across
 Iterators can be used in the definition of a new iterator:
 
 ```scheme
-map (f, iter) = for e <- iter() yield f(e)
+map = (f, iter) -> for e <- iter() yield f(e)
 ```
 
 Embedding for loops iterate the cross product of the iterators:
@@ -122,7 +122,6 @@ for i <- fromto(1,3) {
 > 2 a  
 > 2 b  
 > > nil  
-```
 
 Listing multiple iterators in a for loop zips iterations. The iteration stops when any of the iterators terminate.
 
@@ -196,12 +195,12 @@ In this example, the function returned from f holds reference to the frame that 
 Closure variables are shared with the defining function until the defining function returns. Updates to these variables are visible in the closure, but the closure cannot write these variables, as they are not local.
 
 ```scheme
-    f = () -> {
-      x = 1
-      g = () -> x
-      x = 2
-      g
-    }
+f = () -> {
+  x = 1
+  g = () -> x
+  x = 2
+  g
+}
 ```
 > function
 
@@ -222,17 +221,17 @@ f = (x) -> {
 >  function
 
 ```scheme
-    first = f(1)
+first = f(1)
 ```
 >  function
 
 ```scheme
-    second = first(2)
+second = first(2)
 ```
 >  function
 
 ```scheme
-    second(3) 
+second(3) 
 ```
 > nil error
 
