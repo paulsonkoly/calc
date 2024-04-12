@@ -606,6 +606,8 @@ func (vm *Type) dumpStack(ctx *context, ip int, err error, values ...value.Type)
 		m.DumpStack(vm.CR.Dbg)
 	}
 	// reset state for the next run
+	vm.main.m.Reset()
+	vm.main.ip = len(*vm.CR.CS)
 	vm.main.children.Clear()
 
 	return value.Nil, err
