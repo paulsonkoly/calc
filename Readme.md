@@ -1,6 +1,6 @@
 # Calc
 
-Calc is an interpreted language / REPL. It has dynamic typing, generally strict evaluation semantics with pass by value calls, and lazy iterator semantics. Calc supports closures, first class functions, composable iterators as functions, it only violates referential transparency due to IO. A function always returns the same value for the same input, and always behaves the same way, except if it does input/output. The syntax allows mixing procedural and functional programming.
+Calc is an interpreted language / REPL. It has dynamic typing, generally strict evaluation semantics with pass by value calls, and lazy iterator semantics. Calc supports closures, first class functions, composable iterators as functions, it violates referential transparency only due to IO. A function always returns the same value for the same input, and always behaves the same way, except if it does input/output. The syntax allows mixing procedural and functional programming.
 
 ```scheme
 ; all asserts that a predicate f is true for all iterated values
