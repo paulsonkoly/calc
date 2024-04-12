@@ -32,7 +32,7 @@ relems = (ary) -> {
 }
 
 ; yields equal chunks in an array
-; chunks(() -> elems("aaabbcddee"))
+; chunks(() -> elems("aaaabbcddee"))
 ; yields ["a", "a", "a", "a"], ["b", "b"], ["c"], ["d", "d"], ["e", "e"] in turn
 chunks = (iter) -> {
   ary = []
