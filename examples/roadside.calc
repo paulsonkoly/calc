@@ -1,0 +1,78 @@
+; test for parallel for loop
+; https://www.codewars.com/kata/58e18c5434a3022d270000f2
+
+animals = [
+  "aardvark", "alligator", "armadillo", "antelope", "baboon", "bear", "bobcat", "butterfly", "cat",
+  "camel", "cow", "chameleon", "dog", "dolphin", "duck", "dragonfly", "eagle", "elephant",
+  "emu", "echidna", "fish", "frog", "flamingo", "fox", "goat", "giraffe", "gibbon",
+  "gecko", "hyena", "hippopotamus", "horse", "hamster", "insect", "impala", "iguana", "ibis",
+  "jackal", "jaguar", "jellyfish", "kangaroo", "kiwi", "koala", "killerwhale", "lemur", "leopard",
+  "llama", "lion", "monkey", "mouse", "moose", "meercat", "numbat", "newt", "ostrich",
+  "otter", "octopus", "orangutan", "penguin", "panther", "parrot", "pig", "quail", "quokka",
+  "quoll", "rat", "rhinoceros", "racoon", "reindeer", "rabbit", "snake", "squirrel", "sheep",
+  "seal", "turtle", "tiger", "turkey", "tapir", "unicorn", "vampirebat", "vulture", "wombat",
+  "walrus", "wildebeast", "wallaby", "yak", "zebra"]
+
+assert = (actual, expected) -> if actual == expected {
+  write("OK\n") 
+} else {
+  write(toa(expected) + " expected, got " + toa(actual) + ".\n")
+}
+
+; filter filters based on a predicate
+filter = (iter, pred) -> for e <- iter() if pred(e) yield e
+
+; reverse elems
+relems = (ary) -> {
+  i = #ary - 1
+  while i >= 0 {
+    yield ary[i]
+    i = i - 1
+  }
+}
+
+; yields equal chunks in an array
+; chunks(() -> elems("aaabbcddee"))
+; yields ["a", "a", "a", "a"], ["b", "b"], ["c"], ["d", "d"], ["e", "e"] in turn
+chunks = (iter) -> {
+  ary = []
+  for e <- iter() {
+    if #ary == 0 {
+      ary = ary + [e]
+    } else if ary[0] == e {
+      ary = ary + [e]
+    } else {
+      yield ary
+      ary = [e]
+    }
+  }
+  if ary != [] {
+    yield ary
+  }
+}
+
+
+; demonstration of parallel for loop
+matchfwd = (remains, elems) -> {
+  for abit, bbit <- chunks(remains), chunks(elems) {
+    if #abit < #bbit || abit[0] != bbit[0] return false
+  }
+  true
+}
+
+match = (remains, animal) -> matchfwd(remains, () -> elems(animal)) || matchfwd(remains, () -> relems(animal))
+
+rk = (rd) -> {
+  rditer = () -> elems(rd)
+  remains = () -> filter(rditer, (c) -> c != "=" )
+  for animal <- elems(animals) {
+    if match(remains, animal) return animal
+  }
+}
+
+
+
+assert(rk("==========h==yyyyyy===eeee=n==a========"), "hyena")
+assert(rk("======pe====nnnnnn=======================n=n=ng====u==iiii=iii==nn========================n="), "penguin")
+assert(rk("=====r=rrr=rra=====eee======bb====b======="), "bear")
+
