@@ -95,7 +95,7 @@ for i <- fromto(0, 10) write(i)
 
 An iterator or generator is an expression that when evaluated calls the yield keyword with some value. The syntax for a for loop is
 
-    for <variable> <- <iterator> <for_loop_body>
+    for <variable>[, <variable>...] <- <iterator>[, <iterator>...] <for_loop_body>
 
 `yield` is a keyword that is used to give flow control back to the for loop across function calls given the yield was invoked in the iterator part of the for construct. When yield yields a value the for loop resumes and when the loop body finishes the execution continues from the point the yield happened. This is until there are no more items to yield or the for loop body executes a return statement. Yielding in a call stack that doesn't have a containing for loop would have no effect, yield itself evaluates to the yielded value.
 
