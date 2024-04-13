@@ -38,6 +38,7 @@ type context struct {
 type Type struct {
 	main *context        // main context
 	CR   compresult.Type // cr is the compilation result
+  xxx uint64
 }
 
 // New creates a new virtual machine using memory from m and code and data from cr.
