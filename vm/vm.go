@@ -558,7 +558,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 	return value.Type{}, nil
 }
 
-func (vm Type) fetch(src uint64, addr int, m *memory.Type, ds *[]value.Type) value.Type {
+func (vm *Type) fetch(src uint64, addr int, m *memory.Type, ds *[]value.Type) value.Type {
 	switch src {
 	case bytecode.AddrStck:
 		return m.Pop()
