@@ -7,6 +7,8 @@ import (
 	"slices"
 	"strconv"
 	"unsafe"
+
+	"github.com/paulsonkoly/calc/types/bytecode"
 )
 
 type kind int
@@ -189,7 +191,7 @@ var (
 )
 
 // Arith is value arithmetics, +, -, * /.
-func (t Type) Arith(op string, b Type) (Type, error) {
+func (t Type) Arith(op bytecode.OpCode, b Type) (Type, error) {
 
 	switch (t.typ)<<4 | b.typ {
 
@@ -197,7 +199,7 @@ func (t Type) Arith(op string, b Type) (Type, error) {
 		aVal := t.i()
 		bVal := b.i()
 
-		if op == "/" && bVal == 0 {
+		if op == bytecode.DIV && bVal == 0 {
 			return Nil, ErrZeroDiv
 		}
 
@@ -219,7 +221,7 @@ func (t Type) Arith(op string, b Type) (Type, error) {
 		return NewFloat(builtinArith(op, aVal, bVal)), nil
 
 	case (stringT << 4) | stringT:
-		if op != "+" {
+		if op != bytecode.ADD {
 			return Nil, ErrType
 		}
 
@@ -228,7 +230,7 @@ func (t Type) Arith(op string, b Type) (Type, error) {
 		return NewString(aVal + bVal), nil
 
 	case (arrayT << 4) | arrayT:
-		if op != "+" {
+		if op != bytecode.ADD {
 			return Nil, ErrType
 		}
 
@@ -264,7 +266,7 @@ func (t Type) Mod(b Type) (Type, error) {
 }
 
 // Relational is value relational <, >, <= ...
-func (t Type) Relational(op string, b Type) (Type, error) {
+func (t Type) Relational(op bytecode.OpCode, b Type) (Type, error) {
 	switch (t.typ)<<4 | b.typ {
 
 	case (intT << 4) | intT:
@@ -298,14 +300,14 @@ func (t Type) Relational(op string, b Type) (Type, error) {
 }
 
 // Logic is value logic ops &, |.
-func (t Type) Logic(op string, b Type) (Type, error) {
+func (t Type) Logic(op bytecode.OpCode, b Type) (Type, error) {
 
 	switch (t.typ)<<4 | b.typ {
 	case (intT << 4) | intT:
 		aVal := t.morph
 		bVal := b.morph
 
-		if op == "&" {
+		if op == bytecode.AND {
 			aVal &= bVal
 		} else {
 			aVal |= bVal
@@ -316,7 +318,7 @@ func (t Type) Logic(op string, b Type) (Type, error) {
 		aVal := t.morph
 		bVal := b.morph
 
-		if op == "&" {
+		if op == bytecode.AND {
 			aVal &= bVal
 		} else {
 			aVal |= bVal
@@ -333,14 +335,14 @@ func (t Type) Logic(op string, b Type) (Type, error) {
 }
 
 // Shift is bit shift ops <<, >>.
-func (t Type) Shift(op string, b Type) (Type, error) {
+func (t Type) Shift(op bytecode.OpCode, b Type) (Type, error) {
 
 	switch (t.typ)<<4 | b.typ {
 	case (intT << 4) | intT:
 		aVal := t.morph
 		bVal := b.morph
 
-		if op == "<<" {
+		if op == bytecode.LSH {
 			aVal <<= bVal
 		} else {
 			aVal >>= bVal
@@ -582,41 +584,41 @@ func (t *Type) WeakEq(b Type) (bool, error) {
 }
 
 // Equality check, ==, !=.
-func (t Type) Eq(op string, b Type) (Type, error) {
+func (t Type) Eq(op bytecode.OpCode, b Type) (Type, error) {
 	r, err := t.WeakEq(b)
 	if err != nil {
 		return Nil, err
 	}
-	if op == "!=" {
+	if op == bytecode.NE {
 		r = !r
 	}
 	return NewBool(r), nil
 }
 
-func builtinArith[t int | float64](op string, a, b t) t {
+func builtinArith[t int | float64](op bytecode.OpCode, a, b t) t {
 	switch op {
-	case "+":
+	case bytecode.ADD:
 		return a + b
-	case "-":
+	case bytecode.SUB:
 		return a - b
-	case "*":
+	case bytecode.MUL:
 		return a * b
-	case "/":
+	case bytecode.DIV:
 		return a / b
 
 	}
 	panic("unknown operator")
 }
 
-func builtinRelational[t int | float64](op string, a, b t) bool {
+func builtinRelational[t int | float64](op bytecode.OpCode, a, b t) bool {
 	switch op {
-	case "<":
+	case bytecode.LT:
 		return a < b
-	case ">":
+	case bytecode.GT:
 		return a > b
-	case "<=":
+	case bytecode.LE:
 		return a <= b
-	case ">=":
+	case bytecode.GE:
 		return a >= b
 	}
 	panic("unknown operator")

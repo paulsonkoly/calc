@@ -76,9 +76,8 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 		case bytecode.ADD, bytecode.SUB, bytecode.MUL, bytecode.DIV:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
-			op := [...]string{"+", "-", "*", "/"}[opCode-bytecode.ADD]
 
-			val, err := src1.Arith(op, src0)
+			val, err := src1.Arith(opCode, src0)
 			if err != nil {
 				return vm.dumpStack(ctxp, ip, err, src1, src0)
 			}
@@ -87,9 +86,8 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 		case bytecode.ADDTMP, bytecode.SUBTMP, bytecode.MULTMP, bytecode.DIVTMP:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
-			op := [...]string{"+", "-", "*", "/"}[opCode-bytecode.ADDTMP]
 
-			tmp, err = tmp.Arith(op, src0)
+			tmp, err = tmp.Arith(opCode-bytecode.ADDTMP+bytecode.ADD, src0)
 			if err != nil {
 				return vm.dumpStack(ctxp, ip, err, src0)
 			}
@@ -97,7 +95,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 		case bytecode.INC:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 
-			val, err := src0.Arith("+", value.NewInt(1))
+			val, err := src0.Arith(bytecode.ADD, value.NewInt(1))
 			if err != nil {
 				return vm.dumpStack(ctxp, ip, err, src0)
 			}
@@ -139,9 +137,8 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 		case bytecode.AND, bytecode.OR:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
-			op := [...]string{"&", "|"}[opCode-bytecode.AND]
 
-			val, err := src1.Logic(op, src0)
+			val, err := src1.Logic(opCode, src0)
 			if err != nil {
 				return vm.dumpStack(ctxp, ip, err, src1, src0)
 			}
@@ -150,9 +147,8 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 		case bytecode.ANDTMP, bytecode.ORTMP:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
-			op := [...]string{"&", "|"}[opCode-bytecode.ANDTMP]
 
-			tmp, err = tmp.Logic(op, src0)
+			tmp, err = tmp.Logic(opCode-bytecode.ANDTMP+bytecode.AND, src0)
 			if err != nil {
 				return vm.dumpStack(ctxp, ip, err, src0)
 			}
@@ -160,9 +156,8 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 		case bytecode.LSH, bytecode.RSH:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
-			op := [...]string{"<<", ">>"}[opCode-bytecode.LSH]
 
-			val, err := src1.Shift(op, src0)
+			val, err := src1.Shift(opCode, src0)
 			if err != nil {
 				return vm.dumpStack(ctxp, ip, err, src1, src0)
 			}
@@ -171,9 +166,8 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 		case bytecode.LSHTMP, bytecode.RSHTMP:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
-			op := [...]string{"<<", ">>"}[opCode-bytecode.LSHTMP]
 
-			tmp, err = tmp.Shift(op, src0)
+			tmp, err = tmp.Shift(opCode-bytecode.LSHTMP+bytecode.LSH, src0)
 			if err != nil {
 				return vm.dumpStack(ctxp, ip, err, src0)
 			}
@@ -211,9 +205,8 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 		case bytecode.LT, bytecode.GT, bytecode.LE, bytecode.GE:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
-			op := [...]string{"<", ">", "<=", ">="}[opCode-bytecode.LT]
 
-			val, err := src1.Relational(op, src0)
+			val, err := src1.Relational(opCode, src0)
 			if err != nil {
 				return vm.dumpStack(ctxp, ip, err, src1, src0)
 			}
@@ -222,9 +215,8 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 		case bytecode.LTTMP, bytecode.GTTMP, bytecode.LETMP, bytecode.GETMP:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
-			op := [...]string{"<", ">", "<=", ">="}[opCode-bytecode.LTTMP]
 
-			tmp, err = tmp.Relational(op, src0)
+			tmp, err = tmp.Relational(opCode-bytecode.LTTMP+bytecode.LT, src0)
 			if err != nil {
 				return vm.dumpStack(ctxp, ip, err, src0)
 			}
@@ -232,9 +224,8 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 		case bytecode.EQ, bytecode.NE:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			src1 := vm.fetch(instr.Src1(), instr.Src1Addr(), m, ds)
-			op := [...]string{"==", "!="}[opCode-bytecode.EQ]
 
-			val, err := src1.Eq(op, src0)
+			val, err := src1.Eq(opCode, src0)
 			if err != nil {
 				return vm.dumpStack(ctxp, ip, err, src1, src0)
 			}
@@ -243,9 +234,8 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 		case bytecode.EQTMP, bytecode.NETMP:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
-			op := [...]string{"==", "!="}[opCode-bytecode.EQTMP]
 
-			tmp, err = tmp.Eq(op, src0)
+			tmp, err = tmp.Eq(opCode-bytecode.EQTMP+bytecode.EQ, src0)
 			if err != nil {
 				return vm.dumpStack(ctxp, ip, err, src0)
 			}
