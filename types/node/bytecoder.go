@@ -584,6 +584,11 @@ func (f For) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
 		// patch previous CCONT
 		if i > 0 {
 			(*cr.CS)[ccontAddr] |= bytecode.EncodeSrc(0, bytecode.AddrImm, len(*cr.CS)-ccontAddr)
+
+			// mov the previous iterator result into its destination
+			vref := f.VarRefs.Elems[i-1].byteCode(1, fl.Data().Pass(), cr)
+			instr := bytecode.New(bytecode.MOV) | vref | bytecode.EncodeSrc(0, bytecode.AddrStck, 0)
+			*cr.CS = append(*cr.CS, instr)
 		}
 		ccontAddr = len(*cr.CS)
 		instr := bytecode.New(bytecode.CCONT) | bytecode.EncodeSrc(1, bytecode.AddrImm, i+ctxID)
@@ -606,20 +611,7 @@ func (f For) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
 		*cr.CS = append(*cr.CS, instr)
 	}
 
-	var assignBlobJmp int
-	if len(f.VarRefs.Elems) > 1 {
-		// assign all iterated values after the CCONTs in one blob
-		assignAddr = len(*cr.CS)
-		for i := len(f.VarRefs.Elems) - 1; i >= 0; i-- {
-			vref := f.VarRefs.Elems[i].byteCode(1, fl.Data().Pass(), cr)
-			instr := bytecode.New(bytecode.MOV) | vref | bytecode.EncodeSrc(0, bytecode.AddrStck, 0)
-			*cr.CS = append(*cr.CS, instr)
-		}
-
-		assignBlobJmp = len(*cr.CS)
-		instr := bytecode.New(bytecode.JMP)
-		*cr.CS = append(*cr.CS, instr)
-	}
+	// the last CCONT jumps inside the loop body after SCONTs on the last assign
 
 	// interleave SCONTs with assigns because otherwise if one iterator finishes
 	// early we would have the wrong thing on the stack for the loop result
@@ -629,18 +621,11 @@ func (f For) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
 			bytecode.EncodeSrc(0, bytecode.AddrImm, ctxID+i)
 		*cr.CS = append(*cr.CS, instr)
 
-		if len(f.VarRefs.Elems) <= 1 {
-			assignAddr = len(*cr.CS)
-		}
+		assignAddr = len(*cr.CS)
 
 		assignee := vRef.byteCode(1, fl.Data().Pass(), cr)
 		instr = bytecode.New(bytecode.MOV) | assignee | bytecode.EncodeSrc(0, bytecode.AddrStck, 0)
 		*cr.CS = append(*cr.CS, instr)
-	}
-
-	if len(f.VarRefs.Elems) > 1 {
-		// patch the assign blob jump to jump here
-		(*cr.CS)[assignBlobJmp] |= bytecode.EncodeSrc(0, bytecode.AddrImm, len(*cr.CS)-assignBlobJmp)
 	}
 
 	if !discard {
