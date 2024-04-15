@@ -237,6 +237,8 @@ var testData = [...]TestDatum{
        for i <- f() i()
      }`, nil, value.NewInt(13), nil,
 	},
+	// when one of the iterators never yield
+	{"regression/parallel for value", "for i, j <- elems(\"ab\"), fromto(1, 1) 10", nil, value.Nil, nil},
 
 	{"qsort",
 		`{
