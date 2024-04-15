@@ -567,13 +567,16 @@ func (f For) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
 	}
 
 	ctxID := fl.Data().CtxID
+	discard := fl.Data().Discard
 
 	var assignAddr int
 
-	ix := len(*cr.DS)
-	*cr.DS = append(*cr.DS, value.Nil)
-	instr := bytecode.New(bytecode.PUSH) | bytecode.EncodeSrc(0, bytecode.AddrDS, ix)
-	*cr.CS = append(*cr.CS, instr)
+	if !discard {
+		ix := len(*cr.DS)
+		*cr.DS = append(*cr.DS, value.Nil)
+		instr := bytecode.New(bytecode.PUSH) | bytecode.EncodeSrc(0, bytecode.AddrDS, ix)
+		*cr.CS = append(*cr.CS, instr)
+	}
 
 	ccontAddr := len(*cr.CS)
 	jmpAddrs := []int{}
@@ -583,7 +586,7 @@ func (f For) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
 			(*cr.CS)[ccontAddr] |= bytecode.EncodeSrc(0, bytecode.AddrImm, len(*cr.CS)-ccontAddr)
 		}
 		ccontAddr = len(*cr.CS)
-		instr = bytecode.New(bytecode.CCONT) | bytecode.EncodeSrc(1, bytecode.AddrImm, i+ctxID)
+		instr := bytecode.New(bytecode.CCONT) | bytecode.EncodeSrc(1, bytecode.AddrImm, i+ctxID)
 		*cr.CS = append(*cr.CS, instr)
 
 		// reset context
@@ -609,12 +612,12 @@ func (f For) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
 		assignAddr = len(*cr.CS)
 		for i := len(f.VarRefs.Elems) - 1; i >= 0; i-- {
 			vref := f.VarRefs.Elems[i].byteCode(1, fl.Data().Pass(), cr)
-			instr = bytecode.New(bytecode.MOV) | vref | bytecode.EncodeSrc(0, bytecode.AddrStck, 0)
+			instr := bytecode.New(bytecode.MOV) | vref | bytecode.EncodeSrc(0, bytecode.AddrStck, 0)
 			*cr.CS = append(*cr.CS, instr)
 		}
 
 		assignBlobJmp = len(*cr.CS)
-		instr = bytecode.New(bytecode.JMP)
+		instr := bytecode.New(bytecode.JMP)
 		*cr.CS = append(*cr.CS, instr)
 	}
 
@@ -622,7 +625,7 @@ func (f For) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
 	// early we would have the wrong thing on the stack for the loop result
 	switchAddr := len(*cr.CS)
 	for i, vRef := range f.VarRefs.Elems {
-		instr = bytecode.New(bytecode.SCONT) |
+		instr := bytecode.New(bytecode.SCONT) |
 			bytecode.EncodeSrc(0, bytecode.AddrImm, ctxID+i)
 		*cr.CS = append(*cr.CS, instr)
 
@@ -640,21 +643,28 @@ func (f For) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
 		(*cr.CS)[assignBlobJmp] |= bytecode.EncodeSrc(0, bytecode.AddrImm, len(*cr.CS)-assignBlobJmp)
 	}
 
-	instr = bytecode.New(bytecode.POP)
-	*cr.CS = append(*cr.CS, instr)
+	if !discard {
+		instr := bytecode.New(bytecode.POP)
+		*cr.CS = append(*cr.CS, instr)
+	}
 
-	instr = f.Body.byteCode(0, fl.Data().Pass(
+	body := f.Body.byteCode(0, fl.Data().Pass(
 		flags.WithInFor(true),
 		flags.WithCtxID(ctxID+len(f.VarRefs.Elems)),
 		flags.WithCtxLo(ctxID),
 		flags.WithCtxHi(ctxID+len(f.VarRefs.Elems)-1)), cr)
 
-	if instr.Src0() != bytecode.AddrStck && instr.Src0() != bytecode.AddrInv {
-		instr = bytecode.New(bytecode.PUSH) | instr
+	if body.Src0() != bytecode.AddrStck && body.Src0() != bytecode.AddrInv && !discard {
+		instr := bytecode.New(bytecode.PUSH) | body
 		*cr.CS = append(*cr.CS, instr)
 	}
 
-	instr = bytecode.New(bytecode.JMP) | bytecode.EncodeSrc(0, bytecode.AddrImm, switchAddr-len(*cr.CS))
+	if body.Src0() == bytecode.AddrStck && discard {
+		instr := bytecode.New(bytecode.POP)
+		*cr.CS = append(*cr.CS, instr)
+	}
+
+	instr := bytecode.New(bytecode.JMP) | bytecode.EncodeSrc(0, bytecode.AddrImm, switchAddr-len(*cr.CS))
 	*cr.CS = append(*cr.CS, instr)
 
 	// patch jumps
@@ -665,6 +675,9 @@ func (f For) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
 	// patch ccont
 	(*cr.CS)[ccontAddr] |= bytecode.EncodeSrc(0, bytecode.AddrImm, assignAddr-ccontAddr)
 
+	if discard {
+		return bytecode.EncodeSrc(srcsel, bytecode.AddrInv, 0)
+	}
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
 }
 
