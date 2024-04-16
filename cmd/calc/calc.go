@@ -59,6 +59,18 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
+	if *flags.HeapProfFlag != "" {
+		defer func() {
+			f, err := os.Create(*flags.HeapProfFlag)
+			if err != nil {
+				panic(err)
+			}
+			if err = pprof.WriteHeapProfile(f); err != nil {
+				panic(err)
+			}
+		}()
+	}
+
 	if *flags.EvalFlag != "" { // cmd line mode
 		t, err := parser.Parse(*flags.EvalFlag)
 

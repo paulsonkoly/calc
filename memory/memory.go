@@ -87,6 +87,15 @@ func (m *Type) Clone(reuse *Type) *Type {
 
 	copy(newStack, m.stack[fp:m.sp])
 
+	if reuse != nil {
+		reuse.sp = m.sp - fp
+		reuse.fp = []int{0, le - fp}
+		reuse.global = m.global
+		reuse.closure = m.closure
+		reuse.stack = newStack
+		return reuse
+	}
+
 	return &Type{sp: m.sp - fp, fp: []int{0, le - fp}, global: m.global, closure: m.closure, stack: newStack}
 }
 

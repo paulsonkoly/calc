@@ -10,3 +10,4 @@ var AstFlag = flag.Bool("ast", false, `calc outputs AST in graphviz dot format
 % dot -Tsvg packed.dot -o x.svg`)
 var EvalFlag = flag.String("eval", "", "string to evaluate")
 var CPUProfFlag = flag.String("cpuprof", "", "filename for go pprof")
+var HeapProfFlag = flag.String("heapprof", "", "filename for go pprof")
