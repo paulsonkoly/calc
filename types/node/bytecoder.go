@@ -380,7 +380,7 @@ func (b Block) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type 
 				*cr.CS = append(*cr.CS, instr)
 			}
 		} else {
-			instr = t.byteCode(srcsel, fl.Data().Pass(), cr)
+			instr = t.byteCode(srcsel, fl.Data().Pass(flags.WithDiscard(fl.Data().Discard)), cr)
 		}
 	}
 	return instr
@@ -405,7 +405,7 @@ func (i If) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
 	*cr.CS = append(*cr.CS, instr)
 
 	tcSize := len(*cr.CS)
-	tcInstr := i.TrueCase.byteCode(0, fl.Data().Pass(), cr)
+	tcInstr := i.TrueCase.byteCode(0, fl.Data().Pass(flags.WithDiscard(discard)), cr)
 	tcSize = len(*cr.CS) - tcSize
 
 	if tcSize == 0 && discard {
@@ -519,7 +519,7 @@ func (w While) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type 
 		*cr.CS = append(*cr.CS, instr)
 	}
 
-	body := w.Body.byteCode(0, fl.Data().Pass(), cr)
+	body := w.Body.byteCode(0, fl.Data().Pass(flags.WithDiscard(discard)), cr)
 
 	if body.Src0() != bytecode.AddrStck && body.Src0() != bytecode.AddrInv && !discard {
 		instr = bytecode.New(bytecode.PUSH) | body
@@ -637,7 +637,8 @@ func (f For) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
 		flags.WithInFor(true),
 		flags.WithCtxID(ctxID+len(f.VarRefs.Elems)),
 		flags.WithCtxLo(ctxID),
-		flags.WithCtxHi(ctxID+len(f.VarRefs.Elems)-1)), cr)
+		flags.WithCtxHi(ctxID+len(f.VarRefs.Elems)-1),
+		flags.WithDiscard(discard)), cr)
 
 	if body.Src0() != bytecode.AddrStck && body.Src0() != bytecode.AddrInv && !discard {
 		instr := bytecode.New(bytecode.PUSH) | body
