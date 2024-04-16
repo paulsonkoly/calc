@@ -412,15 +412,19 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			ctxHash := hashContext(m, ctxID)
 			ctxp.ip = ip + jmp - 1
 
-			var free *memory.Type
+			var childCtx *context
 			front := freeList.Front()
 			if front != nil {
 				freeList.Remove(front)
-				free = front.Value.(*memory.Type)
-			}
-			m = m.Clone(free)
+				childCtx = front.Value.(*context)
 
-			childCtx := &context{m: m, parent: ctxp, children: intmap.New[uint64, *context](minAllocContexts)}
+				m = m.Clone(childCtx.m)
+				childCtx.m = m
+				childCtx.parent = ctxp
+			} else {
+				m = m.Clone(nil)
+				childCtx = &context{m: m, parent: ctxp, children: intmap.New[uint64, *context](minAllocContexts)}
+			}
 
 			ctxp.children.Put(ctxHash, childCtx)
 			ctxp = childCtx
@@ -613,5 +617,7 @@ func deleteContext(ctxp *context, freeList *list.List) {
 		return true
 	})
 
-	freeList.PushFront(ctxp.m)
+	ctxp.children.Clear()
+
+	freeList.PushFront(ctxp)
 }
