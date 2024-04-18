@@ -291,18 +291,27 @@ func (b BinOp) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type 
 		tempified = true
 	}
 
-	right = b.Right.byteCode(0, fl.Data().Pass(flags.WithForbidTemp(true)), cr)
+	if tempified && b.Left == b.Right {
+		// some common sub-expression elimination
+		instr := bytecode.New(bytecode.PUSHTMP)
+		*cr.CS = append(*cr.CS, instr)
 
-	var instr bytecode.Type
-	if tempified {
-		instr = bytecode.New(op|bytecode.TempFlag) | right
+		instr = bytecode.New(op|bytecode.TempFlag) | bytecode.EncodeSrc(0, bytecode.AddrStck, 0)
+		*cr.CS = append(*cr.CS, instr)
 	} else {
-		instr = bytecode.New(op) | left | right
+		right = b.Right.byteCode(0, fl.Data().Pass(flags.WithForbidTemp(true)), cr)
+
+		var instr bytecode.Type
+		if tempified {
+			instr = bytecode.New(op|bytecode.TempFlag) | right
+		} else {
+			instr = bytecode.New(op) | left | right
+		}
+		*cr.CS = append(*cr.CS, instr)
 	}
-	*cr.CS = append(*cr.CS, instr)
 
 	if tempified && opDepth == 0 {
-		instr = bytecode.New(bytecode.PUSHTMP)
+		instr := bytecode.New(bytecode.PUSHTMP)
 		*cr.CS = append(*cr.CS, instr)
 
 		tempified = false
