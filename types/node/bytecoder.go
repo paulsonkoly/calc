@@ -292,7 +292,7 @@ func (b BinOp) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type 
 	}
 
 	if tempified && b.Left == b.Right {
-    // some common sub-expression elimination
+		// some common sub-expression elimination
 		instr := bytecode.New(bytecode.PUSHTMP)
 		*cr.CS = append(*cr.CS, instr)
 
