@@ -37,7 +37,7 @@ const (
 	localFP = -2
 )
 
-type Frame []value.Type
+type Frame = []value.Type
 type gframe map[string]value.Type
 
 // Memory holds all variables.

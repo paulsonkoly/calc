@@ -35,10 +35,10 @@ type Type struct {
 
 // A structure that represents a function value.
 type FunctionData struct {
-	Node     int // Pointer to the code of the function - the AST node that holds the function
-	Frame    any // Pointer to the closure stack frame
-	ParamCnt int // ParamCnt is the number of parameters of the function
-	LocalCnt int // LocalCnt is the number of local variables of the function including ParamCnt
+	Node     int     // Pointer to the code of the function - the AST node that holds the function
+	Frame    *[]Type // Pointer to the closure stack frame
+	ParamCnt int     // ParamCnt is the number of parameters of the function
+	LocalCnt int     // LocalCnt is the number of local variables of the function including ParamCnt
 }
 
 // unsafe (no type check) accessors.
@@ -78,17 +78,30 @@ func NewArray(a []Type) Type { return Type{typ: arrayT, ptr: unsafe.Pointer(&a)}
 // NewString allocates a new string value.
 func NewString(s string) Type { return Type{typ: stringT, ptr: unsafe.Pointer(&s)} }
 
+// Function binary layout.
+const (
+	paramsCntHi = 63
+	paramsCntLo = 48
+	localCntHi  = 47
+	localCntLo  = 32
+	ipHi        = 31
+	ipLo        = 0
+)
+
 // NewFunction allocates a new function value.
-func NewFunction(node int, frame any, paramCnt int, localCnt int) Type {
-	d := FunctionData{Node: node, Frame: frame, ParamCnt: paramCnt, LocalCnt: localCnt}
-	return Type{typ: functionT, ptr: unsafe.Pointer(&d)}
+func NewFunction(node int, frame *[]Type, paramCnt int, localCnt int) Type {
+	nd := ((uint64)(node)) & ((1 << (ipHi - ipLo + 1)) - 1)
+	pc := ((uint64)(paramCnt)) & ((1 << (paramsCntHi - paramsCntLo + 1)) - 1)
+	lc := ((uint64)(localCnt)) & ((1 << (localCntHi - localCntLo + 1)) - 1)
+	morp := (pc << paramsCntLo) | (lc << localCntLo) | nd<<ipLo
+	return Type{typ: functionT, morph: morp, ptr: unsafe.Pointer(frame)}
 }
 
-func (t *Type) SetFrame(frame any) {
+func (t *Type) SetFrame(frame *[]Type) {
 	if t.typ != functionT {
 		panic("type is not a function")
 	}
-	(*FunctionData)(t.ptr).Frame = frame
+	t.ptr = unsafe.Pointer(frame)
 }
 
 // ToFunction converts a value to FunctionData.
@@ -99,7 +112,11 @@ func (t Type) ToFunction() (FunctionData, bool) {
 		return FunctionData{}, false
 	}
 
-	return *(*FunctionData)(unsafe.Pointer(t.ptr)), true
+	nd := int((t.morph)>>ipLo) & ((1 << (ipHi - ipLo + 1)) - 1)
+	pc := int((t.morph)>>paramsCntLo) & ((1 << (paramsCntHi - paramsCntLo + 1)) - 1)
+	lc := int((t.morph)>>localCntLo) & ((1 << (localCntHi - localCntLo + 1)) - 1)
+
+	return FunctionData{ParamCnt: pc, Frame: (*[]Type)(t.ptr), LocalCnt: lc, Node: nd}, true
 }
 
 // ToInt converts a value to int.
