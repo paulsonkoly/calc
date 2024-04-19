@@ -352,11 +352,10 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			m.Push(val)
 
 		case bytecode.FUNC:
-			localCnt := instr.Src2Addr()
-			paramCnt := instr.Src1Addr()
-
-			f := value.NewFunction(instr.Src0Addr(), m.Top(), paramCnt, localCnt)
-			m.Push(f)
+			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+			frame := m.Top()
+			val.SetFrame(&frame)
+			m.Push(val)
 
 		case bytecode.CALL:
 			f := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
@@ -373,7 +372,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			}
 
 			m.PushFrame(args, fVal.LocalCnt)
-			m.PushClosure(fVal.Frame.(memory.Frame))
+			m.PushClosure(*fVal.Frame)
 			m.Push(value.NewInt(ip))
 
 			ip = fVal.Node - 1
@@ -383,8 +382,8 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 			f, ok := val.ToFunction()
 			if ok && f.Frame != nil {
-				f.Frame = slices.Clone(f.Frame.(memory.Frame))
-				val = value.NewFunction(f.Node, f.Frame, f.ParamCnt, f.LocalCnt)
+				frame := slices.Clone(*f.Frame)
+				val.SetFrame(&frame)
 			}
 
 			nip := m.IP()
@@ -525,7 +524,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 		case bytecode.TOA:
 			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
-			val = value.NewString(fmt.Sprint(val))
+			val = value.NewString(val.String())
 			m.Push(val)
 
 		case bytecode.EXIT:

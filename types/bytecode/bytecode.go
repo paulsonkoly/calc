@@ -90,20 +90,18 @@ const (
 
 	JMP  // JMP jumps relative to ip + src0
 	JMPF // JMPF jumps relative to ip+src1 if src0 is false or ip+src2 if src0 is not bool
-	FUNC // FUNC pushes a function value with code address from src0, parameter count src1, local count src2
+	FUNC // FUNC pushes a function value sourced from src0 while setting the closure frame in it to current top
 	CALL // CALL calls src0 with argument cnt src1
 	RET  // RET returns from a function call pushing src0 after rolling back the stack
 
-	// CCONT jumps relative to ip + src0 in current context, appends old context
-	// to the current context frame, and switches to a new context that continues
-	// from old ip.
+	// CCONT jumps relative to ip + src0 in current context, and switches to a
+	// new context that continues from old ip.
 	CCONT
-	// DCONT restores previous context switches memory, but doesn't switch ip.
+	// DCONT switches context to parent, then deletes contexts between src0 and src1.
 	DCONT
-	// RCONT deletes last frame of memory contexts.
+	// DCONT deletes contexts between src0 and src1.
 	RCONT
-	// SCONT switches to the context id src0; id is the index of the context in
-	// the current frame.
+	// SCONT switches context to src0.
 	SCONT
 	// YIELD pushes src0 in the current context, swaps the current context with
 	// its parent, and pushes src0 in the new context.
