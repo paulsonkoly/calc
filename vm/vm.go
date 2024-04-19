@@ -352,11 +352,9 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			m.Push(val)
 
 		case bytecode.FUNC:
-			localCnt := instr.Src2Addr()
-			paramCnt := instr.Src1Addr()
-
-			f := value.NewFunction(instr.Src0Addr(), m.Top(), paramCnt, localCnt)
-			m.Push(f)
+			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
+			val.SetFrame(m.Top())
+			m.Push(val)
 
 		case bytecode.CALL:
 			f := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
@@ -525,7 +523,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 		case bytecode.TOA:
 			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
-			val = value.NewString(fmt.Sprint(val))
+			val = value.NewString(val.String())
 			m.Push(val)
 
 		case bytecode.EXIT:

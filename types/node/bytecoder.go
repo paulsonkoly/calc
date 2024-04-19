@@ -123,9 +123,9 @@ func (n Name) byteCode(srcsel int, _ flags.Pass, cr compResult) bytecode.Type {
 }
 
 func (f Function) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
+	jmpAddr := len(*cr.CS)
 	instr := bytecode.New(bytecode.JMP)
 	*cr.CS = append(*cr.CS, instr)
-	jmpAddr := len(*cr.CS) - 1
 
 	subfl := fl.Data().Pass(
 		flags.WithInFor(false),
@@ -133,18 +133,21 @@ func (f Function) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Ty
 		flags.WithOpDepth(0),
 		flags.WithInFunc(true))
 
+	bodyAddr := len(*cr.CS)
 	instr = f.Body.byteCode(0, subfl, cr)
 	instr |= bytecode.New(bytecode.RET)
 	*cr.CS = append(*cr.CS, instr)
 
-	instr = bytecode.New(bytecode.FUNC) |
-		bytecode.EncodeSrc(2, bytecode.AddrImm, (f.LocalCnt)) |
-		bytecode.EncodeSrc(1, bytecode.AddrImm, len(f.Parameters.Elems)) |
-		bytecode.EncodeSrc(0, bytecode.AddrImm, jmpAddr+1)
+	funVal := value.NewFunction(bodyAddr, nil, len(f.Parameters.Elems), f.LocalCnt)
+	ix := len(*cr.DS)
+	*cr.DS = append(*cr.DS, funVal)
+
+	funcAddr := len(*cr.CS)
+	instr = bytecode.New(bytecode.FUNC) | bytecode.EncodeSrc(0, bytecode.AddrDS, ix)
 	*cr.CS = append(*cr.CS, instr)
 
 	// patch the jmp
-	(*cr.CS)[jmpAddr] |= bytecode.EncodeSrc(0, bytecode.AddrImm, len(*cr.CS)-jmpAddr-1)
+	(*cr.CS)[jmpAddr] |= bytecode.EncodeSrc(0, bytecode.AddrImm, funcAddr-jmpAddr)
 
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
 }

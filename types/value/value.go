@@ -84,6 +84,13 @@ func NewFunction(node int, frame any, paramCnt int, localCnt int) Type {
 	return Type{typ: functionT, ptr: unsafe.Pointer(&d)}
 }
 
+func (t *Type) SetFrame(frame any) {
+	if t.typ != functionT {
+		panic("type is not a function")
+	}
+	(*FunctionData)(t.ptr).Frame = frame
+}
+
 // ToFunction converts a value to FunctionData.
 //
 // It returns ok false if not a function.
