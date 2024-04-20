@@ -390,7 +390,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			if nip == nil {
 				m.ResetSP()
 				m.Push(val)
-				ip = len(*cs)
+				ip = len(*cs) - 1
 				break
 			}
 			lip, ok := nip.ToInt()
