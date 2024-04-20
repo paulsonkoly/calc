@@ -1,0 +1,40 @@
+; https://projecteuler.net/problem=35
+
+binsearch = (a, b, cond) -> {
+  if a >= b-1 {
+    if cond(b) return b else return error("not found")
+  }
+  mid = (a + b) / 2
+  if cond(mid) binsearch(a, mid, cond) else binsearch(mid, b, cond)
+}
+
+sqrt = (a) -> binsearch(1, a / 2, (n) -> (n+1)*(n+1) > a)
+
+all = (iter, f) -> {
+  for e <- iter() {
+    if !f(e) return false
+  }
+  true
+}
+
+isprime = (n) -> {
+  if n < 2 return false
+  all(() -> fromto(2, sqrt(n)+1), (i) -> n % i != 0)
+}
+
+rotations = (n) -> {
+  s = toa(n)
+  l = #s
+  for i <- fromto(0, l) {
+    yield aton(s[i: l] + s[0:i])
+  }
+}
+
+c = 0
+for i <- fromto(0, 1000000) {
+  if all(() -> rotations(i), isprime) {
+    c = c + 1
+  }
+}
+write(toa(c) + "\n")
+
