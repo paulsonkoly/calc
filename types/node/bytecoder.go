@@ -229,7 +229,7 @@ func (a Assign) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type
 		}
 	}
 
-	srcInstr := a.Value.byteCode(0, fl.Data().Pass(), cr)
+	srcInstr := a.Value.byteCode(0, fl.Data().Pass(flags.WithAcceptTemp(true)), cr)
 	instr := srcInstr | vref.byteCode(1, fl.Data().Pass(), cr)
 	instr |= bytecode.New(bytecode.MOV)
 
@@ -313,7 +313,7 @@ func (b BinOp) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type 
 		*cr.CS = append(*cr.CS, instr)
 	}
 
-	if tempified && opDepth == 0 {
+	if tempified && opDepth == 0 && !fl.Data().Discard && !fl.Data().AcceptTemp {
 		instr := bytecode.New(bytecode.PUSHTMP)
 		*cr.CS = append(*cr.CS, instr)
 
@@ -367,7 +367,7 @@ func (u UnOp) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
 	}
 	*cr.CS = append(*cr.CS, instr)
 
-	if tempified && opDepth == 0 {
+	if tempified && opDepth == 0 && !fl.Data().Discard && !fl.Data().AcceptTemp {
 		instr := bytecode.New(bytecode.PUSHTMP)
 		*cr.CS = append(*cr.CS, instr)
 
