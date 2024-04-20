@@ -89,7 +89,8 @@ const (
 	ARR // ARR pushes the src0 + [src1]
 
 	JMP  // JMP jumps relative to ip + src0
-	JMPF // JMPF jumps relative to ip+src1 if src0 is false or ip+src2 if src0 is not bool
+	JMPF // JMPF jumps relative to ip+src1 if src0 is false
+	JMPT // JMPT jumps relative to ip+src1 if src0 is true
 	FUNC // FUNC pushes a function value sourced from src0 while setting the closure frame in it to current top
 	CALL // CALL calls src0 with argument cnt src1
 	RET  // RET returns from a function call pushing src0 after rolling back the stack

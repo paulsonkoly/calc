@@ -284,7 +284,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 
 			ip += src0Imm - 1
 
-		case bytecode.JMPF:
+		case bytecode.JMPF, bytecode.JMPT:
 			src0 := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 			src1Imm := instr.Src1Addr()
 
@@ -293,7 +293,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			if !ok {
 				return vm.dumpStack(ctxp, ip, value.ErrType, src0)
 			}
-			if !b {
+			if (opCode == bytecode.JMPF && !b) || (opCode == bytecode.JMPT && b) {
 				ip += src1Imm - 1
 			}
 
