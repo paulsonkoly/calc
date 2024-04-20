@@ -68,7 +68,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 		instr := (*cs)[ip]
 
 		// TODO allow tracing flag
-		fmt.Printf("%8d | %8p | %v\n", ip, ctxp, instr)
+		// fmt.Printf("%8d | %8p | %v\n", ip, ctxp, instr)
 
 		opCode := instr.OpCode()
 
