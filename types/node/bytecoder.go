@@ -502,43 +502,22 @@ func (i IfElse) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type
 }
 
 func (w While) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
-	// PUSH no result
-	// JMPF condition                                <-----+ -+
-	// POP                                                 |  |
-	// loop body                                           |  |
-	// if body didn't leave its result on the stack        |  |
-	//    PUSH body result                                 |  |
-	// JUMP                                           -----+  |
-	//                                                <-------+
-
-	discard := fl.Data().Discard
-
-	if !discard {
-		ix := len(*cr.DS)
-		*cr.DS = append(*cr.DS, value.Nil)
-		instr := bytecode.New(bytecode.PUSH) | bytecode.EncodeSrc(0, bytecode.AddrDS, ix)
-		*cr.CS = append(*cr.CS, instr)
+	if fl.Data().Discard {
+		return discardingWhile(w, srcsel, fl, cr)
 	}
+	return pushingWhile(w, srcsel, fl, cr)
+}
 
+func discardingWhile(w While, srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
 	condAddr := len(*cr.CS)
 	condition := w.Condition.byteCode(0, fl.Data().Pass(), cr)
 	jmpfAddr := len(*cr.CS)
 	instr := bytecode.New(bytecode.JMPF) | condition
 	*cr.CS = append(*cr.CS, instr)
 
-	if !discard {
-		instr = bytecode.New(bytecode.POP)
-		*cr.CS = append(*cr.CS, instr)
-	}
+	body := w.Body.byteCode(0, fl.Data().Pass(flags.WithDiscard(true)), cr)
 
-	body := w.Body.byteCode(0, fl.Data().Pass(flags.WithDiscard(discard)), cr)
-
-	if body.Src0() != bytecode.AddrStck && body.Src0() != bytecode.AddrInv && !discard {
-		instr = bytecode.New(bytecode.PUSH) | body
-		*cr.CS = append(*cr.CS, instr)
-	}
-
-	if body.Src0() == bytecode.AddrStck && discard {
+	if body.Src0() == bytecode.AddrStck {
 		instr = bytecode.New(bytecode.POP)
 		*cr.CS = append(*cr.CS, instr)
 	}
@@ -549,9 +528,51 @@ func (w While) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type 
 	// patch the JMPF
 	(*cr.CS)[jmpfAddr] |= bytecode.EncodeSrc(1, bytecode.AddrImm, len(*cr.CS)-jmpfAddr)
 
-	if discard {
-		return bytecode.EncodeSrc(srcsel, bytecode.AddrInv, 0)
+	return bytecode.EncodeSrc(srcsel, bytecode.AddrInv, 0)
+}
+
+func pushingWhile(w While, srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
+	ix := len(*cr.DS)
+	*cr.DS = append(*cr.DS, value.Nil)
+	instr := bytecode.New(bytecode.PUSH) | bytecode.EncodeSrc(0, bytecode.AddrDS, ix)
+	*cr.CS = append(*cr.CS, instr)
+
+	condition := w.Condition.byteCode(0, fl.Data().Pass(), cr)
+	initJmpFAddr := len(*cr.CS)
+	instr = bytecode.New(bytecode.JMPF) | condition
+	*cr.CS = append(*cr.CS, instr)
+
+	popAddr := len(*cr.CS)
+	instr = bytecode.New(bytecode.POP)
+	*cr.CS = append(*cr.CS, instr)
+
+	bodyAddr := len(*cr.CS)
+	body := w.Body.byteCode(0, fl.Data().Pass(flags.WithDiscard(false)), cr)
+
+	if body.Src0() == bytecode.AddrInv {
+		panic("while body result is invalid in non-discarding while")
 	}
+
+	jumpBack := bodyAddr
+	if body.Src0() == bytecode.AddrStck {
+		jumpBack = popAddr
+	}
+
+	condition = w.Condition.byteCode(0, fl.Data().Pass(), cr)
+	jumpBackAddr := len(*cr.CS)
+	instr = bytecode.New(bytecode.JMPT) | bytecode.EncodeSrc(1, bytecode.AddrImm, jumpBack-jumpBackAddr) | condition
+	*cr.CS = append(*cr.CS, instr)
+
+	if body.Src0() != bytecode.AddrStck {
+		instr = bytecode.New(bytecode.PUSH) | body
+		*cr.CS = append(*cr.CS, instr)
+	}
+
+	endAddr := len(*cr.CS)
+
+	// patch the JMPF
+	(*cr.CS)[initJmpFAddr] |= bytecode.EncodeSrc(1, bytecode.AddrImm, endAddr-initJmpFAddr)
+
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
 }
 
