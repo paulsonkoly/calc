@@ -11,6 +11,7 @@ type Data struct {
 	Discard             bool // Discard determines whether computation result can be discarded. Non-transitive
 	ForbidTemp          bool // ForbidTemp determines whether tmp register can be used.
 	AcceptTemp          bool // AcceptTemp determines whether the result in tmp register is acceptable. Non-transitive
+	Returning           bool // Returning determines whether the node is the last statement of a function. Non-transitive
 	OpDepth             int  // OpDepth is the depth of arithemtics, logic and relational.
 	InFor               bool // InFor determines whether the current node is in a for loop. Transitive
 	InFunc              bool // InFunc determines whether the current node is in a function. Transitive
@@ -31,6 +32,7 @@ func (p Pass) Data() Data {
 func (d Data) Pass(options ...Option) Pass {
 	d.Discard = false
 	d.AcceptTemp = false
+	d.Returning = false
 
 	for _, o := range options {
 		o(&d)
@@ -53,6 +55,13 @@ func WithDiscard(discard bool) Option {
 func WithForbidTemp(forbidTemp bool) Option {
 	return func(d *Data) {
 		d.ForbidTemp = forbidTemp
+	}
+}
+
+// WithReturning sets returning flag on the data.
+func WithReturning(returning bool) Option {
+	return func(d *Data) {
+		d.Returning = returning
 	}
 }
 

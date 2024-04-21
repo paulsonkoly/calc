@@ -35,6 +35,7 @@ var testData = [...]TestDatum{
 	{"simple literal/array", "[1, false]", nil, value.NewArray([]value.Type{value.NewInt(1), value.NewBool(false)}), nil},
 	{"array lit with newline", "[1,2,\n3,4]", nil, value.NewArray([]value.Type{value.NewInt(1), value.NewInt(2), value.NewInt(3), value.NewInt(4)}), nil},
 	{"array lit with leading newline", "[\n1,2,\n3,4]", nil, value.NewArray([]value.Type{value.NewInt(1), value.NewInt(2), value.NewInt(3), value.NewInt(4)}), nil},
+	{"array lit with computed value", "[1, 2, 3 + 2, 4]", nil, value.NewArray([]value.Type{value.NewInt(1), value.NewInt(2), value.NewInt(5), value.NewInt(4)}), nil},
 
 	{"simple arithmetic/addition", "1+2", nil, value.NewInt(3), nil},
 	{"bitwise logic", "~(1<<1) & 7", nil, value.NewInt(5), nil},
@@ -49,6 +50,9 @@ var testData = [...]TestDatum{
 
 	{"arithmetics/left assoc", "1-2+1", nil, value.NewInt(0), nil},
 	{"arithmetics/parenthesis", "1-(2+1)", nil, value.NewInt(-2), nil},
+
+	{"unary/-", "-5", nil, value.NewInt(-5), nil},
+	{"unary/tempified ", `#("a"+"b"+"c")`, nil, value.NewInt(3), nil},
 
 	{"variable/not defined", "a", nil, value.Nil, nil},
 	{"variable/lookup", "{\na=3\na+1\n}", nil, value.NewInt(4), nil},
@@ -71,7 +75,31 @@ var testData = [...]TestDatum{
 	{"block/single line", "{\n1\n}", nil, value.NewInt(1), nil},
 	{"block/multi line", "{\n1\n2\n}", nil, value.NewInt(2), nil},
 
+	{"assign/a=a+1", `{
+    a = 5
+    a = a + 1
+   }`, nil, value.NewInt(6), nil},
+	{"assign/a=1+a", `{
+    a = 5
+    a = 1 + a
+  }`, nil, value.NewInt(6), nil},
+
 	{"conditional/single line no else", "if true 1", nil, value.NewInt(1), nil},
+	{"conditional/single line no else discarding from stack",
+		`{
+     if true 1+2
+     2
+    }`, nil, value.NewInt(2), nil},
+	{"conditional/single line no else discarding from DS",
+		`{
+     if true 1
+     2
+    }`, nil, value.NewInt(2), nil},
+	{"conditional/single line no else returning",
+		`{
+       f = () -> if true 1
+       f()
+    }`, nil, value.NewInt(1), nil},
 	{"conditional/single line else", "if false 1 else 2", nil, value.NewInt(2), nil},
 	{"conditional/incorrect condition", "if 1 1", nil, value.Nil, value.ErrType},
 	{"conditional/no result", "if false 1", nil, value.Nil, nil},
@@ -84,6 +112,23 @@ var testData = [...]TestDatum{
 		while a < 10 a = a + 1
 		a
 	}`, nil, value.NewInt(10), nil},
+	{"loop/discarding from stack",
+		`{
+		a = 1
+		while a < 10 {
+      a = a + 1
+      a + 5
+    }
+    a
+	}`, nil, value.NewInt(10), nil},
+	{"loop/pushing while from stack",
+		`{
+		a = 1
+		while a < 10 {
+      a = a + 1
+      a + 5
+    }
+	}`, nil, value.NewInt(15), nil},
 	{"loop/block",
 		`{
 		a = 1
@@ -153,6 +198,14 @@ var testData = [...]TestDatum{
        }
        f(2)
     }`, nil, value.NewInt(76), nil},
+
+	{"iterator/discarding",
+		`{
+      for i <- fromto(1, 3) {
+        i + 4
+      }
+      2
+    }`, nil, value.NewInt(2), nil},
 
 	{"function definition", "(n) -> 1", nil, emptyFunction, nil},
 	{"function/no argument", "() -> 1", nil, emptyFunction, nil},
