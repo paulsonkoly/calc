@@ -298,7 +298,12 @@ func (b BinOp) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type 
 		tempified = true
 	}
 
-	if tempified && b.Left == b.Right {
+	_, nonComparable := b.Left.(List)
+	if !nonComparable {
+		_, nonComparable = b.Right.(List)
+	}
+
+	if tempified && !nonComparable && b.Left == b.Right {
 		// some common sub-expression elimination
 		instr := bytecode.New(bytecode.PUSHTMP)
 		*cr.CS = append(*cr.CS, instr)

@@ -292,6 +292,9 @@ var testData = [...]TestDatum{
 	},
 	// when one of the iterators never yield
 	{"regression/parallel for value", "for i, j <- elems(\"ab\"), fromto(1, 1) 10", nil, value.Nil, nil},
+	{"regression/[1]+[2]+[3]",
+		"[1]+[2]+[3]",
+		nil, value.NewArray([]value.Type{value.NewInt(1), value.NewInt(2), value.NewInt(3)}), nil},
 
 	{"qsort",
 		`{
