@@ -502,7 +502,7 @@ func (i IfElse) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type
 	*cr.CS = append(*cr.CS, instr)
 
 	tCase := i.TrueCase.byteCode(0, fl.Data().Pass(), cr)
-	if instr.Src0() != bytecode.AddrStck && instr.Src0() != bytecode.AddrInv && !returning {
+	if tCase.Src0() != bytecode.AddrStck && tCase.Src0() != bytecode.AddrInv && !returning {
 		instr := bytecode.New(bytecode.PUSH) | tCase
 		*cr.CS = append(*cr.CS, instr)
 	}
