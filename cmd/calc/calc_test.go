@@ -105,6 +105,8 @@ var testData = [...]TestDatum{
 	{"conditional/no result", "if false 1", nil, value.Nil, nil},
 	{"conditional/blocks no else", "if true {\n1\n}", nil, value.NewInt(1), nil},
 	{"conditional/blocks with else", "if false {\n1\n} else {\n2\n}", nil, value.NewInt(2), nil},
+	{"conditional/negated condition no else", "if !false 2", nil, value.NewInt(2), nil},
+	{"conditional/negated condition with else", "if !true 2 else 3", nil, value.NewInt(3), nil},
 
 	{"loop/single line",
 		`{
@@ -149,6 +151,21 @@ var testData = [...]TestDatum{
 			a = a + 1
 		}
 	}`, nil, value.Nil, value.ErrType},
+	{"loop/negated condition",
+		`{
+      a = 1
+      while !(a > 10) {
+        a = a + 1
+      }
+		  a
+	}`, nil, value.NewInt(11), nil},
+	{"loop/ pushing negated condition",
+		`{
+      a = 1
+      while !(a > 10) {
+        a = a + 1
+      }
+	}`, nil, value.NewInt(11), nil},
 
 	{"iterator/elems",
 		`{
