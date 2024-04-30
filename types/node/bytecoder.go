@@ -408,6 +408,27 @@ func (b Block) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type 
 	return instr
 }
 
+func condition(condition Type, falsey bool, srcsel int, fl flags.Pass, cr compResult) int {
+	jmpInstr := [...]bytecode.OpCode{bytecode.JMPF, bytecode.JMPT}
+	jmpIx := 1
+	if falsey {
+		jmpIx = 0
+	}
+
+	jumpType := jmpInstr[jmpIx]
+	if cond, ok := condition.(UnOp); ok && cond.Op == "!" {
+		jumpType = jmpInstr[jmpIx^1]
+		condition = cond.Target
+	}
+
+	condCode := condition.byteCode(srcsel, fl.Data().Pass(), cr)
+	jmpfAddr := len(*cr.CS)
+	instr := bytecode.New(jumpType) | condCode
+	*cr.CS = append(*cr.CS, instr)
+
+	return jmpfAddr
+}
+
 func (i If) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
 	//
 	// JMPF ..., condition                     --+
@@ -422,10 +443,7 @@ func (i If) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
 	discard := fl.Data().Discard
 	returning := fl.Data().Returning
 
-	condition := i.Condition.byteCode(0, fl.Data().Pass(), cr)
-	jmpfAddr := len(*cr.CS)
-	instr := bytecode.New(bytecode.JMPF) | condition
-	*cr.CS = append(*cr.CS, instr)
+	jmpfAddr := condition(i.Condition, true, 0, fl.Data().Pass(), cr)
 
 	tcSize := len(*cr.CS)
 	tcInstr := i.TrueCase.byteCode(0, fl.Data().Pass(flags.WithDiscard(discard)), cr)
@@ -440,13 +458,13 @@ func (i If) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
 
 	dest := bytecode.EncodeSrc(srcsel, tcInstr.Src0(), tcInstr.Src0Addr())
 	if tcInstr.Src0() != bytecode.AddrStck && tcInstr.Src0() != bytecode.AddrInv && !discard && !returning {
-		instr = bytecode.New(bytecode.PUSH) | tcInstr
+		instr := bytecode.New(bytecode.PUSH) | tcInstr
 		*cr.CS = append(*cr.CS, instr)
 		dest = bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
 	}
 
 	if tcInstr.Src0() == bytecode.AddrStck && discard && !returning {
-		instr = bytecode.New(bytecode.POP)
+		instr := bytecode.New(bytecode.POP)
 		*cr.CS = append(*cr.CS, instr)
 		dest = bytecode.EncodeSrc(srcsel, bytecode.AddrInv, 0)
 	}
@@ -455,7 +473,7 @@ func (i If) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
 	noResultAddr := len(*cr.CS)
 
 	if returning {
-		instr = bytecode.New(bytecode.RET) | tcInstr
+		instr := bytecode.New(bytecode.RET) | tcInstr
 		*cr.CS = append(*cr.CS, instr)
 
 		dest = bytecode.EncodeSrc(srcsel, bytecode.AddrInv, 0)
@@ -469,7 +487,7 @@ func (i If) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
 	}
 
 	if !returning && !discard {
-		instr = bytecode.New(bytecode.JMP) | bytecode.EncodeSrc(0, bytecode.AddrImm, 2)
+		instr := bytecode.New(bytecode.JMP) | bytecode.EncodeSrc(0, bytecode.AddrImm, 2)
 		*cr.CS = append(*cr.CS, instr)
 
 		noResultAddr = len(*cr.CS)
@@ -501,10 +519,7 @@ func (i IfElse) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type
 
 	returning := fl.Data().Returning
 
-	condition := i.Condition.byteCode(0, fl.Data().Pass(), cr)
-	jmpFAddr := len(*cr.CS)
-	instr := bytecode.New(bytecode.JMPF) | condition
-	*cr.CS = append(*cr.CS, instr)
+	jmpFAddr := condition(i.Condition, true, 0, fl.Data().Pass(), cr)
 
 	tCase := i.TrueCase.byteCode(0, fl.Data().Pass(), cr)
 	if tCase.Src0() != bytecode.AddrStck && tCase.Src0() != bytecode.AddrInv && !returning {
@@ -518,7 +533,7 @@ func (i IfElse) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type
 		*cr.CS = append(*cr.CS, instr)
 	} else {
 		jmpTAddr = len(*cr.CS)
-		instr = bytecode.New(bytecode.JMP)
+		instr := bytecode.New(bytecode.JMP)
 		*cr.CS = append(*cr.CS, instr)
 	}
 
@@ -556,19 +571,16 @@ func (w While) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type 
 
 func discardingWhile(w While, srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
 	condAddr := len(*cr.CS)
-	condition := w.Condition.byteCode(0, fl.Data().Pass(), cr)
-	jmpfAddr := len(*cr.CS)
-	instr := bytecode.New(bytecode.JMPF) | condition
-	*cr.CS = append(*cr.CS, instr)
+	jmpfAddr := condition(w.Condition, true, 0, fl.Data().Pass(), cr)
 
 	body := w.Body.byteCode(0, fl.Data().Pass(flags.WithDiscard(true)), cr)
 
 	if body.Src0() == bytecode.AddrStck {
-		instr = bytecode.New(bytecode.POP)
+		instr := bytecode.New(bytecode.POP)
 		*cr.CS = append(*cr.CS, instr)
 	}
 
-	instr = bytecode.New(bytecode.JMP) | bytecode.EncodeSrc(0, bytecode.AddrImm, condAddr-len(*cr.CS))
+	instr := bytecode.New(bytecode.JMP) | bytecode.EncodeSrc(0, bytecode.AddrImm, condAddr-len(*cr.CS))
 	*cr.CS = append(*cr.CS, instr)
 
 	// patch the JMPF
@@ -585,10 +597,7 @@ func pushingWhile(w While, srcsel int, fl flags.Pass, cr compResult) bytecode.Ty
 	instr := bytecode.New(bytecode.PUSH) | bytecode.EncodeSrc(0, bytecode.AddrDS, ix)
 	*cr.CS = append(*cr.CS, instr)
 
-	condition := w.Condition.byteCode(0, fl.Data().Pass(), cr)
-	initJmpFAddr := len(*cr.CS)
-	instr = bytecode.New(bytecode.JMPF) | condition
-	*cr.CS = append(*cr.CS, instr)
+	initJmpFAddr := condition(w.Condition, true, 0, fl.Data().Pass(), cr)
 
 	popAddr := len(*cr.CS)
 	instr = bytecode.New(bytecode.POP)
@@ -606,10 +615,8 @@ func pushingWhile(w While, srcsel int, fl flags.Pass, cr compResult) bytecode.Ty
 		jumpBack = popAddr
 	}
 
-	condition = w.Condition.byteCode(0, fl.Data().Pass(), cr)
-	jumpBackAddr := len(*cr.CS)
-	instr = bytecode.New(bytecode.JMPT) | bytecode.EncodeSrc(1, bytecode.AddrImm, jumpBack-jumpBackAddr) | condition
-	*cr.CS = append(*cr.CS, instr)
+	jumpBackAddr := condition(w.Condition, false, 0, fl.Data().Pass(), cr)
+	(*cr.CS)[jumpBackAddr] |= bytecode.EncodeSrc(1, bytecode.AddrImm, jumpBack-jumpBackAddr)
 
 	dest := body
 	if body.Src0() != bytecode.AddrStck && !returning {
