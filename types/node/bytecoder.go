@@ -670,6 +670,7 @@ func (f For) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
 
 	ctxID := fl.Data().CtxID
 	discard := fl.Data().Discard
+	returning := fl.Data().Returning
 
 	var assignAddr int
 
@@ -708,9 +709,14 @@ func (f For) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
 			bytecode.EncodeSrc(1, bytecode.AddrImm, ctxID+len(f.Iterators.Elems)-1)
 		*cr.CS = append(*cr.CS, instr)
 
-		jmpAddrs = append(jmpAddrs, len(*cr.CS))
-		instr = bytecode.New(bytecode.JMP)
-		*cr.CS = append(*cr.CS, instr)
+		if returning {
+			instr = bytecode.New(bytecode.RET) | bytecode.EncodeSrc(0, bytecode.AddrStck, 0)
+			*cr.CS = append(*cr.CS, instr)
+		} else {
+			jmpAddrs = append(jmpAddrs, len(*cr.CS))
+			instr = bytecode.New(bytecode.JMP)
+			*cr.CS = append(*cr.CS, instr)
+		}
 	}
 
 	// the last CCONT jumps inside the loop body after SCONTs on the last assign
@@ -763,7 +769,8 @@ func (f For) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
 	// patch ccont
 	(*cr.CS)[ccontAddr] |= bytecode.EncodeSrc(0, bytecode.AddrImm, assignAddr-ccontAddr)
 
-	if discard {
+	// if returning then after the loop we are already in dead code.
+	if discard || returning {
 		return bytecode.EncodeSrc(srcsel, bytecode.AddrInv, 0)
 	}
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
