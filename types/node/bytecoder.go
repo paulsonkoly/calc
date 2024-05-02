@@ -577,7 +577,6 @@ func (w While) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type 
 }
 
 func discardingWhile(w While, srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
-	condAddr := len(*cr.CS)
 	jmpfAddr := condition(w.Condition, true, 0, fl.Data().Pass(), cr)
 
 	bodyAddr := len(*cr.CS)
@@ -590,9 +589,6 @@ func discardingWhile(w While, srcsel int, fl flags.Pass, cr compResult) bytecode
 
 	jumpBackAddr := condition(w.Condition, false, 0, fl.Data().Pass(), cr)
 	(*cr.CS)[jumpBackAddr] |= bytecode.EncodeSrc(1, bytecode.AddrImm, bodyAddr-jumpBackAddr)
-
-	instr := bytecode.New(bytecode.JMP) | bytecode.EncodeSrc(0, bytecode.AddrImm, condAddr-len(*cr.CS))
-	*cr.CS = append(*cr.CS, instr)
 
 	// patch the JMPF
 	(*cr.CS)[jmpfAddr] |= bytecode.EncodeSrc(1, bytecode.AddrImm, len(*cr.CS)-jmpfAddr)
