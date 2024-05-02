@@ -705,11 +705,8 @@ func (f For) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
 		*cr.CS = append(*cr.CS, instr)
 
 		// reset context
-		instr = iter.byteCode(0, fl.Data().Pass(flags.WithCtxID(0)), cr)
-		if instr.Src0() == bytecode.AddrStck {
-			instr = bytecode.New(bytecode.POP)
-			*cr.CS = append(*cr.CS, instr)
-		}
+		iter.byteCode(0, fl.Data().Pass(flags.WithCtxID(0)), cr)
+		// the iter can leave junk on the stack in the slave context, but we are just about to destroy it
 
 		instr = bytecode.New(bytecode.DCONT) |
 			bytecode.EncodeSrc(0, bytecode.AddrImm, ctxID) |
