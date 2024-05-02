@@ -559,6 +559,13 @@ func (i IfElse) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type
 	// patch jmp
 	(*cr.CS)[jmpTAddr] |= bytecode.EncodeSrc(0, bytecode.AddrImm, len(*cr.CS)-jmpTAddr)
 
+	// if both true case and false case are Inv then there is nothing on the
+	// stack. It is possible that only one side is on the stack, while the other
+	// is invalid, if for example one side does explicit return and the other not
+	if tCase == bytecode.AddrInv && fCase == bytecode.AddrInv {
+		return bytecode.EncodeSrc(srcsel, bytecode.AddrInv, 0)
+	}
+
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
 }
 
