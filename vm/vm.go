@@ -346,7 +346,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 				log.Panicf("cannot convert value to array\n %8d | %v\n", ip, instr)
 			}
 
-      slc = slices.Clone(slc)
+			slc = slices.Clone(slc)
 			slc = append(slc, val)
 
 			val = value.NewArray(slc)
