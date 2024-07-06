@@ -313,6 +313,23 @@ var testData = [...]TestDatum{
 		"[1]+[2]+[3]",
 		nil, value.NewArray([]value.Type{value.NewInt(1), value.NewInt(2), value.NewInt(3)}), nil},
 
+	// https://github.com/paulsonkoly/calc/issues/53
+	{"regression/nested arrays",
+		`{
+        a = []
+        i = 0
+        while i < 3 {
+          a = a + [[i]]
+          i = i + 1
+        }
+        a
+	   }`, nil, value.NewArray([]value.Type{
+			value.NewArray([]value.Type{value.NewInt(0)}),
+			value.NewArray([]value.Type{value.NewInt(1)}),
+			value.NewArray([]value.Type{value.NewInt(2)})}),
+		nil,
+	},
+
 	{"qsort",
 		`{
 	       filter = (pred, ary) -> {
