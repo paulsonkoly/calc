@@ -205,8 +205,15 @@ func (r Return) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type
 }
 
 func (y Yield) byteCode(srcsel int, fl flags.Pass, cr compResult) bytecode.Type {
-	instr := y.Target.byteCode(0, fl.Data().Pass(), cr)
-	instr |= bytecode.New(bytecode.YIELD)
+	target := y.Target.byteCode(0, fl.Data().Pass(), cr)
+	instr := bytecode.New(bytecode.YIELD) | target
+	*cr.CS = append(*cr.CS, instr)
+
+	if fl.Data().Discard {
+		return bytecode.EncodeSrc(srcsel, bytecode.AddrInv, 0)
+	}
+
+	instr = bytecode.New(bytecode.PUSHTMP)
 	*cr.CS = append(*cr.CS, instr)
 
 	return bytecode.EncodeSrc(srcsel, bytecode.AddrStck, 0)
