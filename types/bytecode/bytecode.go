@@ -104,7 +104,7 @@ const (
 	RCONT
 	// SCONT switches context to src0.
 	SCONT
-	// YIELD pushes src0 in the current context, swaps the current context with
+	// YIELD moves src0 in tmp, swaps the current context with
 	// its parent, and pushes src0 in the new context.
 	YIELD
 
