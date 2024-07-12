@@ -471,11 +471,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 			ip = ctxp.ip
 
 		case bytecode.YIELD:
-			val := vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
-
-			// yield needs to push in the slave context because a subsequent pop, we
-			// should optimise this away
-			m.Push(val)
+			tmp = vm.fetch(instr.Src0(), instr.Src0Addr(), m, ds)
 
 			// otherwise naked yield, in the master context
 			if ctxp.parent != nil {
@@ -487,7 +483,7 @@ func (vm *Type) Run(retResult bool) (value.Type, error) {
 				m = ctxp.m
 				ip = ctxp.ip
 
-				m.Push(val)
+				m.Push(tmp)
 			}
 
 		case bytecode.READ:
